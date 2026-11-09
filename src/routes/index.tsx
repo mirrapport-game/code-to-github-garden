@@ -5,7 +5,10 @@ import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
-import { IntroDialogue } from '@/components/intro-dialogue';
+import { IntroTrainer } from '@/components/intro-trainer';
+import { loadTrainer } from '@/lib/intro-trainer';
+import { PLAYABLE_CARDS } from '@/lib/official-cards';
+import type { UIMessage } from 'ai';
 import type { DialogueTurn } from '@/lib/intro-dialogue';
 
 export const Route = createFileRoute("/")({
@@ -68,11 +71,18 @@ function Index() {
   const [a3, setA3] = useState("");
   const [name, setName] = useState("");
   const [dialogue, setDialogue] = useState<DialogueTurn[]>([]);
+  const [trainerMessages, setTrainerMessages] = useState<UIMessage[]>([]);
+  const [aiSummary, setAiSummary] = useState('');
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
     const saved = loadSeason();
     setName(saved.name);
+    const trainer = loadTrainer();
+    const savedCard = PLAYABLE_CARDS.find(c => c.id === trainer?.cardId);
+    if (trainer && savedCard && trainer.messages.length) {
+      setCard(savedCard); setLevel(trainer.level); setTrainerMessages(trainer.messages); setAiSummary(trainer.summary); setStep('dialogue');
+    }
   }, []);
 
   const reset = () => {
@@ -85,6 +95,7 @@ function Index() {
     setA2("");
     setA3("");
     setDialogue([]);
+    setTrainerMessages([]); setAiSummary('');
   };
 
   const draw = () => {
@@ -98,10 +109,11 @@ function Index() {
     setA2('');
     setA3('');
     setDialogue([]);
+    setTrainerMessages([]); setAiSummary('');
     setStep("card");
   };
 
-  const finishDay = () => {
+  const finishDay = (completedDialogue = dialogue, completedSummary = aiSummary) => {
     if (card && level) {
         saveSeasonName(name.trim());
         saveSeasonDay({
@@ -114,7 +126,8 @@ function Index() {
           shadow: a2,
           resource: a3,
           cardId: card.id,
-          dialogue,
+           dialogue: completedDialogue,
+           aiSummary: completedSummary,
           doneAt: new Date().toISOString(),
         });
     }
@@ -205,19 +218,7 @@ function Index() {
               <p className="pt-2 text-sm text-muted-foreground">Где в теле отклик?</p>
               <Chips items={BODY} value={body} onChange={setBody} />
             </section>
-            <section className="space-y-3">
-              <label htmlFor="intro-hurt" className="block font-semibold">Что в этой ситуации задевает тебя больше всего?</label>
-              <textarea id="intro-hurt" value={a1} onChange={(e) => setA1(e.target.value)} className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
-            </section>
-            <section className="space-y-3">
-              <label htmlFor="intro-shadow" className="block font-semibold">Что тебе хочется сказать или сделать, но ты себя останавливаешь?</label>
-              <textarea id="intro-shadow" value={a2} onChange={(e) => setA2(e.target.value)} placeholder="Мне хочется… но я не разрешаю себе…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
-            </section>
-            <section className="space-y-3">
-              <label htmlFor="intro-resource" className="block font-semibold">Что тебе сейчас важно и что поможет поддержать себя?</label>
-              <textarea id="intro-resource" value={a3} onChange={(e) => setA3(e.target.value)} placeholder="Мне важно… Я могу поддержать себя…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
-            </section>
-            <Btn onClick={() => setStep("dialogue")}>Отыграть диалог</Btn>
+            <Btn onClick={() => setStep("dialogue")}>Попробовать диалог с ИИ</Btn>
           </div>
         )}
 
@@ -228,8 +229,7 @@ function Index() {
               <p>{card.context}</p>
               <p className="mt-3">{card.levels[level].text}</p>
             </div>
-            <IntroDialogue turns={dialogue} onChange={setDialogue} />
-            <Btn onClick={() => setStep('reflection')}>{dialogue.length ? 'Завершить диалог · что я заметила' : 'Пропустить диалог · что я заметила'}</Btn>
+            {card.id && <IntroTrainer key={`${card.id}-${level}`} cardId={card.id} level={level} initialMessages={trainerMessages} initialSummary={aiSummary} onComplete={(turns, summary) => { setDialogue(turns); setAiSummary(summary); finishDay(turns, summary); }} />}
             <Btn variant="ghost" onClick={() => setStep('questions')}>Вернуться к чувствам и вопросам</Btn>
           </div>
         )}
