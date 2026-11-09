@@ -1,7 +1,7 @@
 import { DEMO_CARDS } from '@/lib/demo-cards';
 import type { DayAnswer } from '@/lib/season-store';
-export const CHALLENGE_KEY = 'rapport-challenge-7-v1';
-export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: string[] };
+export const CHALLENGE_KEY = 'rapport-challenge-7-v2';
+export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: string[]; choiceId?: string };
 export type Feedback = { takeaway: string; character: string; useful: string; difficult: string; change: string; format: string; rating: number };
 export type ChallengeState = {
   name: string;
@@ -15,6 +15,10 @@ export type ChallengeState = {
   feedback?: Feedback;
 };
 export function emptyChallenge(): ChallengeState { return { name: '', assignments: {}, days: {}, drafts: {}, testDrafts: {} }; }
+export function hasPreviousChallenge(): boolean {
+  if (typeof window === 'undefined') return false;
+  try { return Boolean(JSON.parse(window.localStorage.getItem('rapport-challenge-7-v1') || 'null')?.baseline); } catch { return false; }
+}
 export function loadChallenge(): ChallengeState {
   if (typeof window === 'undefined') return emptyChallenge();
   try { const data = JSON.parse(window.localStorage.getItem(CHALLENGE_KEY) || 'null'); return data ? { ...emptyChallenge(), ...data } : emptyChallenge(); } catch { return emptyChallenge(); }
