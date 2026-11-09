@@ -7,7 +7,6 @@ import { CHALLENGE_DAYS, canOpenDay, unlockAt, challengeComplete } from '@/lib/c
 import { hasPreviousChallenge, assignDay, clearChallenge, loadChallenge, saveChallenge, type ChallengeState, type Feedback } from '@/lib/challenge-store';
 import { hasIntroCompleted, loadSeason } from '@/lib/season-store';
 import { useNavigate } from '@tanstack/react-router';
-import { ChallengePreview } from '@/components/challenge-preview';
 import { ChoiceReflection } from '@/components/choice-reflection';
 
 export const Route = createFileRoute('/season')({
@@ -20,7 +19,7 @@ export const Route = createFileRoute('/season')({
   ] }), component: Season,
 });
 
-type Screen = 'overview' | 'day' | 'feedback' | 'preview';
+type Screen = 'overview' | 'day' | 'feedback';
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
   const navigate = useNavigate();
@@ -45,7 +44,7 @@ function Season() {
   };
   const go = (next: Screen) => {setScreen(next); window.scrollTo(0,0);};
   if (!state) return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground" />;
-  if (!introDone && screen !== 'preview') return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground"><div className="mx-auto max-w-md space-y-6 px-6 py-16"><Logo className="h-16 w-16 text-4xl" /><h1 className="text-4xl font-semibold">Сначала — знакомство с собой</h1><Btn onClick={() => navigate({to: '/'})}>К первой карте</Btn><section className="space-y-3 border-t border-border pt-5"><h2 className="text-2xl">Просмотр всех дней</h2>{CHALLENGE_DAYS.map((p,i) => <Btn key={p.title} variant="ghost" onClick={() => {setActiveDay(i+1); go('preview');}}>День {i+1} · {p.title}</Btn>)}</section></div></main>;
+  if (!introDone) return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground"><div className="mx-auto max-w-md space-y-6 px-6 py-16"><Logo className="h-16 w-16 text-4xl" /><h1 className="text-4xl font-semibold">Сначала — знакомство с собой</h1><Btn onClick={() => navigate({to: '/'})}>К первой карте</Btn></div></main>;
   const completed = challengeComplete(state);
   const passed = Object.keys(state.days).length;
   const feedback = state.feedback ?? initialFeedback;
@@ -80,7 +79,6 @@ function Season() {
             {entry ? <details className="mt-3"><summary className="cursor-pointer text-sm text-muted-foreground">{entry.stage} · Твои ответы</summary><div className="mt-4 space-y-4 text-sm">
               <ChoiceReflection answer={entry} />
             </div></details> : available ? <Btn className="mt-4" onClick={() => open(day)}>{state.assignments[day] ? 'Продолжить карту' : 'Вытянуть карту'}</Btn> : <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{!state.startedAt ? 'После начала челленджа' : date && now < date ? `Откроется ${date.toLocaleDateString('ru-RU')} по времени этого устройства, после предыдущего дня.` : 'Сначала заверши предыдущий день.'}</p>}
-            <Btn className="mt-3" variant="ghost" onClick={() => {setActiveDay(day); go('preview');}}>Посмотреть день {day}</Btn>
           </li>;
         })}</ol>
         {completed && <Btn onClick={() => go('feedback')}>Обратная связь и следующий шаг</Btn>}
@@ -88,7 +86,6 @@ function Season() {
         {state.startedAt && <Btn variant="ghost" onClick={() => setResetPrompt(true)}>Начать челлендж заново</Btn>}
         <p className="text-xs text-muted-foreground">Ответы хранятся только в этом браузере, не отправляются организатору и не доступны с другого устройства. Новый день открывается в полночь по местному времени; пропущенные дни можно пройти позже.</p>
       </div>}
-      {screen === 'preview' && <ChallengePreview key={activeDay} day={activeDay} onClose={() => go('overview')} />}
       {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeDay key={activeDay} day={activeDay} card={card} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
         if (!canOpenDay(state,activeDay)) return;
         if (persist({...state,days:{...state.days,[activeDay]:entry}})) go('overview');
