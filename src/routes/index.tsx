@@ -5,7 +5,7 @@ import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
 import { seasonDayByStage } from "@/lib/season";
-import { loadSeason, saveSeasonDay, saveSeasonName, hasIntroCompleted } from "@/lib/season-store";
+import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -66,12 +66,10 @@ function Index() {
   const [a2, setA2] = useState("");
   const [a3, setA3] = useState("");
   const [name, setName] = useState("");
-  const [seasonStarted, setSeasonStarted] = useState(false);
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
     const saved = loadSeason();
-    setSeasonStarted(hasIntroCompleted(saved));
     setName(saved.name);
   }, []);
 
@@ -109,7 +107,6 @@ function Index() {
           resource: a3,
           doneAt: new Date().toISOString(),
         });
-        setSeasonStarted(true);
       }
     }
     setStep("cta");
@@ -136,9 +133,6 @@ function Index() {
             <input aria-label="Твоё имя" value={name} onChange={(e) => setName(e.target.value)} placeholder="Твоё имя" className="w-full rounded-full border border-gold/50 bg-night/40 px-6 py-4 text-center text-lg outline-none placeholder:text-night-foreground/40 focus:border-gold" />
             {name.trim() && <Btn onClick={draw}>Вытянуть карту</Btn>}
           </div>
-          {seasonStarted && (
-            <Btn className="mt-5" variant="ghost" onClick={() => navigate({ to: "/season" })}>Челлендж · 7 дней с собой</Btn>
-          )}
           <p className="mt-4 text-center text-xs text-night-foreground/60">Это игра-зеркало, а не психотерапия.</p>
         </div>
       </main>
@@ -245,10 +239,10 @@ function Index() {
             <img src={cardsPhoto.url} alt="Карты игры Раппорт ЖиваЯ" className="h-64 w-full rounded-2xl object-cover gold-frame shadow-card" />
             <h2 className="text-4xl font-semibold leading-tight">{hi ? `${name.trim()}, я вижу твой выбор.` : "Я вижу твой выбор."}<span className="block italic text-muted-foreground">Хочешь продолжить вживую?</span></h2>
             <div className="space-y-3">
-              <Btn onClick={() => navigate({ to: "/season" })}>Челлендж · 7 дней с собой</Btn>
               <Btn disabled>Записаться на живую игру</Btn>
               <Btn variant="night" disabled>Записаться на онлайн-игру</Btn>
               <Btn variant="ghost" disabled>Интенсив «Я живая — Раппорт с собой»</Btn>
+              <Btn onClick={() => navigate({ to: "/season" })}>Челлендж · 7 дней с собой</Btn>
             </div>
             <p className="text-sm text-muted-foreground">Запись откроется, когда появится контакт организатора.</p>
             <Btn variant="ghost" onClick={draw}>Вытянуть ещё карту</Btn>
