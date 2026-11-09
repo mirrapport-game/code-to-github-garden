@@ -7,6 +7,8 @@ import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } fr
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
 import { drawShade, SHADOW_SHADES } from "@/lib/shadow-shades";
 import shadowCover from "@/assets/shadow-shades-cover.jpg";
+import { IntroDialogue } from '@/components/intro-dialogue';
+import type { DialogueTurn } from '@/lib/intro-dialogue';
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "intro" | "card" | "level" | "questions" | "shadow" | "cta";
+type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "shadow" | "cta";
 
 function CoverView({ card }: { card: GameCard }) {
   const [flipped, setFlipped] = useState(false);
@@ -95,6 +97,7 @@ function Index() {
   const [a3, setA3] = useState("");
   const [name, setName] = useState("");
   const [shadeId, setShadeId] = useState("");
+  const [dialogue, setDialogue] = useState<DialogueTurn[]>([]);
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
@@ -112,6 +115,7 @@ function Index() {
     setA2("");
     setA3("");
     setShadeId("");
+    setDialogue([]);
   };
 
   const draw = () => {
@@ -120,6 +124,12 @@ function Index() {
     setCard(next);
     setShadeId(drawShade(next?.id, next?.stage ?? "", [])?.id ?? "");
     setLevel(null);
+    setFeelings([]);
+    setBody([]);
+    setA1('');
+    setA2('');
+    setA3('');
+    setDialogue([]);
     setStep("card");
   };
 
@@ -135,6 +145,8 @@ function Index() {
           hurt: a1,
           shadow: a2,
           resource: a3,
+          cardId: card.id,
+          dialogue,
           shadeId,
           doneAt: new Date().toISOString(),
         });
@@ -227,18 +239,31 @@ function Index() {
               <Chips items={BODY} value={body} onChange={setBody} />
             </section>
             <section className="space-y-3">
-              <p className="font-semibold">Что именно тебя здесь задевает? Какая фраза, жест?</p>
-              <textarea value={a1} onChange={(e) => setA1(e.target.value)} className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
+              <label htmlFor="intro-hurt" className="block font-semibold">Что в этой ситуации задевает тебя больше всего?</label>
+              <textarea id="intro-hurt" value={a1} onChange={(e) => setA1(e.target.value)} className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
             </section>
             <section className="space-y-3">
-              <p className="font-semibold">Что ты не разрешаешь себе в такой момент?</p>
-              <textarea value={a2} onChange={(e) => setA2(e.target.value)} placeholder="Я не разрешаю себе…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
+              <label htmlFor="intro-shadow" className="block font-semibold">Что тебе хочется сказать или сделать, но ты себя останавливаешь?</label>
+              <textarea id="intro-shadow" value={a2} onChange={(e) => setA2(e.target.value)} placeholder="Мне хочется… но я не разрешаю себе…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
             </section>
             <section className="space-y-3">
-              <p className="font-semibold">Что бы ты ответила подруге?</p>
-              <textarea value={a3} onChange={(e) => setA3(e.target.value)} placeholder="Я чувствую… когда… мне важно…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
+              <label htmlFor="intro-resource" className="block font-semibold">Что тебе сейчас важно и что поможет поддержать себя?</label>
+              <textarea id="intro-resource" value={a3} onChange={(e) => setA3(e.target.value)} placeholder="Мне важно… Я могу поддержать себя…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
             </section>
-            <Btn onClick={() => setStep("shadow")}>Знакомство с Тенью</Btn>
+            <Btn onClick={() => setStep("dialogue")}>Отыграть диалог</Btn>
+          </div>
+        )}
+
+        {step === 'dialogue' && card && level && (
+          <div className="space-y-6 animate-rise">
+            <ScenarioHeader card={card} />
+            <div className="border-l-2 border-gold pl-4 text-sm leading-relaxed text-muted-foreground">
+              <p>{card.context}</p>
+              <p className="mt-3">{card.levels[level].text}</p>
+            </div>
+            <IntroDialogue turns={dialogue} onChange={setDialogue} />
+            <Btn onClick={() => setStep('shadow')}>{dialogue.length ? 'Завершить диалог · к Тени' : 'Пропустить диалог · к Тени'}</Btn>
+            <Btn variant="ghost" onClick={() => setStep('questions')}>Вернуться к чувствам и вопросам</Btn>
           </div>
         )}
 
@@ -252,14 +277,21 @@ function Index() {
             </div>
             {[
               ["Что тебя задело", a1 || "—"],
-              ["Тень", a2 || "Я не разрешаю себе…"],
-              ["Ресурс — что можно забрать", a3 || "Твой ответ — это уже твой голос."],
+              ["То, что пока трудно разрешить себе", a2 || "Можно оставить этот вопрос открытым."],
+              ["Ресурс — твоя поддержка", a3 || "Что поможет тебе почувствовать больше опоры?"],
             ].map(([k, v]) => (
               <div key={k} className="rounded-2xl border border-border bg-card p-6">
                 <p className="text-xs uppercase tracking-[0.2em] text-gold">{k}</p>
                 <p className="mt-2 font-display text-2xl leading-snug">{v}</p>
               </div>
             ))}
+            {dialogue.length > 0 && <section className="space-y-3 border-t border-border pt-5">
+              <h3 className="text-2xl font-semibold">Твой диалог</h3>
+              {dialogue.map((turn, index) => <div key={index} className="border-l-2 border-gold pl-4">
+                <p className="text-xs text-muted-foreground">{turn.role === 'participant' ? 'Ты' : 'Предполагаемый ответ другой стороны'}</p>
+                <p className="mt-1 whitespace-pre-wrap break-words">{turn.text}</p>
+              </div>)}
+            </section>}
             {feelings.length > 0 && <p className="text-center text-muted-foreground">Ты заметила: {feelings.join(", ")}{body.length ? ` — ${body.join(", ")}` : ""}</p>}
             <Btn onClick={finishDay}>Дальше</Btn>
           </div>
