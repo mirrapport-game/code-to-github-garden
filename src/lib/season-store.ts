@@ -1,4 +1,5 @@
 import type { LevelKey } from "@/lib/cards";
+import type { DialogueTurn } from "@/lib/intro-dialogue";
 
 const KEY = "rapport-season-1";
 
@@ -12,8 +13,10 @@ export type DayAnswer = {
   hurt: string;
   /** The shadow — what she does not allow herself. */
   shadow: string;
-  /** The resource — what she would tell a friend. */
+  /** The resource — the support she chooses for herself. */
   resource: string;
+  cardId?: string;
+  dialogue?: DialogueTurn[];
   shadeId?: string | undefined;
   doneAt: string;
 };
