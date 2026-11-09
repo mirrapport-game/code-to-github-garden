@@ -13,6 +13,13 @@ describe('Original card library', () => {
     expect(PLAYABLE_CARDS.some(c => c.id === 'inner-girl-8')).toBe(false);
     expect(PLAYABLE_CARDS.some(c => c.id === 'society-7')).toBe(false);
   });
+  it('includes complete motherhood and society scenarios in random play', () => {
+    expect(PLAYABLE_CARDS).toHaveLength(132);
+    expect(PLAYABLE_CARDS.filter(c => c.stage === 'Материнство')).toHaveLength(15);
+    expect(PLAYABLE_CARDS.filter(c => c.stage === 'В социуме')).toHaveLength(9);
+    expect(cardsForTheme('Просьба о помощи').some(c => c.id === 'motherhood-9')).toBe(true);
+    expect(cardsForTheme('Границы').some(c => c.id === 'society-5')).toBe(true);
+  });
   it.each(DEMO_THEMES)('links %s to complete original cards', theme => {
     expect(cardsForTheme(theme).length).toBeGreaterThan(0);
     expect(cardsForTheme(theme).every(c => c.source === 'official' && c.cover)).toBe(true);
