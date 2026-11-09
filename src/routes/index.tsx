@@ -5,14 +5,21 @@ import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
-import { IntroDialogue } from '@/components/intro-dialogue';
-import type { DialogueTurn } from '@/lib/intro-dialogue';
+import { IntroTrainer } from "@/components/intro-trainer";
+import { clearTrainer, loadTrainer } from "@/lib/intro-trainer";
+import { PLAYABLE_CARDS } from "@/lib/official-cards";
+import type { UIMessage } from "ai";
+import type { DialogueTurn } from "@/lib/intro-dialogue";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Раппорт: ЖиваЯ — вытяни свою карту" },
-      { name: "description", content: "Вытяни карту, попробуй диалог и заметь свои чувства. Ближе к себе, ближе к другим." },
+      {
+        name: "description",
+        content:
+          "Вытяни карту, попробуй диалог и заметь свои чувства. Ближе к себе, ближе к другим.",
+      },
       { property: "og:title", content: "Раппорт: ЖиваЯ — вытяни свою карту" },
       { property: "og:description", content: "Игра-зеркало для женщин. Без оценок и советов." },
       { property: "og:type", content: "website" },
@@ -22,7 +29,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "reflection" | "cta";
+type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "cta";
 
 function CoverView({ card }: { card: GameCard }) {
   const [flipped, setFlipped] = useState(false);
@@ -33,15 +40,23 @@ function CoverView({ card }: { card: GameCard }) {
         aria-label="Перевернуть карту"
         className={`relative block aspect-[2/3] w-full transition-transform duration-700 [transform-style:preserve-3d] ${flipped ? "[transform:rotateY(180deg)]" : ""}`}
       >
-        <img src={card.cover} alt={`Карта «${card.stage}»`} className="gold-frame absolute inset-0 h-full w-full rounded-2xl object-cover shadow-card [backface-visibility:hidden]" />
+        <img
+          src={card.cover}
+          alt={`Карта «${card.stage}»`}
+          className="gold-frame absolute inset-0 h-full w-full rounded-2xl object-cover shadow-card [backface-visibility:hidden]"
+        />
         <div className="gold-frame absolute inset-0 flex flex-col justify-center gap-4 overflow-auto rounded-2xl bg-card p-6 text-center shadow-card [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <span className="mx-auto rounded-md bg-level-soft px-3 py-0.5 font-display text-xs uppercase tracking-[0.3em] text-level-foreground">Этап</span>
+          <span className="mx-auto rounded-md bg-level-soft px-3 py-0.5 font-display text-xs uppercase tracking-[0.3em] text-level-foreground">
+            Этап
+          </span>
           <p className="font-display text-2xl font-semibold uppercase">{card.stage}</p>
           <p className="font-display text-xl font-semibold text-level-hard">{card.scenario}</p>
           <p className="text-sm leading-relaxed text-muted-foreground">{card.context}</p>
         </div>
       </button>
-      <p className="mt-3 text-center text-xs text-muted-foreground">Нажми на карту, чтобы перевернуть</p>
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        Нажми на карту, чтобы перевернуть
+      </p>
     </div>
   );
 }
@@ -49,7 +64,9 @@ function CoverView({ card }: { card: GameCard }) {
 function ScenarioHeader({ card }: { card: GameCard }) {
   return (
     <div className="text-center">
-      <span className="rounded-md bg-level-soft px-4 py-1 font-display text-sm uppercase tracking-[0.3em] text-level-foreground">Этап</span>
+      <span className="rounded-md bg-level-soft px-4 py-1 font-display text-sm uppercase tracking-[0.3em] text-level-foreground">
+        Этап
+      </span>
       <h2 className="mt-3 text-3xl font-semibold uppercase tracking-wide">{card.stage}</h2>
       <p className="mt-4 font-display text-2xl font-semibold text-level-hard">{card.scenario}</p>
     </div>
@@ -63,61 +80,71 @@ function Index() {
   const [level, setLevel] = useState<LevelKey | null>(null);
   const [feelings, setFeelings] = useState<string[]>([]);
   const [body, setBody] = useState<string[]>([]);
-  const [a1, setA1] = useState("");
-  const [a2, setA2] = useState("");
-  const [a3, setA3] = useState("");
   const [name, setName] = useState("");
   const [dialogue, setDialogue] = useState<DialogueTurn[]>([]);
+  const [trainerMessages, setTrainerMessages] = useState<UIMessage[]>([]);
+  const [aiSummary, setAiSummary] = useState("");
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
     const saved = loadSeason();
     setName(saved.name);
+    const trainer = loadTrainer();
+    const savedCard = PLAYABLE_CARDS.find((c) => c.id === trainer?.cardId);
+    if (trainer && savedCard && trainer.messages.length) {
+      setCard(savedCard);
+      setLevel(trainer.level);
+      setTrainerMessages(trainer.messages);
+      setAiSummary(trainer.summary);
+      setStep("dialogue");
+    }
   }, []);
 
   const reset = () => {
+    clearTrainer();
     setStep("intro");
     setCard(null);
     setLevel(null);
     setFeelings([]);
     setBody([]);
-    setA1("");
-    setA2("");
-    setA3("");
     setDialogue([]);
+    setTrainerMessages([]);
+    setAiSummary("");
   };
 
   const draw = () => {
+    clearTrainer();
     saveSeasonName(name.trim());
     const next = drawCard(card ?? undefined) ?? null;
     setCard(next);
     setLevel(null);
     setFeelings([]);
     setBody([]);
-    setA1('');
-    setA2('');
-    setA3('');
     setDialogue([]);
+    setTrainerMessages([]);
+    setAiSummary("");
     setStep("card");
   };
 
-  const finishDay = () => {
+  const finishDay = (completedDialogue = dialogue, completedSummary = aiSummary) => {
     if (card && level) {
-        saveSeasonName(name.trim());
-        saveSeasonDay({
-          day: 1,
-          stage: card.stage,
-          level,
-          feelings,
-          body,
-          hurt: a1,
-          shadow: a2,
-          resource: a3,
-          cardId: card.id,
-          dialogue,
-          doneAt: new Date().toISOString(),
-        });
+      saveSeasonName(name.trim());
+      saveSeasonDay({
+        day: 1,
+        stage: card.stage,
+        level,
+        feelings,
+        body,
+        hurt: "",
+        shadow: "",
+        resource: "",
+        cardId: card.id,
+        dialogue: completedDialogue,
+        aiSummary: completedSummary,
+        doneAt: new Date().toISOString(),
+      });
     }
+    clearTrainer();
     setStep("cta");
   };
 
@@ -129,20 +156,38 @@ function Index() {
             <Logo className="h-16 w-16 text-4xl" />
             <h1 className="mt-5 text-5xl font-semibold leading-none text-gold-gradient">Раппорт</h1>
             <p className="mt-1 font-display text-3xl italic text-gold-soft">— ЖиваЯ —</p>
-            <p className="mt-4 text-sm uppercase tracking-[0.3em] text-gold-soft/80">ближе к себе · ближе к другим</p>
+            <p className="mt-4 text-sm uppercase tracking-[0.3em] text-gold-soft/80">
+              ближе к себе · ближе к другим
+            </p>
           </div>
-          <img src={box.url} alt="Коробка игры Раппорт ЖиваЯ" className="mt-8 rounded-2xl gold-frame shadow-card animate-rise" />
+          <img
+            src={box.url}
+            alt="Коробка игры Раппорт ЖиваЯ"
+            className="mt-8 rounded-2xl gold-frame shadow-card animate-rise"
+          />
           <div className="mt-8 space-y-3 rounded-2xl border border-gold/30 bg-night/40 p-6 text-[15px] leading-relaxed animate-rise">
             <p>✦ Ты играешь роль, а не себя.</p>
             <p>✦ Здесь нет правильных ответов.</p>
-            <p>✦ Если страшно — нажми <b className="text-gold">СТОП</b>. Без объяснений.</p>
+            <p>
+              ✦ Если страшно — нажми <b className="text-gold">СТОП</b>. Без объяснений.
+            </p>
           </div>
           <div className="mt-8 space-y-3">
-            <label className="block text-center font-display text-xl italic text-gold-soft">Как к тебе можно обращаться?</label>
-            <input aria-label="Твоё имя" value={name} onChange={(e) => setName(e.target.value)} placeholder="Твоё имя" className="w-full rounded-full border border-gold/50 bg-night/40 px-6 py-4 text-center text-lg outline-none placeholder:text-night-foreground/40 focus:border-gold" />
+            <label className="block text-center font-display text-xl italic text-gold-soft">
+              Как к тебе можно обращаться?
+            </label>
+            <input
+              aria-label="Твоё имя"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Твоё имя"
+              className="w-full rounded-full border border-gold/50 bg-night/40 px-6 py-4 text-center text-lg outline-none placeholder:text-night-foreground/40 focus:border-gold"
+            />
             {name.trim() && <Btn onClick={draw}>Вытянуть карту</Btn>}
           </div>
-          <p className="mt-4 text-center text-xs text-night-foreground/60">Это игра-зеркало, а не психотерапия.</p>
+          <p className="mt-4 text-center text-xs text-night-foreground/60">
+            Это игра-зеркало, а не психотерапия.
+          </p>
         </div>
       </main>
     );
@@ -157,7 +202,9 @@ function Index() {
             <CoverView card={card} />
             <div className="space-y-3">
               <Btn onClick={() => setStep("level")}>Открыть карту</Btn>
-              <Btn variant="ghost" onClick={draw}>Вытянуть другую</Btn>
+              <Btn variant="ghost" onClick={draw}>
+                Вытянуть другую
+              </Btn>
             </div>
           </div>
         )}
@@ -169,35 +216,65 @@ function Index() {
               <p className="text-xs uppercase tracking-[0.2em] text-gold">Контекст</p>
               <p className="mt-2 leading-relaxed">{card.context}</p>
             </div>
-            <p className="text-center font-display text-xl italic">Выбери, с какой силой ты готова встретиться</p>
+            <p className="text-center font-display text-xl italic">
+              Выбери, с какой силой ты готова встретиться
+            </p>
             <div className="space-y-3">
               {(Object.keys(LEVEL_META) as LevelKey[]).map((k) => {
                 const m = LEVEL_META[k];
                 const on = level === k;
                 return (
-                  <div key={k} className={`overflow-hidden rounded-2xl border bg-card transition ${on ? "border-gold shadow-glow" : "border-border"}`}>
-                    <button onClick={() => setLevel(k)} className="flex w-full items-center gap-4 p-4 text-left">
-                      <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-xl ${m.bg}`}>{m.icon}</span>
+                  <div
+                    key={k}
+                    className={`overflow-hidden rounded-2xl border bg-card transition ${on ? "border-gold shadow-glow" : "border-border"}`}
+                  >
+                    <button
+                      onClick={() => setLevel(k)}
+                      className="flex w-full items-center gap-4 p-4 text-left"
+                    >
+                      <span
+                        className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-xl ${m.bg}`}
+                      >
+                        {m.icon}
+                      </span>
                       <span>
-                        <span className={`block text-xs font-bold uppercase tracking-widest ${m.text}`}>{m.label}</span>
-                        <span className="font-display text-xl font-semibold">{card.levels[k].title}</span>
+                        <span
+                          className={`block text-xs font-bold uppercase tracking-widest ${m.text}`}
+                        >
+                          {m.label}
+                        </span>
+                        <span className="font-display text-xl font-semibold">
+                          {card.levels[k].title}
+                        </span>
                       </span>
                     </button>
-                    {on && <p className="animate-rise px-5 pb-5 leading-relaxed text-muted-foreground">{card.levels[k].text}</p>}
+                    {on && (
+                      <p className="animate-rise px-5 pb-5 leading-relaxed text-muted-foreground">
+                        {card.levels[k].text}
+                      </p>
+                    )}
                   </div>
                 );
               })}
             </div>
             {level && <Btn onClick={() => setStep("questions")}>Войти в эту ситуацию</Btn>}
-            <p className="text-center text-xs text-muted-foreground">Ты всегда можешь выбрать мягче. Это твой выбор.</p>
+            <p className="text-center text-xs text-muted-foreground">
+              Ты всегда можешь выбрать мягче. Это твой выбор.
+            </p>
           </div>
         )}
 
         {step === "questions" && card && level && (
           <div className="space-y-8 animate-rise">
             <div className="rounded-2xl border border-border bg-card p-5">
-              <p className={`text-xs font-bold uppercase tracking-widest ${LEVEL_META[level].text}`}>{LEVEL_META[level].label} · {card.levels[level].title}</p>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{card.levels[level].text}</p>
+              <p
+                className={`text-xs font-bold uppercase tracking-widest ${LEVEL_META[level].text}`}
+              >
+                {LEVEL_META[level].label} · {card.levels[level].title}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {card.levels[level].text}
+              </p>
             </div>
             <section className="space-y-3">
               <p className="font-semibold">{hi}что ты чувствуешь, проживая сценарий на карте?</p>
@@ -205,76 +282,64 @@ function Index() {
               <p className="pt-2 text-sm text-muted-foreground">Где в теле отклик?</p>
               <Chips items={BODY} value={body} onChange={setBody} />
             </section>
-            <section className="space-y-3">
-              <label htmlFor="intro-hurt" className="block font-semibold">Что в этой ситуации задевает тебя больше всего?</label>
-              <textarea id="intro-hurt" value={a1} onChange={(e) => setA1(e.target.value)} className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
-            </section>
-            <section className="space-y-3">
-              <label htmlFor="intro-shadow" className="block font-semibold">Что тебе хочется сказать или сделать, но ты себя останавливаешь?</label>
-              <textarea id="intro-shadow" value={a2} onChange={(e) => setA2(e.target.value)} placeholder="Мне хочется… но я не разрешаю себе…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
-            </section>
-            <section className="space-y-3">
-              <label htmlFor="intro-resource" className="block font-semibold">Что тебе сейчас важно и что поможет поддержать себя?</label>
-              <textarea id="intro-resource" value={a3} onChange={(e) => setA3(e.target.value)} placeholder="Мне важно… Я могу поддержать себя…" className="min-h-20 w-full rounded-xl border border-input bg-card p-4 outline-none focus:border-gold" />
-            </section>
-            <Btn onClick={() => setStep("dialogue")}>Отыграть диалог</Btn>
+            <Btn onClick={() => setStep("dialogue")}>Попробовать диалог с ИИ</Btn>
           </div>
         )}
 
-        {step === 'dialogue' && card && level && (
+        {step === "dialogue" && card && level && (
           <div className="space-y-6 animate-rise">
             <ScenarioHeader card={card} />
             <div className="border-l-2 border-gold pl-4 text-sm leading-relaxed text-muted-foreground">
               <p>{card.context}</p>
               <p className="mt-3">{card.levels[level].text}</p>
             </div>
-            <IntroDialogue turns={dialogue} onChange={setDialogue} />
-            <Btn onClick={() => setStep('reflection')}>{dialogue.length ? 'Завершить диалог · что я заметила' : 'Пропустить диалог · что я заметила'}</Btn>
-            <Btn variant="ghost" onClick={() => setStep('questions')}>Вернуться к чувствам и вопросам</Btn>
-          </div>
-        )}
-
-        {step === "reflection" && card && (
-          <div className="space-y-6 animate-rise">
-            <div className="gold-frame rounded-2xl bg-night-gradient p-8 text-night-foreground shadow-card">
-              <p className="font-display text-xl italic leading-relaxed text-gold-soft">
-                {hi}ты попробовала побыть в этой роли. Что оказалось знакомым? Посмотри на свои ответы: что тебя задело, что хотелось сказать и что может поддержать тебя.
-              </p>
-            </div>
-            {[
-              ["Что тебя задело", a1 || "—"],
-              ["Что хочется сказать или сделать", a2 || "Можно оставить этот вопрос открытым."],
-              ["Что может поддержать тебя", a3 || "Что поможет тебе почувствовать больше опоры?"],
-            ].map(([k, v]) => (
-              <div key={k} className="rounded-2xl border border-border bg-card p-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-gold">{k}</p>
-                <p className="mt-2 font-display text-2xl leading-snug">{v}</p>
-              </div>
-            ))}
-            {dialogue.length > 0 && <section className="space-y-3 border-t border-border pt-5">
-              <h3 className="text-2xl font-semibold">Твой диалог</h3>
-              {dialogue.map((turn, index) => <div key={index} className="border-l-2 border-gold pl-4">
-                <p className="text-xs text-muted-foreground">{turn.role === 'participant' ? 'Ты' : 'Предполагаемый ответ другой стороны'}</p>
-                <p className="mt-1 whitespace-pre-wrap break-words">{turn.text}</p>
-              </div>)}
-            </section>}
-            {feelings.length > 0 && <p className="text-center text-muted-foreground">Ты заметила: {feelings.join(", ")}{body.length ? ` — ${body.join(", ")}` : ""}</p>}
-            <Btn onClick={finishDay}>Дальше</Btn>
+            {card.id && (
+              <IntroTrainer
+                key={`${card.id}-${level}`}
+                cardId={card.id}
+                level={level}
+                initialMessages={trainerMessages}
+                initialSummary={aiSummary}
+                onComplete={(turns, summary) => {
+                  setDialogue(turns);
+                  setAiSummary(summary);
+                  finishDay(turns, summary);
+                }}
+              />
+            )}
+            <Btn variant="ghost" onClick={() => setStep("questions")}>
+              Вернуться к чувствам
+            </Btn>
           </div>
         )}
 
         {step === "cta" && (
           <div className="space-y-6 animate-rise">
-            <img src={cardsPhoto.url} alt="Карты игры Раппорт ЖиваЯ" className="h-64 w-full rounded-2xl object-cover gold-frame shadow-card" />
-            <h2 className="text-4xl font-semibold leading-tight">{hi ? `${name.trim()}, я вижу твой выбор.` : "Я вижу твой выбор."}<span className="block italic text-muted-foreground">Хочешь продолжить вживую?</span></h2>
+            <img
+              src={cardsPhoto.url}
+              alt="Карты игры Раппорт ЖиваЯ"
+              className="h-64 w-full rounded-2xl object-cover gold-frame shadow-card"
+            />
+            <h2 className="text-4xl font-semibold leading-tight">
+              {hi ? `${name.trim()}, я вижу твой выбор.` : "Я вижу твой выбор."}
+              <span className="block italic text-muted-foreground">Хочешь продолжить вживую?</span>
+            </h2>
             <div className="space-y-3">
               <Btn disabled>Записаться на живую игру</Btn>
-              <Btn variant="night" disabled>Записаться на онлайн-игру</Btn>
-              <Btn variant="ghost" disabled>Интенсив «Я живая — Раппорт с собой»</Btn>
+              <Btn variant="night" disabled>
+                Записаться на онлайн-игру
+              </Btn>
+              <Btn variant="ghost" disabled>
+                Интенсив «Я живая — Раппорт с собой»
+              </Btn>
               <Btn onClick={() => navigate({ to: "/season" })}>Челлендж · 7 дней с собой</Btn>
             </div>
-            <p className="text-sm text-muted-foreground">Запись откроется, когда появится контакт организатора.</p>
-            <Btn variant="ghost" onClick={draw}>Вытянуть ещё карту</Btn>
+            <p className="text-sm text-muted-foreground">
+              Запись откроется, когда появится контакт организатора.
+            </p>
+            <Btn variant="ghost" onClick={draw}>
+              Вытянуть ещё карту
+            </Btn>
           </div>
         )}
       </div>

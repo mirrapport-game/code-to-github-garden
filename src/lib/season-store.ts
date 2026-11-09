@@ -17,6 +17,7 @@ export type DayAnswer = {
   resource: string;
   cardId?: string | undefined;
   dialogue?: DialogueTurn[];
+  aiSummary?: string;
   shadeId?: string | undefined;
   doneAt: string;
 };
