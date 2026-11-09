@@ -11,6 +11,15 @@ describe('Seven-day challenge', () => {
   it('has exactly seven days and practices', () => {expect(CHALLENGE_LENGTH).toBe(7); expect(PRACTICES).toHaveLength(7);});
   it('draws from all nine requested themes', () => {expect(DEMO_CARDS.map(c => c.stage)).toEqual(['Границы','Просьба о помощи','Влияние','Дистанция','Слабость','Наглость','Жертва','Манипуляция','Холодность']); expect(DEMO_THEMES).toHaveLength(9);});
   it('assigns seven distinct random cards', () => {let state: ChallengeState = started(); for(let day=1;day<=7;day++) state = assignDay(state,day,() => 0.5); expect(new Set(Object.values(state.assignments)).size).toBe(7);});
+  it('never repeats a sphere even when the random draw always returns the same value', () => {
+    let state: ChallengeState = started();
+    for (let day = 1; day <= 7; day++) {
+      const previous = Object.values(state.assignments);
+      state = assignDay(state, day, () => 0);
+      expect(previous).not.toContain(state.assignments[day]);
+    }
+    expect(Object.values(state.assignments)).toEqual(DEMO_THEMES.slice(0,7));
+  });
   it('keeps the same card after reload', () => {const state=assignDay(started(),1,() => 0); saveChallenge(state); expect(assignDay(loadChallenge(),1,() => 0.99).assignments[1]).toBe('Границы');});
   it('requires starting the challenge before a card', () => {expect(canOpenDay(emptyChallenge(),1,new Date(2026,10,9,23))).toBe(false);});
   it('opens the first card without an entry test', () => {expect(canOpenDay({...emptyChallenge(),startedAt:new Date(2026,10,9,22).toISOString()},1,new Date(2026,10,9,23))).toBe(true);});
