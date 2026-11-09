@@ -7,6 +7,8 @@ import { DEMO_CARDS, DEMO_THEMES } from '@/lib/demo-cards';
 import { PRACTICES, canOpenDay, unlockAt, challengeComplete } from '@/lib/challenge';
 import { assignDay, clearChallenge, loadChallenge, saveChallenge, type ChallengeState, type Feedback } from '@/lib/challenge-store';
 import { scoreTest, suggestedLevel } from '@/lib/self-test';
+import { hasIntroCompleted, loadSeason } from '@/lib/season-store';
+import { useNavigate } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
@@ -21,19 +23,29 @@ export const Route = createFileRoute('/season')({
 type Screen = 'overview' | 'before' | 'after' | 'profile' | 'day' | 'feedback';
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
+  const navigate = useNavigate();
   const [state, setState] = useState<ChallengeState | null>(null);
+  const [introDone, setIntroDone] = useState(false);
   const [screen, setScreen] = useState<Screen>('overview');
   const [activeDay, setActiveDay] = useState(1);
   const [now, setNow] = useState(new Date());
   const [error, setError] = useState('');
   const [resetPrompt, setResetPrompt] = useState(false);
-  useEffect(() => {setState(loadChallenge()); const id = setInterval(() => setNow(new Date()),30000); return () => clearInterval(id);},[]);
+  useEffect(() => {
+    const saved = loadChallenge();
+    const intro = loadSeason();
+    setIntroDone(hasIntroCompleted(intro) || Boolean(saved.baseline));
+    setState({...saved, name: saved.name || intro.name});
+    const id = setInterval(() => setNow(new Date()),30000);
+    return () => clearInterval(id);
+  },[]);
   const persist = (next: ChallengeState) => {
     try {saveChallenge(next); setState(next); setError(''); return true;}
     catch {setError('Не удалось сохранить ответы в этом браузере. Разреши хранение данных или освободи место и попробуй снова.'); return false;}
   };
   const go = (next: Screen) => {setScreen(next); window.scrollTo(0,0);};
   if (!state) return <main className="min-h-screen bg-background" />;
+  if (!introDone) return <main className="min-h-screen bg-night-gradient text-night-foreground"><div className="mx-auto max-w-md space-y-6 px-6 py-16"><Logo className="h-16 w-16 text-4xl" /><h1 className="text-4xl font-semibold">Сначала — знакомство с собой</h1><Btn onClick={() => navigate({to: '/'})}>К первой карте</Btn></div></main>;
   const completed = challengeComplete(state);
   const passed = Object.keys(state.days).length;
   const feedback = state.feedback ?? initialFeedback;
