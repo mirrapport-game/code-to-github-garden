@@ -3,7 +3,7 @@ import { Btn } from '@/components/game-ui';
 import { TEST_GROUPS, TEST_QUESTIONS, scoreTest, profileBand } from '@/lib/self-test';
 
 const SCALE = ['совсем не про меня', 'скорее не про меня', 'иногда так, иногда нет', 'скорее про меня', 'очень про меня'];
-export function SelfTest({ initial, repeated, onDraft, onComplete }: { initial?: number[]; repeated: boolean; onDraft: (v: number[]) => void; onComplete: (v: number[]) => void }) {
+export function SelfTest({ initial, repeated, onDraft, onComplete }: { initial?: number[] | undefined; repeated: boolean; onDraft: (v: number[]) => void; onComplete: (v: number[]) => void }) {
   const [answers, setAnswers] = useState<number[]>(initial ?? Array(24).fill(0));
   const [group, setGroup] = useState(0);
   const section = TEST_GROUPS[group];
@@ -37,7 +37,7 @@ export function SelfTest({ initial, repeated, onDraft, onComplete }: { initial?:
   </div>;
 }
 
-export function TestProfile({ before, after }: { before: number[]; after?: number[] }) {
+export function TestProfile({ before, after }: { before: number[]; after?: number[] | undefined }) {
   const baseline = scoreTest(before);
   const final = after ? scoreTest(after) : null;
   return <section className="space-y-6">

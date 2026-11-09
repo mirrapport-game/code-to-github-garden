@@ -4,7 +4,7 @@ import { BODY, FEELINGS, LEVEL_META, type GameCard, type LevelKey } from '@/lib/
 import { PRACTICES } from '@/lib/challenge';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 
-export function ChallengeDay({ day, card, name, suggested, draft, onDraft, onComplete }: { day: number; card: GameCard; name: string; suggested: LevelKey; draft?: Partial<ChallengeAnswer>; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
+export function ChallengeDay({ day, card, name, suggested, draft, onDraft, onComplete }: { day: number; card: GameCard; name: string; suggested: LevelKey; draft?: Partial<ChallengeAnswer> | undefined; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
   const [step, setStep] = useState<'cover' | 'level' | 'answers'>('cover');
   const [flipped, setFlipped] = useState(false);
   const [answer, setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? { feelings: [], body: [], hurt: '', shadow: '', resource: '', practice: [] });
