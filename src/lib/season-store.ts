@@ -15,7 +15,7 @@ export type DayAnswer = {
   shadow: string;
   /** The resource — the support she chooses for herself. */
   resource: string;
-  cardId?: string;
+  cardId?: string | undefined;
   dialogue?: DialogueTurn[];
   shadeId?: string | undefined;
   doneAt: string;
