@@ -12,7 +12,8 @@ describe('Seven-day challenge', () => {
   it('draws from all nine requested themes', () => {expect(DEMO_CARDS.map(c => c.stage)).toEqual(['Границы','Просьба о помощи','Влияние','Дистанция','Слабость','Наглость','Жертва','Манипуляция','Холодность']); expect(DEMO_THEMES).toHaveLength(9);});
   it('assigns seven distinct random cards', () => {let state: ChallengeState = started(); for(let day=1;day<=7;day++) state = assignDay(state,day,() => 0.5); expect(new Set(Object.values(state.assignments)).size).toBe(7);});
   it('keeps the same card after reload', () => {const state=assignDay(started(),1,() => 0); saveChallenge(state); expect(assignDay(loadChallenge(),1,() => 0.99).assignments[1]).toBe('Границы');});
-  it('requires the baseline before a card', () => {expect(canOpenDay(emptyChallenge(),1,new Date(2026,10,9,23))).toBe(false);});
+  it('requires starting the challenge before a card', () => {expect(canOpenDay(emptyChallenge(),1,new Date(2026,10,9,23))).toBe(false);});
+  it('opens the first card without an entry test', () => {expect(canOpenDay({...emptyChallenge(),startedAt:new Date(2026,10,9,22).toISOString()},1,new Date(2026,10,9,23))).toBe(true);});
   it('opens day two on the next calendar day, not the same evening', () => {const state={...started(),days:{1:entry(1)}}; expect(canOpenDay(state,2,new Date(2026,10,9,23,59))).toBe(false); expect(canOpenDay(state,2,new Date(2026,10,10,0,0))).toBe(true);});
   it('requires previous day completion', () => {expect(canOpenDay(started(),2,new Date(2026,10,10,12))).toBe(false);});
   it('does not allow another card on a completed day', () => {expect(canOpenDay({...started(),days:{1:entry(1)}},1,new Date(2026,10,9,23))).toBe(false);});

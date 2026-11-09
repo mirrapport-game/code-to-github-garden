@@ -37,4 +37,6 @@ use the editor.
 - Keep the original introductory card flow on / and open the challenge on /season after its completion; existing challenge participants retain access. Why: the challenge is an optional continuation, not a replacement for the first experience.
 - Keep thematic questions and non-diagnostic reflection prompts in a browser-safe theme module; store personal theme answers separately from daily practice answers. Why: existing drafts remain compatible and reflections do not pretend to infer psychological traits from free text.
 - Preview all challenge days through a read-only screen independent of scheduling and assignments. Why: content inspection must not mark days complete or alter the participant's random cards.
+- Keep the extended challenge screens in .lovable/future-seasons/extended and their original storage untouched; the simplified challenge uses its own versioned storage. Why: future seasons can reuse the richer flow without mixing incompatible answers.
+- Define four response choices and their non-diagnostic reflections in a browser-safe module shared by daily play, preview and saved results. Why: a selected answer must produce the same reflection after reload.
 
