@@ -14,9 +14,9 @@ import { SelfTest, TestProfile } from '@/components/self-test';
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
     { title: '7 дней с собой — Раппорт: ЖиваЯ' },
-    { name: 'description', content: 'Семь дней с собой: короткие истории о тени и восприятии, случайные карты, личные ответы и тест до и после.' },
+    { name: 'description', content: 'Знакомство с игрой «Раппорт: ЖиваЯ» за семь дней: короткие истории, случайные карты, личные ответы и тест до и после.' },
     { property: 'og:title', content: '7 дней с собой — Раппорт: ЖиваЯ' },
-    { property: 'og:description', content: 'Семь встреч с собой через карты игры и бережные практики.' },
+    { property: 'og:description', content: 'Семь дней знакомства с игрой «Раппорт: ЖиваЯ» перед продолжением онлайн или вживую.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary_large_image' },
   ] }), component: Season,
 });
@@ -64,7 +64,9 @@ function Season() {
         <header className="border-b border-border pb-7">
           <div className="flex items-center gap-4"><Logo className="h-12 w-12 text-2xl" /><p className="text-sm text-muted-foreground">Раппорт: ЖиваЯ</p></div>
           <h1 className="mt-5 text-5xl font-semibold text-gold-gradient">7 дней с собой</h1>
+          <p className="mt-3 text-sm uppercase text-gold">Знакомство с игрой «Раппорт: ЖиваЯ»</p>
           <p className="mt-3 font-display text-2xl italic">{state.name ? `${state.name}, ближе к себе — день за днём.` : 'Ближе к себе — день за днём.'}</p>
+          <p className="mt-4 leading-relaxed text-muted-foreground">Эти семь дней — первая встреча с игрой. Примерь разные ситуации, прислушайся к своим ответам и почувствуй, хочется ли продолжить онлайн или вживую.</p>
           <p className="mt-4 text-sm text-muted-foreground">{passed} из 7 дней пройдено</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gold-gradient" style={{width:`${passed/7*100}%`}} /></div>
         </header>
@@ -111,7 +113,7 @@ function Season() {
         <label className="block space-y-2 font-semibold">С каким персонажем хочешь играть дальше?<select aria-label="Персонаж" value={feedback.character} onChange={e => updateFeedback({character:e.target.value})} className="w-full rounded-lg border border-input bg-card p-3 font-normal"><option value="">Выбери тему</option>{DEMO_THEMES.map(t => <option key={t}>{t}</option>)}</select></label>
         <fieldset><legend className="mb-3 font-semibold">Насколько тебе подошёл челлендж?</legend><div className="flex gap-2">{[1,2,3,4,5].map(v => <Btn key={v} variant={feedback.rating === v ? 'night' : 'ghost'} onClick={() => updateFeedback({rating:v})}>{v}</Btn>)}</div><p className="mt-2 text-xs text-muted-foreground">1 — совсем не подошёл · 5 — очень подошёл</p></fieldset>
         <fieldset><legend className="mb-3 font-semibold">Как хочешь продолжить?</legend><div className="space-y-2">{['Онлайн-игра','Живая игра','Пока не решила'].map(format => <Btn key={format} variant={feedback.format === format ? 'night' : 'ghost'} onClick={() => updateFeedback({format})}>{format}</Btn>)}</div></fieldset>
-        <p className="font-display text-2xl italic">В следующей игре можно встретиться с другими участницами — онлайн или вживую.</p>
+        <p className="font-display text-2xl italic">Ты познакомилась с игрой «Раппорт: ЖиваЯ». Следующая встреча может быть с другими участницами — онлайн или вживую.</p>
         <p className="text-sm text-muted-foreground">Выбор сохранён в этом браузере. Запись пока не открыта — ждём контакты организатора.</p>
         <Btn variant="ghost" onClick={() => {
           const text = ['Раппорт: ЖиваЯ — обратная связь', ...Object.entries(feedback).map(([k,v]) => `${({takeaway:'Что забираю',character:'Персонаж',useful:'Полезное',difficult:'Сложное',change:'Что изменить',format:'Формат',rating:'Отклик'} as Record<string,string>)[k]}: ${v}`)].join('\n\n');
