@@ -140,6 +140,21 @@
   h1, h2, h3, .font-display { font-family: var(--font-display); }
 }
 
+.challenge-theme {
+  --background: var(--night);
+  --foreground: var(--night-foreground);
+  --card: oklch(0.265 0.055 265);
+  --card-foreground: var(--night-foreground);
+  --secondary: oklch(0.32 0.05 265);
+  --secondary-foreground: var(--night-foreground);
+  --muted: oklch(0.3 0.045 265);
+  --muted-foreground: oklch(0.8 0.025 85);
+  --primary: oklch(0.4 0.065 265);
+  --primary-foreground: var(--night-foreground);
+  --border: oklch(0.47 0.045 80);
+  --input: oklch(0.5 0.05 80);
+}
+
 @utility bg-night-gradient { background-image: var(--gradient-night); }
 @utility bg-gold-gradient { background-image: var(--gradient-gold); }
 @utility text-gold-gradient {
