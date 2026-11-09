@@ -5,10 +5,9 @@ import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 import { cardChoices } from '@/lib/card-choices';
 import { ChoiceReflection } from '@/components/choice-reflection';
-import { ShadowCardButton } from '@/components/shadow-card-button';
 
-export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, onDraft, onComplete }: { day: number; card: GameCard; theme?: string; shadeId?: string | undefined; draft?: Partial<ChallengeAnswer> | undefined; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
-  const [step, setStep] = useState<'cover' | 'level' | 'answers' | 'reflection'>('cover');
+export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, introductory = false, onDraft, onComplete }: { day: number; card: GameCard; theme?: string; shadeId?: string | undefined; draft?: Partial<ChallengeAnswer> | undefined; introductory?: boolean; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
+  const [step, setStep] = useState<'cover' | 'level' | 'answers' | 'reflection'>(introductory && draft?.choiceId ? 'reflection' : introductory && draft?.level ? 'answers' : 'cover');
   const [flipped, setFlipped] = useState(false);
   const [answer, setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? {});
   const update = (values: Partial<ChallengeAnswer>) => { const next = {...answer, ...values, shadeId, stage:theme, cardId:card.id, cardStage:card.stage, day}; setAnswer(next); onDraft(next); };
@@ -16,7 +15,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, on
   const choices = answer.level ? cardChoices(theme, answer.level, card.id) : [];
   const selected = choices.find(item => item.id === answer.choiceId);
   return <div className="space-y-6 animate-rise">
-    <p className="text-sm uppercase text-gold">День {day} / 7</p>
+    <p className="text-sm uppercase text-gold">{introductory ? 'Первая карта' : `День ${day} / 7`}</p>
     <h1 className="text-4xl font-semibold">{card.stage}</h1>
     <p className="text-sm text-gold">{theme}{card.source !== 'official' && ' · Демо-сценарий'}</p>
     {step === 'cover' && <>
@@ -44,9 +43,8 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, on
       <Btn variant="ghost" onClick={() => next('level')}>Изменить силу ситуации</Btn>
     </>}
     {step === 'reflection' && selected && <>
-      <ShadowCardButton shadeId={shadeId} answers={answer.shadowAnswers} onAnswers={shadowAnswers => update({shadowAnswers})} />
-      <ChoiceReflection showShade={false} answer={{...answer,stage:theme,cardId:card.id,cardStage:card.stage}} />
-      <Btn onClick={() => onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:[],body:[],hurt:selected.text,shadow:'',resource:selected.resource,practice:[],doneAt:new Date().toISOString()})}>Сохранить день {day}</Btn>
+      <ChoiceReflection showShade={!introductory} onShadowAnswers={shadowAnswers => update({shadowAnswers})} answer={{...answer,shadeId,stage:theme,cardId:card.id,cardStage:card.stage}} />
+      <Btn onClick={() => onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:[],body:[],hurt:selected.text,shadow:'',resource:selected.resource,practice:[],doneAt:new Date().toISOString()})}>{introductory ? 'Завершить первую карту' : `Сохранить день ${day}`}</Btn>
       <Btn variant="ghost" onClick={() => next('answers')}>Выбрать другой ответ</Btn>
     </>}
   </div>;
