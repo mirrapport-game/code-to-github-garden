@@ -2,7 +2,7 @@ import { DEMO_CARDS } from '@/lib/demo-cards';
 import { cardsForTheme } from '@/lib/official-cards';
 import type { DayAnswer } from '@/lib/season-store';
 export const CHALLENGE_KEY = 'rapport-challenge-7-v2';
-export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: string[]; choiceId?: string; cardId?: string; cardStage?: string; responseText?: string };
+export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: string[]; choiceId?: string; cardId?: string | undefined; cardStage?: string; responseText?: string };
 export type Feedback = { takeaway: string; character: string; useful: string; difficult: string; change: string; format: string; rating: number };
 export type ChallengeState = {
   name: string;
