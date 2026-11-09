@@ -12,10 +12,14 @@ export function Btn({
   children,
   onClick,
   variant = "gold",
+  disabled = false,
+  className = "",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   variant?: "gold" | "ghost" | "night";
+  disabled?: boolean;
+  className?: string;
 }) {
   const v = {
     gold: "bg-gold-gradient text-accent-foreground shadow-glow hover:brightness-105",
@@ -23,7 +27,7 @@ export function Btn({
     ghost: "border border-gold/60 text-current hover:bg-gold/10",
   }[variant];
   return (
-    <button onClick={onClick} className={`w-full rounded-full px-6 py-4 text-base font-semibold tracking-wide transition ${v}`}>
+    <button onClick={onClick} disabled={disabled} className={`w-full rounded-full px-6 py-4 text-base font-semibold tracking-wide transition disabled:cursor-not-allowed disabled:opacity-40 ${v} ${className}`}>
       {children}
     </button>
   );
