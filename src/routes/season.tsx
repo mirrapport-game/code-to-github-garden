@@ -9,6 +9,8 @@ import { assignDay, clearChallenge, loadChallenge, saveChallenge, type Challenge
 import { scoreTest, suggestedLevel } from '@/lib/self-test';
 import { hasIntroCompleted, loadSeason } from '@/lib/season-store';
 import { useNavigate } from '@tanstack/react-router';
+import { ChallengePreview } from '@/components/challenge-preview';
+import { DayReflection } from '@/components/day-reflection';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
@@ -20,7 +22,7 @@ export const Route = createFileRoute('/season')({
   ] }), component: Season,
 });
 
-type Screen = 'overview' | 'before' | 'after' | 'profile' | 'day' | 'feedback';
+type Screen = 'overview' | 'before' | 'after' | 'profile' | 'day' | 'feedback' | 'preview';
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
   const navigate = useNavigate();
@@ -44,8 +46,8 @@ function Season() {
     catch {setError('Не удалось сохранить ответы в этом браузере. Разреши хранение данных или освободи место и попробуй снова.'); return false;}
   };
   const go = (next: Screen) => {setScreen(next); window.scrollTo(0,0);};
-  if (!state) return <main className="min-h-screen bg-background" />;
-  if (!introDone) return <main className="min-h-screen bg-night-gradient text-night-foreground"><div className="mx-auto max-w-md space-y-6 px-6 py-16"><Logo className="h-16 w-16 text-4xl" /><h1 className="text-4xl font-semibold">Сначала — знакомство с собой</h1><Btn onClick={() => navigate({to: '/'})}>К первой карте</Btn></div></main>;
+  if (!state) return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground" />;
+  if (!introDone && screen !== 'preview') return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground"><div className="mx-auto max-w-md space-y-6 px-6 py-16"><Logo className="h-16 w-16 text-4xl" /><h1 className="text-4xl font-semibold">Сначала — знакомство с собой</h1><Btn onClick={() => navigate({to: '/'})}>К первой карте</Btn><section className="space-y-3 border-t border-border pt-5"><h2 className="text-2xl">Просмотр всех дней</h2>{PRACTICES.map((p,i) => <Btn key={p.title} variant="ghost" onClick={() => {setActiveDay(i+1); go('preview');}}>День {i+1} · {p.title}</Btn>)}</section></div></main>;
   const completed = challengeComplete(state);
   const passed = Object.keys(state.days).length;
   const feedback = state.feedback ?? initialFeedback;
@@ -55,14 +57,14 @@ function Season() {
     if (persist(assignDay(state,day))) {setActiveDay(day); go('day');}
   };
   const updateFeedback = (values: Partial<Feedback>) => persist({...state, feedback: {...feedback,...values}});
-  return <main className="min-h-screen bg-background">
+  return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground">
     <Stop onStop={() => go('overview')} />
     <div className="mx-auto max-w-lg px-5 pb-16 pt-20">
       {error && <p role="alert" className="mb-5 rounded-lg border border-destructive p-4 text-destructive">{error}</p>}
       {screen === 'overview' && <div className="space-y-8">
         <header className="border-b border-border pb-7">
           <div className="flex items-center gap-4"><Logo className="h-12 w-12 text-2xl" /><p className="text-sm text-muted-foreground">Раппорт: ЖиваЯ</p></div>
-          <h1 className="mt-5 text-5xl font-semibold">7 дней с собой</h1>
+          <h1 className="mt-5 text-5xl font-semibold text-gold-gradient">7 дней с собой</h1>
           <p className="mt-3 font-display text-2xl italic">{state.name ? `${state.name}, ближе к себе — день за днём.` : 'Ближе к себе — день за днём.'}</p>
           <p className="mt-4 text-sm text-muted-foreground">{passed} из 7 дней пройдено</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gold-gradient" style={{width:`${passed/7*100}%`}} /></div>
@@ -81,7 +83,9 @@ function Season() {
             {entry ? <details className="mt-3"><summary className="cursor-pointer text-sm text-muted-foreground">{entry.stage} · Твои ответы</summary><div className="mt-4 space-y-4 text-sm">
               <p>{entry.feelings.join(', ')}{entry.body.length ? ` · ${entry.body.join(', ')}` : ''}</p>
               {[["Что задело",entry.hurt], ...(day > 1 ? [["Тень",entry.shadow]] : []), ["Ресурс",entry.resource], ...p.questions.map((q,index) => [q,entry.practice[index] ?? ''])].map(([title,value]) => <div key={title}><p className="font-semibold">{title}</p><p className="mt-1 whitespace-pre-wrap break-words text-muted-foreground">{value}</p></div>)}
+              <DayReflection stage={entry.stage} answer={entry} />
             </div></details> : available ? <Btn className="mt-4" onClick={() => open(day)}>{state.assignments[day] ? 'Продолжить карту' : 'Вытянуть карту'}</Btn> : <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{!state.baseline ? 'После входного теста' : date && now < date ? `Откроется ${date.toLocaleDateString('ru-RU')} по времени этого устройства, после предыдущего дня.` : 'Сначала заверши предыдущий день.'}</p>}
+            <Btn className="mt-3" variant="ghost" onClick={() => {setActiveDay(day); go('preview');}}>Посмотреть день {day}</Btn>
           </li>;
         })}</ol>
         {completed && !state.finalTest && <Btn onClick={() => go('after')}>Повторить тест — что изменилось?</Btn>}
@@ -90,6 +94,7 @@ function Season() {
         {state.baseline && <Btn variant="ghost" onClick={() => setResetPrompt(true)}>Начать челлендж заново</Btn>}
         <p className="text-xs text-muted-foreground">Ответы хранятся только в этом браузере, не отправляются организатору и не доступны с другого устройства. Новый день открывается в полночь по местному времени; пропущенные дни можно пройти позже.</p>
       </div>}
+      {screen === 'preview' && <ChallengePreview key={activeDay} day={activeDay} onClose={() => go('overview')} />}
       {(screen === 'before' || screen === 'after') && <SelfTest key={screen} repeated={screen === 'after'} initial={state.testDrafts[screen]} onDraft={answers => persist({...state,testDrafts:{...state.testDrafts,[screen]:answers}})} onComplete={answers => {
         const next = screen === 'before' ? {...state,baseline:answers, startedAt:state.startedAt ?? new Date().toISOString()} : {...state,finalTest:answers};
         if (persist(next)) go('profile');

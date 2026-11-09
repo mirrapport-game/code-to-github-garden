@@ -35,4 +35,6 @@ use the editor.
 - Keep challenge scheduling and scoring in browser-safe library modules, and orchestrate its screens on /season. Why: time gates and scoring are independently testable and cannot be bypassed through a second game entry point.
 - Use a separate versioned challenge storage key from the legacy season. Why: older answers are not valid baseline tests or daily assignments for the new challenge.
 - Keep the original introductory card flow on / and open the challenge on /season after its completion; existing challenge participants retain access. Why: the challenge is an optional continuation, not a replacement for the first experience.
+- Keep thematic questions and non-diagnostic reflection prompts in a browser-safe theme module; store personal theme answers separately from daily practice answers. Why: existing drafts remain compatible and reflections do not pretend to infer psychological traits from free text.
+- Preview all challenge days through a read-only screen independent of scheduling and assignments. Why: content inspection must not mark days complete or alter the participant's random cards.
 
