@@ -1,41 +1,77 @@
-import { z } from 'zod';
-import type { UIMessage } from 'ai';
+import { z } from "zod";
+import type { UIMessage } from "ai";
 
-export const trainerRequestSchema = z.object({
-  cardId: z.string().min(1).max(100),
-  level: z.enum(['soft', 'medium', 'hard']),
-  mode: z.enum(['dialogue', 'summary']),
-  messages: z.array(z.object({
-    id: z.string().min(1).max(150),
-    role: z.enum(['user', 'assistant']),
-    parts: z.array(z.object({ type: z.literal('text'), text: z.string().min(1).max(12000) })).min(1).max(8),
-  })).min(1).max(100),
-}).strict();
+export const trainerRequestSchema = z
+  .object({
+    cardId: z.string().min(1).max(100),
+    level: z.enum(["soft", "medium", "hard"]),
+    mode: z.enum(["dialogue", "summary"]),
+    messages: z
+      .array(
+        z.object({
+          id: z.string().min(1).max(150),
+          role: z.enum(["user", "assistant"]),
+          parts: z
+            .array(z.object({ type: z.literal("text"), text: z.string().min(1).max(12000) }))
+            .min(1)
+            .max(8),
+        }),
+      )
+      .min(1)
+      .max(100),
+  })
+  .strict();
 
 export function textOnlyMessages(messages: UIMessage[]): UIMessage[] {
-  return messages.filter(m => m.role !== 'system').map(m => ({
-    id: m.id, role: m.role,
-    parts: m.parts.filter(p => p.type === 'text' && p.text.trim().length > 0).map(p => ({ type: 'text' as const, text: p.type === 'text' ? p.text : '' })),
-  })).filter(m => m.parts.length > 0);
+  return messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({
+      id: m.id,
+      role: m.role,
+      parts: m.parts
+        .filter((p) => p.type === "text" && p.text.trim().length > 0)
+        .map((p) => ({ type: "text" as const, text: p.type === "text" ? p.text : "" })),
+    }))
+    .filter((m) => m.parts.length > 0);
 }
 
-export type TrainerSession = { cardId: string; level: 'soft' | 'medium' | 'hard'; messages: UIMessage[]; summary: string };
-const KEY = 'rapport-intro-trainer-v1';
+export type TrainerSession = {
+  cardId: string;
+  level: "soft" | "medium" | "hard";
+  messages: UIMessage[];
+  summary: string;
+};
+const KEY = "rapport-intro-trainer-v1";
 export function loadTrainer(): TrainerSession | null {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
     const value = JSON.parse(raw) as TrainerSession;
     // Summary is deliberately not part of the request payload.
-    const validated = trainerRequestSchema.safeParse({ cardId: value.cardId, level: value.level, mode: 'dialogue', messages: textOnlyMessages(value.messages) });
+    const validated = trainerRequestSchema.safeParse({
+      cardId: value.cardId,
+      level: value.level,
+      mode: "dialogue",
+      messages: textOnlyMessages(value.messages),
+    });
     if (!validated.success && value.messages.length > 0) return null;
-    if (typeof value.cardId !== 'string' || !['soft', 'medium', 'hard'].includes(value.level)) return null;
-    return { ...value, summary: typeof value.summary === 'string' ? value.summary : '' };
-  } catch { return null; }
+    if (typeof value.cardId !== "string" || !["soft", "medium", "hard"].includes(value.level))
+      return null;
+    return { ...value, summary: typeof value.summary === "string" ? value.summary : "" };
+  } catch {
+    return null;
+  }
 }
 export function saveTrainer(session: TrainerSession) {
-  window.localStorage.setItem(KEY, JSON.stringify({ ...session, messages: textOnlyMessages(session.messages) }));
+  window.localStorage.setItem(
+    KEY,
+    JSON.stringify({ ...session, messages: textOnlyMessages(session.messages) }),
+  );
 }
 export function clearTrainer() {
-  try { window.localStorage.removeItem(KEY); } catch { /* Storage unavailable. */ }
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch {
+    /* Storage unavailable. */
+  }
 }
