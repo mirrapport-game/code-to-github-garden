@@ -5,6 +5,8 @@ import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
+import { drawShade, SHADOW_SHADES } from "@/lib/shadow-shades";
+import shadowCover from "@/assets/shadow-shades-cover.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -54,6 +56,33 @@ function ScenarioHeader({ card }: { card: GameCard }) {
   );
 }
 
+function IntroShade({ shadeId }: { shadeId: string }) {
+  const [opened, setOpened] = useState(false);
+  const current = SHADOW_SHADES.find(s => s.id === shadeId);
+  if (!current) return null;
+  return (
+    <section className="space-y-4">
+      <p className="text-center text-xs uppercase tracking-[0.2em] text-gold">Оттенки тени · {current.category}</p>
+      {!opened ? (
+        <div className="mx-auto w-full max-w-xs">
+          <button onClick={() => setOpened(true)} aria-label="Открыть оттенок тени" className="gold-frame block aspect-[2/3] w-full overflow-hidden rounded-2xl shadow-card">
+            <img src={shadowCover} alt="Колода «Оттенки тени»" width={1024} height={1536} className="h-full w-full object-contain" />
+          </button>
+        </div>
+      ) : (
+        <div className="gold-frame rounded-2xl bg-card p-6 shadow-card">
+          <h3 className="text-center text-3xl font-semibold">{current.name}</h3>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Это случайный ракурс для размышления, а не вывод о тебе. Тень — то, что может быть вытеснено или не разрешено; интеграция — то, как эта сила может помогать без разрушения. Оставь только то, что откликается.</p>
+          <div className="mt-5 space-y-4 text-sm leading-relaxed">
+            <p><span className="font-semibold text-gold">Теневое проявление: </span>{current.shadow}</p>
+            <p><span className="font-semibold text-gold">Интегрированное проявление: </span>{current.integrated}</p>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Index() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("intro");
@@ -65,6 +94,7 @@ function Index() {
   const [a2, setA2] = useState("");
   const [a3, setA3] = useState("");
   const [name, setName] = useState("");
+  const [shadeId, setShadeId] = useState("");
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
@@ -81,11 +111,14 @@ function Index() {
     setA1("");
     setA2("");
     setA3("");
+    setShadeId("");
   };
 
   const draw = () => {
     saveSeasonName(name.trim());
-    setCard(drawCard(card ?? undefined) ?? null);
+    const next = drawCard(card ?? undefined) ?? null;
+    setCard(next);
+    setShadeId(drawShade(next?.id, next?.stage ?? "", [])?.id ?? "");
     setLevel(null);
     setStep("card");
   };
@@ -102,6 +135,7 @@ function Index() {
           hurt: a1,
           shadow: a2,
           resource: a3,
+          shadeId,
           doneAt: new Date().toISOString(),
         });
     }
@@ -210,9 +244,10 @@ function Index() {
 
         {step === "shadow" && card && (
           <div className="space-y-6 animate-rise">
+            <IntroShade shadeId={shadeId} />
             <div className="gold-frame rounded-2xl bg-night-gradient p-8 text-night-foreground shadow-card">
               <p className="font-display text-xl italic leading-relaxed text-gold-soft">
-                {hi}ты играешь роль. Это не ты. Но в этой роли есть то, что ты не разрешаешь себе в жизни. Давай посмотрим, что это. И заберём это себе.
+                {hi}ты играешь роль. Это не ты. Сначала мы замечаем, что тебя задело, затем видим возможную тень — то, что ты не разрешаешь себе, и находим ресурс — силу, которую можно забрать.
               </p>
             </div>
             {[
