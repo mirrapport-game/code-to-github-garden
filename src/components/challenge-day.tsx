@@ -5,7 +5,7 @@ import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 import { cardChoices } from '@/lib/card-choices';
 import { ChoiceReflection } from '@/components/choice-reflection';
-import { ShadowReflection } from '@/components/shadow-reflection';
+import { ShadowCardButton } from '@/components/shadow-card-button';
 
 export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, onDraft, onComplete }: { day: number; card: GameCard; theme?: string; shadeId?: string | undefined; draft?: Partial<ChallengeAnswer> | undefined; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
   const [step, setStep] = useState<'cover' | 'level' | 'answers' | 'reflection'>('cover');
@@ -44,7 +44,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, on
       <Btn variant="ghost" onClick={() => next('level')}>Изменить силу ситуации</Btn>
     </>}
     {step === 'reflection' && selected && <>
-      <ShadowReflection shadeId={shadeId} answers={answer.shadowAnswers} onAnswers={shadowAnswers => update({shadowAnswers})} />
+      <ShadowCardButton shadeId={shadeId} answers={answer.shadowAnswers} onAnswers={shadowAnswers => update({shadowAnswers})} />
       <ChoiceReflection showShade={false} answer={{...answer,stage:theme,cardId:card.id,cardStage:card.stage}} />
       <Btn onClick={() => onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:[],body:[],hurt:selected.text,shadow:'',resource:selected.resource,practice:[],doneAt:new Date().toISOString()})}>Сохранить день {day}</Btn>
       <Btn variant="ghost" onClick={() => next('answers')}>Выбрать другой ответ</Btn>
