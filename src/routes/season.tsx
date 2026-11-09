@@ -87,7 +87,7 @@ function Season() {
         {state.startedAt && <Btn variant="ghost" onClick={() => setResetPrompt(true)}>Начать челлендж заново</Btn>}
         <p className="text-xs text-muted-foreground">Ответы хранятся только в этом браузере, не отправляются организатору и не доступны с другого устройства. Новый день открывается в полночь по местному времени; пропущенные дни можно пройти позже.</p>
       </div>}
-      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeDay key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
+      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeDay key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
         if (!canOpenDay(state,activeDay)) return;
         if (persist({...state,days:{...state.days,[activeDay]:entry}})) go('overview');
       }} />}
