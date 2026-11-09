@@ -1,7 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { trainerRequestSchema, textOnlyMessages } from "@/lib/intro-trainer";
+import { clearTrainer, loadTrainer, saveTrainer, trainerRequestSchema, textOnlyMessages } from "@/lib/intro-trainer";
 
 describe("Intro AI conversation boundaries", () => {
+  it("keeps the selected scenario, transcript and summary together until completion", () => {
+    const session = { cardId: "taxi", level: "soft" as const, messages: [{ id: "one", role: "user" as const, parts: [{ type: "text" as const, text: "Я не сяду в эту машину." }] }], summary: "Ты обозначила свой выбор." };
+    saveTrainer(session);
+    expect(loadTrainer()).toEqual(session);
+    clearTrainer();
+    expect(loadTrainer()).toBeNull();
+  });
   it("accepts only participant and AI turns, never client system instructions", () => {
     const request = {
       cardId: "taxi",
