@@ -46,4 +46,6 @@ use the editor.
 - Expand challenge shade cards inline through the shared button between resource and small step in live and saved reflections. Why: the participant stays with the same answer and can collapse the card without navigation.
 - Reuse ChallengeDay for the introductory card with a randomly assigned concept and curated original scenario, persisting its draft separately from the challenge. Why: four choices and reflections stay identical without changing challenge scheduling or showing introductory shades.
 - Keep AI access denials in a server-only database guard and preserve upstream status/messages without retries. Why: blocked providers must remain paused across reloads and server restarts.
+- Keep seven paginated daily stories separate from random concepts and persist story completion, optional second choice and personal response without overwriting the first choice. Why: the season tells a continuous story while preserving the participant's original reflection.
+- Require the entry test for new challenge participants and offer the repeated test after seven days; preserve access for participants with saved completed days. Why: restoring tests must not erase or block existing progress.
 

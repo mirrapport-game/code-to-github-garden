@@ -1,6 +1,10 @@
 import type { ChallengeState } from '@/lib/challenge-store';
+import { CHALLENGE_STORIES } from '@/lib/challenge-story';
 export const CHALLENGE_LENGTH = 7;
-export const CHALLENGE_DAYS = Array.from({ length: CHALLENGE_LENGTH }, (_, index) => ({ day: index + 1, title: 'Новая встреча с собой' }));
+export const CHALLENGE_DAYS = CHALLENGE_STORIES.map((story, index) => ({day: index + 1, title: story.title}));
+export function needsEntryTest(state: ChallengeState): boolean {
+  return !state.baseline && Object.keys(state.days).length === 0;
+}
 export const PRACTICES = [
   { title: 'Знакомство с собой', concept: 'Сегодня — первая встреча с картой. Заметь чувства, телесный отклик и то, что для тебя важно. Не нужно исправлять себя или искать правильный ответ.', questions: ['Что эта ситуация говорит о том, что для тебя важно?'] },
   { title: 'Моя тень', concept: 'В аналитической психологии Юнга Тень — стороны личности, которые мы не признаём или не хотим показывать. В ней могут оказаться не только нежелательные импульсы, но и сила, спонтанность, право просить. Раздражение может стать поводом исследовать себя, но не доказывает наличие скрытого качества.', questions: ['Какое качество персонажа ты осуждаешь или не разрешаешь себе?', 'Как могла бы выглядеть безопасная, бережная форма этого качества в твоей жизни?'] },
@@ -19,7 +23,7 @@ export function unlockAt(state: ChallengeState, day: number): Date | null {
 }
 export function canOpenDay(state: ChallengeState, day: number, now = new Date()): boolean {
   const date = unlockAt(state, day);
-  return Boolean(date && day >= 1 && day <= 7 && now >= date && !state.days[day] && (day === 1 || state.days[day - 1]));
+  return Boolean(!needsEntryTest(state) && date && day >= 1 && day <= 7 && now >= date && !state.days[day] && (day === 1 || state.days[day - 1]));
 }
 export function challengeComplete(state: ChallengeState): boolean {
   return Array.from({length: 7}, (_,i) => i+1).every(day => Boolean(state.days[day]));

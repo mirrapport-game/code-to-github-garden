@@ -3,24 +3,25 @@ import { useEffect, useState } from 'react';
 import { Btn, Logo, Stop } from '@/components/game-ui';
 import { ChallengeDay } from '@/components/challenge-day';
 import { DEMO_CARDS, DEMO_THEMES } from '@/lib/demo-cards';
-import { CHALLENGE_DAYS, canOpenDay, unlockAt, challengeComplete } from '@/lib/challenge';
+import { CHALLENGE_DAYS, canOpenDay, unlockAt, challengeComplete, needsEntryTest } from '@/lib/challenge';
 import { hasPreviousChallenge, assignDay, clearChallenge, loadChallenge, saveChallenge, type ChallengeState, type Feedback } from '@/lib/challenge-store';
 import { hasIntroCompleted, loadSeason } from '@/lib/season-store';
 import { useNavigate } from '@tanstack/react-router';
 import { ChoiceReflection } from '@/components/choice-reflection';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
+import { SelfTest, TestProfile } from '@/components/self-test';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
     { title: '7 дней с собой — Раппорт: ЖиваЯ' },
-    { name: 'description', content: 'Семь дней с собой: случайная карта из девяти сфер, три уровня, четыре ответа, рефлексия, ресурс и маленький шаг.' },
+    { name: 'description', content: 'Семь дней с собой: короткие истории о тени и восприятии, случайные карты, личные ответы и тест до и после.' },
     { property: 'og:title', content: '7 дней с собой — Раппорт: ЖиваЯ' },
     { property: 'og:description', content: 'Семь встреч с собой через карты игры и бережные практики.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary_large_image' },
   ] }), component: Season,
 });
 
-type Screen = 'overview' | 'day' | 'feedback';
+type Screen = 'overview' | 'day' | 'feedback' | 'before' | 'after' | 'profile';
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
   const navigate = useNavigate();
@@ -67,25 +68,38 @@ function Season() {
           <p className="mt-4 text-sm text-muted-foreground">{passed} из 7 дней пройдено</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gold-gradient" style={{width:`${passed/7*100}%`}} /></div>
         </header>
-        {!state.startedAt && <section className="space-y-4">
+        {(needsEntryTest(state) || !state.startedAt) && <section className="space-y-4">
           <label className="block font-semibold">Как к тебе обращаться?<input aria-label="Твоё имя" value={state.name} onChange={e => persist({...state,name:e.target.value})} placeholder="Твоё имя" className="mt-2 w-full rounded-lg border border-input bg-card px-4 py-3 outline-none focus:border-gold" /></label>
-          <Btn disabled={!state.name.trim()} onClick={() => persist({...state, startedAt:new Date().toISOString()})}>Начать 7 дней с собой</Btn>
+          {needsEntryTest(state) ? <Btn disabled={!state.name.trim()} onClick={() => go('before')}>Пройти тест перед челленджем</Btn> : <Btn disabled={!state.name.trim()} onClick={() => persist({...state, startedAt:new Date().toISOString()})}>Начать 7 дней с собой</Btn>}
           <p className="text-sm text-muted-foreground">Ты играешь роль, а не себя. Нет правильных ответов. Можно остановиться без объяснений. Это игра-зеркало, не психотерапия.</p>
         </section>}
+        {state.baseline && <Btn variant="ghost" onClick={() => go('profile')}>Мой тест {state.finalTest ? 'до и после' : 'до начала'}</Btn>}
+        {!state.baseline && passed > 0 && <p className="text-sm text-muted-foreground">Ты начала до возвращения входного теста. Твои дни сохранены; тест после семи дней станет первым замером, а не сравнением.</p>}
         <ol className="space-y-4">{CHALLENGE_DAYS.map((p,i) => {
           const day = i+1; const entry = state.days[day]; const available = canOpenDay(state,day,now); const date = unlockAt(state,day);
           return <li key={day} className={`rounded-lg border bg-card p-5 ${entry || available ? 'border-gold' : 'border-border'}`}>
             <div className="flex items-center justify-between gap-3"><span className="text-xs uppercase text-gold">День {day}</span><span className="text-xs text-muted-foreground">{entry ? 'Пройдено' : available ? 'Доступен' : 'Закрыт'}</span></div>
-            <h2 className="mt-2 text-2xl font-semibold">{entry?.stage ?? state.assignments[day] ?? p.title}</h2>
+            <h2 className="mt-2 text-2xl font-semibold">{p.title}</h2>
+            {(entry?.stage || state.assignments[day]) && <p className="mt-2 text-sm text-gold">{entry?.stage ?? state.assignments[day]}</p>}
             {entry ? <details className="mt-3"><summary className="cursor-pointer text-sm text-muted-foreground">{entry.stage} · Твои ответы</summary><div className="mt-4 space-y-4 text-sm">
               <ChoiceReflection answer={entry} />
-            </div></details> : available ? <Btn className="mt-4" onClick={() => open(day)}>{state.assignments[day] ? 'Продолжить карту' : 'Вытянуть карту'}</Btn> : <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{!state.startedAt ? 'После начала челленджа' : date && now < date ? `Откроется ${date.toLocaleDateString('ru-RU')} по времени этого устройства, после предыдущего дня.` : 'Сначала заверши предыдущий день.'}</p>}
+            </div></details> : available ? <Btn className="mt-4" onClick={() => open(day)}>{state.assignments[day] ? 'Продолжить день' : 'Открыть день'}</Btn> : <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{needsEntryTest(state) ? 'После входного теста' : !state.startedAt ? 'После начала челленджа' : date && now < date ? `Откроется ${date.toLocaleDateString('ru-RU')} по времени этого устройства, после предыдущего дня.` : 'Сначала заверши предыдущий день.'}</p>}
           </li>;
         })}</ol>
-        {completed && <Btn onClick={() => go('feedback')}>Обратная связь и следующий шаг</Btn>}
+        {completed && !state.finalTest && <Btn onClick={() => go('after')}>Пройти тест после семи дней</Btn>}
+        {completed && state.finalTest && <Btn onClick={() => go('feedback')}>Обратная связь и следующий шаг</Btn>}
         <Link to="/" className="block text-center text-sm text-muted-foreground underline underline-offset-4">Раппорт: ЖиваЯ</Link>
         {state.startedAt && <Btn variant="ghost" onClick={() => setResetPrompt(true)}>Начать челлендж заново</Btn>}
         <p className="text-xs text-muted-foreground">Ответы хранятся только в этом браузере, не отправляются организатору и не доступны с другого устройства. Новый день открывается в полночь по местному времени; пропущенные дни можно пройти позже.</p>
+      </div>}
+      {(screen === 'before' || (screen === 'after' && completed)) && <SelfTest key={screen} repeated={screen === 'after'} initial={state.testDrafts[screen]} onDraft={answers => persist({...state,testDrafts:{...state.testDrafts,[screen]:answers}})} onComplete={answers => {
+        const next = screen === 'before' ? {...state,baseline:answers,startedAt:Object.keys(state.days).length ? state.startedAt ?? new Date().toISOString() : new Date().toISOString()} : {...state,finalTest:answers};
+        if (persist(next)) go('profile');
+      }} />}
+      {screen === 'profile' && (state.baseline || state.finalTest) && <div className="space-y-8">
+        <TestProfile before={state.baseline ?? state.finalTest ?? []} after={state.baseline ? state.finalTest : undefined} />
+        {!state.baseline && <p className="text-sm text-muted-foreground">Это твой первый замер после прохождения. Входного результата нет, поэтому сравнение не рассчитываем.</p>}
+        <Btn onClick={() => go(completed && state.finalTest ? 'feedback' : 'overview')}>{completed && state.finalTest ? 'К обратной связи' : 'К семи дням'}</Btn>
       </div>}
       {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeDay key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
         if (!canOpenDay(state,activeDay)) return;
