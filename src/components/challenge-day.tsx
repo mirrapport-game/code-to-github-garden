@@ -6,7 +6,7 @@ import type { ChallengeAnswer } from '@/lib/challenge-store';
 import { cardChoices } from '@/lib/card-choices';
 import { ChoiceReflection } from '@/components/choice-reflection';
 
-export function ChallengeDay({ day, card, draft, onDraft, onComplete }: { day: number; card: GameCard; draft?: Partial<ChallengeAnswer>; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
+export function ChallengeDay({ day, card, draft, onDraft, onComplete }: { day: number; card: GameCard; draft?: Partial<ChallengeAnswer> | undefined; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
   const [step, setStep] = useState<'cover' | 'level' | 'answers' | 'reflection'>('cover');
   const [answer, setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? {});
   const update = (values: Partial<ChallengeAnswer>) => { const next = {...answer, ...values, stage:card.stage, day}; setAnswer(next); onDraft(next); };
@@ -24,7 +24,7 @@ export function ChallengeDay({ day, card, draft, onDraft, onComplete }: { day: n
     {step === 'level' && <>
       <h2 className="text-2xl font-semibold">{card.scenario}</h2><p className="leading-relaxed">{card.context}</p>
       <h3 className="text-2xl">Какая сила ситуации тебе подходит сегодня?</h3>
-      <RadioGroup aria-label="Сила ситуации" value={answer.level ?? ''} onValueChange={value => update({level:value as LevelKey, choiceId:undefined})}>
+      <RadioGroup aria-label="Сила ситуации" value={answer.level ?? ''} onValueChange={value => update({level:value as LevelKey, choiceId:''})}>
         {(Object.keys(LEVEL_META) as LevelKey[]).map(key => <label key={key} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4"><RadioGroupItem id={`level-${day}-${key}`} value={key} /><span>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span></label>)}
       </RadioGroup>
       {answer.level && <p className="border-l-2 border-gold pl-4 leading-relaxed">{card.levels[answer.level].text}</p>}
