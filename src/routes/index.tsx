@@ -5,8 +5,6 @@ import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
-import { drawShade, SHADOW_SHADES } from "@/lib/shadow-shades";
-import shadowCover from "@/assets/shadow-shades-cover.jpg";
 import { IntroDialogue } from '@/components/intro-dialogue';
 import type { DialogueTurn } from '@/lib/intro-dialogue';
 
@@ -14,7 +12,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Раппорт: ЖиваЯ — вытяни свою карту" },
-      { name: "description", content: "Вытяни карту, встреться со своей Тенью. Ближе к себе, ближе к другим." },
+      { name: "description", content: "Вытяни карту, попробуй диалог и заметь свои чувства. Ближе к себе, ближе к другим." },
       { property: "og:title", content: "Раппорт: ЖиваЯ — вытяни свою карту" },
       { property: "og:description", content: "Игра-зеркало для женщин. Без оценок и советов." },
       { property: "og:type", content: "website" },
@@ -24,7 +22,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "shadow" | "cta";
+type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "reflection" | "cta";
 
 function CoverView({ card }: { card: GameCard }) {
   const [flipped, setFlipped] = useState(false);
@@ -58,33 +56,6 @@ function ScenarioHeader({ card }: { card: GameCard }) {
   );
 }
 
-function IntroShade({ shadeId }: { shadeId: string }) {
-  const [opened, setOpened] = useState(false);
-  const current = SHADOW_SHADES.find(s => s.id === shadeId);
-  if (!current) return null;
-  return (
-    <section className="space-y-4">
-      <p className="text-center text-xs uppercase tracking-[0.2em] text-gold">Оттенки тени · {current.category}</p>
-      {!opened ? (
-        <div className="mx-auto w-full max-w-xs">
-          <button onClick={() => setOpened(true)} aria-label="Открыть оттенок тени" className="gold-frame block aspect-[2/3] w-full overflow-hidden rounded-2xl shadow-card">
-            <img src={shadowCover} alt="Колода «Оттенки тени»" width={1024} height={1536} className="h-full w-full object-contain" />
-          </button>
-        </div>
-      ) : (
-        <div className="gold-frame rounded-2xl bg-card p-6 shadow-card">
-          <h3 className="text-center text-3xl font-semibold">{current.name}</h3>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Это случайный ракурс для размышления, а не вывод о тебе. Тень — то, что может быть вытеснено или не разрешено; интеграция — то, как эта сила может помогать без разрушения. Оставь только то, что откликается.</p>
-          <div className="mt-5 space-y-4 text-sm leading-relaxed">
-            <p><span className="font-semibold text-gold">Теневое проявление: </span>{current.shadow}</p>
-            <p><span className="font-semibold text-gold">Интегрированное проявление: </span>{current.integrated}</p>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
 function Index() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("intro");
@@ -96,7 +67,6 @@ function Index() {
   const [a2, setA2] = useState("");
   const [a3, setA3] = useState("");
   const [name, setName] = useState("");
-  const [shadeId, setShadeId] = useState("");
   const [dialogue, setDialogue] = useState<DialogueTurn[]>([]);
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
@@ -114,7 +84,6 @@ function Index() {
     setA1("");
     setA2("");
     setA3("");
-    setShadeId("");
     setDialogue([]);
   };
 
@@ -122,7 +91,6 @@ function Index() {
     saveSeasonName(name.trim());
     const next = drawCard(card ?? undefined) ?? null;
     setCard(next);
-    setShadeId(drawShade(next?.id, next?.stage ?? "", [])?.id ?? "");
     setLevel(null);
     setFeelings([]);
     setBody([]);
@@ -147,7 +115,6 @@ function Index() {
           resource: a3,
           cardId: card.id,
           dialogue,
-          shadeId,
           doneAt: new Date().toISOString(),
         });
     }
@@ -262,23 +229,22 @@ function Index() {
               <p className="mt-3">{card.levels[level].text}</p>
             </div>
             <IntroDialogue turns={dialogue} onChange={setDialogue} />
-            <Btn onClick={() => setStep('shadow')}>{dialogue.length ? 'Завершить диалог · к Тени' : 'Пропустить диалог · к Тени'}</Btn>
+            <Btn onClick={() => setStep('reflection')}>{dialogue.length ? 'Завершить диалог · что я заметила' : 'Пропустить диалог · что я заметила'}</Btn>
             <Btn variant="ghost" onClick={() => setStep('questions')}>Вернуться к чувствам и вопросам</Btn>
           </div>
         )}
 
-        {step === "shadow" && card && (
+        {step === "reflection" && card && (
           <div className="space-y-6 animate-rise">
-            <IntroShade shadeId={shadeId} />
             <div className="gold-frame rounded-2xl bg-night-gradient p-8 text-night-foreground shadow-card">
               <p className="font-display text-xl italic leading-relaxed text-gold-soft">
-                {hi}ты играешь роль. Это не ты. Сначала мы замечаем, что тебя задело, затем видим возможную тень — то, что ты не разрешаешь себе, и находим ресурс — силу, которую можно забрать.
+                {hi}ты попробовала побыть в этой роли. Что оказалось знакомым? Посмотри на свои ответы: что тебя задело, что хотелось сказать и что может поддержать тебя.
               </p>
             </div>
             {[
               ["Что тебя задело", a1 || "—"],
-              ["То, что пока трудно разрешить себе", a2 || "Можно оставить этот вопрос открытым."],
-              ["Ресурс — твоя поддержка", a3 || "Что поможет тебе почувствовать больше опоры?"],
+              ["Что хочется сказать или сделать", a2 || "Можно оставить этот вопрос открытым."],
+              ["Что может поддержать тебя", a3 || "Что поможет тебе почувствовать больше опоры?"],
             ].map(([k, v]) => (
               <div key={k} className="rounded-2xl border border-border bg-card p-6">
                 <p className="text-xs uppercase tracking-[0.2em] text-gold">{k}</p>
