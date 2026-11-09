@@ -13,5 +13,7 @@ export function ChoiceReflection({ answer, showShade = true, onShadowAnswers }: 
     <section><h3 className="text-2xl font-semibold">Твой ресурс</h3><p className="mt-3 leading-relaxed">{choice.resource}</p></section>
     {showShade && <ShadowCardButton shadeId={answer.shadeId} answers={answer.shadowAnswers} onAnswers={onShadowAnswers} />}
     <section className="border-t border-border pt-5"><h3 className="text-2xl font-semibold">Маленький шаг</h3><p className="mt-3 leading-relaxed">{choice.smallStep}</p><p className="mt-3 text-sm text-muted-foreground">Только если это посильно и безопасно. Можно остановиться и обратиться за поддержкой.</p></section>
+    {answer.revisitedChoiceId && <section><h3 className="text-2xl font-semibold">Мой повторный выбор</h3><p className="mt-3 leading-relaxed">{cardChoices(answer.stage, answer.level, answer.cardId).find(item => item.id === answer.revisitedChoiceId)?.text}</p></section>}
+    {answer.personalAnswer && <section><h3 className="text-2xl font-semibold">Мой ответ своими словами</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.personalAnswer}</p></section>}
   </div>;
 }
