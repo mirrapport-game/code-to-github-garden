@@ -14,7 +14,7 @@ export type DayAnswer = {
   shadow: string;
   /** The resource — what she would tell a friend. */
   resource: string;
-  shadeId?: string;
+  shadeId?: string | undefined;
   doneAt: string;
 };
 
