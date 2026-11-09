@@ -26,7 +26,6 @@ export function loadTrainer(): TrainerSession | null {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
     const value = JSON.parse(raw) as TrainerSession;
-    const parsed = trainerRequestSchema.safeParse({ ...value, summary: undefined, mode: 'dialogue' });
     // Summary is deliberately not part of the request payload.
     const validated = trainerRequestSchema.safeParse({ cardId: value.cardId, level: value.level, mode: 'dialogue', messages: textOnlyMessages(value.messages) });
     if (!validated.success && value.messages.length > 0) return null;
