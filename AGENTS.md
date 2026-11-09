@@ -39,4 +39,6 @@ use the editor.
 - Preview all challenge days through a read-only screen independent of scheduling and assignments. Why: content inspection must not mark days complete or alter the participant's random cards.
 - Keep the extended challenge screens in .lovable/future-seasons/extended and their original storage untouched; the simplified challenge uses its own versioned storage. Why: future seasons can reuse the richer flow without mixing incompatible answers.
 - Define four response choices and their non-diagnostic reflections in a browser-safe module shared by daily play, preview and saved results. Why: a selected answer must produce the same reflection after reload.
+- Store original scenarios separately from curated concept links; persist both concept and scenario ID in daily assignments. Why: life stages and reflection concepts are different, and random scenarios must remain stable after reload.
+- Exclude original scenarios with missing levels or covers from random play without authoring replacement text. Why: all imported material stays intact while only complete cards enter the game.
 

@@ -1,10 +1,13 @@
 import devochkaCover from "@/assets/devochka_vnutri_cover.png.asset.json";
+import { PLAYABLE_CARDS } from '@/lib/official-cards';
 
 export type LevelKey = "soft" | "medium" | "hard";
 
 export type Situation = { title: string; text: string };
 
 export type GameCard = {
+  id?: string;
+  source?: 'official' | 'demo';
   stage: string;
   cover: string;
   scenario: string;
@@ -46,6 +49,6 @@ export const FEELINGS = ["обида", "злость", "стыд", "грусть
 export const BODY = ["горло", "грудь", "живот", "плечи", "руки", "лицо", "спина", "ноги", "не чувствую"];
 
 export const drawCard = (exclude?: GameCard) => {
-  const pool = CARDS.length > 1 ? CARDS.filter((c) => c !== exclude) : CARDS;
+  const pool = PLAYABLE_CARDS.filter(c => c.id !== exclude?.id);
   return pool[Math.floor(Math.random() * pool.length)];
 };
