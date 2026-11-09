@@ -2,14 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import box from "@/assets/rapport_box.webp.asset.json";
 import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
-import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
-import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
+import { Btn, Logo, Stop } from "@/components/game-ui";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
-import { IntroTrainer } from "@/components/intro-trainer";
-import { clearTrainer, loadTrainer } from "@/lib/intro-trainer";
+import { ChallengeDay } from "@/components/challenge-day";
+import { clearIntroChoices, drawIntroChoices, loadIntroChoices, saveIntroChoices, type IntroChoices } from "@/lib/intro-choices";
 import { PLAYABLE_CARDS } from "@/lib/official-cards";
-import type { UIMessage } from "ai";
-import type { DialogueTurn } from "@/lib/intro-dialogue";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,10 +16,10 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Вытяни карту, попробуй диалог и заметь свои чувства. Ближе к себе, ближе к другим.",
+          "Вытяни случайную карту, выбери один из четырёх ответов и найди свой ресурс. Ближе к себе, ближе к другим.",
       },
       { property: "og:title", content: "Раппорт: ЖиваЯ — вытяни свою карту" },
-      { property: "og:description", content: "Игра-зеркало для женщин. Без оценок и советов." },
+      { property: "og:description", content: "Случайная тема, четыре ответа и бережное знакомство с собой через карты игры." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -29,123 +27,35 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "cta";
-
-function CoverView({ card }: { card: GameCard }) {
-  const [flipped, setFlipped] = useState(false);
-  return (
-    <div className="mx-auto w-full max-w-xs animate-flip [perspective:1200px]">
-      <button
-        onClick={() => setFlipped((f) => !f)}
-        aria-label="Перевернуть карту"
-        className={`relative block aspect-[2/3] w-full transition-transform duration-700 [transform-style:preserve-3d] ${flipped ? "[transform:rotateY(180deg)]" : ""}`}
-      >
-        <img
-          src={card.cover}
-          alt={`Карта «${card.stage}»`}
-          className="gold-frame absolute inset-0 h-full w-full rounded-2xl object-cover shadow-card [backface-visibility:hidden]"
-        />
-        <div className="gold-frame absolute inset-0 flex flex-col justify-center gap-4 overflow-auto rounded-2xl bg-card p-6 text-center shadow-card [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <span className="mx-auto rounded-md bg-level-soft px-3 py-0.5 font-display text-xs uppercase tracking-[0.3em] text-level-foreground">
-            Этап
-          </span>
-          <p className="font-display text-2xl font-semibold uppercase">{card.stage}</p>
-          <p className="font-display text-xl font-semibold text-level-hard">{card.scenario}</p>
-          <p className="text-sm leading-relaxed text-muted-foreground">{card.context}</p>
-        </div>
-      </button>
-      <p className="mt-3 text-center text-xs text-muted-foreground">
-        Нажми на карту, чтобы перевернуть
-      </p>
-    </div>
-  );
-}
-
-function ScenarioHeader({ card }: { card: GameCard }) {
-  return (
-    <div className="text-center">
-      <span className="rounded-md bg-level-soft px-4 py-1 font-display text-sm uppercase tracking-[0.3em] text-level-foreground">
-        Этап
-      </span>
-      <h2 className="mt-3 text-3xl font-semibold uppercase tracking-wide">{card.stage}</h2>
-      <p className="mt-4 font-display text-2xl font-semibold text-level-hard">{card.scenario}</p>
-    </div>
-  );
-}
+type Step = "intro" | "card" | "cta";
 
 function Index() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("intro");
-  const [card, setCard] = useState<GameCard | null>(null);
-  const [level, setLevel] = useState<LevelKey | null>(null);
-  const [feelings, setFeelings] = useState<string[]>([]);
-  const [body, setBody] = useState<string[]>([]);
+  const [assignment, setAssignment] = useState<IntroChoices | null>(null);
   const [name, setName] = useState("");
-  const [dialogue, setDialogue] = useState<DialogueTurn[]>([]);
-  const [trainerMessages, setTrainerMessages] = useState<UIMessage[]>([]);
-  const [aiSummary, setAiSummary] = useState("");
+  const card = PLAYABLE_CARDS.find(item => item.id === assignment?.cardId);
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
-    const saved = loadSeason();
-    setName(saved.name);
-    const trainer = loadTrainer();
-    const savedCard = PLAYABLE_CARDS.find((c) => c.id === trainer?.cardId);
-    if (trainer && savedCard && trainer.messages.length) {
-      setCard(savedCard);
-      setLevel(trainer.level);
-      setTrainerMessages(trainer.messages);
-      setAiSummary(trainer.summary);
-      setStep("dialogue");
-    }
+    setName(loadSeason().name);
+    const saved = loadIntroChoices();
+    if (saved) { setAssignment(saved); setStep("card"); }
   }, []);
 
   const reset = () => {
-    clearTrainer();
+    clearIntroChoices();
+    setAssignment(null);
     setStep("intro");
-    setCard(null);
-    setLevel(null);
-    setFeelings([]);
-    setBody([]);
-    setDialogue([]);
-    setTrainerMessages([]);
-    setAiSummary("");
   };
-
   const draw = () => {
-    clearTrainer();
     saveSeasonName(name.trim());
-    const next = drawCard(card ?? undefined) ?? null;
-    setCard(next);
-    setLevel(null);
-    setFeelings([]);
-    setBody([]);
-    setDialogue([]);
-    setTrainerMessages([]);
-    setAiSummary("");
+    const next = drawIntroChoices();
+    if (!next) return;
+    saveIntroChoices(next);
+    setAssignment(next);
     setStep("card");
-  };
-
-  const finishDay = (completedDialogue = dialogue, completedSummary = aiSummary) => {
-    if (card && level) {
-      saveSeasonName(name.trim());
-      saveSeasonDay({
-        day: 1,
-        stage: card.stage,
-        level,
-        feelings,
-        body,
-        hurt: "",
-        shadow: "",
-        resource: "",
-        cardId: card.id,
-        dialogue: completedDialogue,
-        aiSummary: completedSummary,
-        doneAt: new Date().toISOString(),
-      });
-    }
-    clearTrainer();
-    setStep("cta");
+    window.scrollTo(0, 0);
   };
 
   if (step === "intro") {
@@ -194,124 +104,29 @@ function Index() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="challenge-theme min-h-screen bg-night-gradient text-foreground">
       <Stop onStop={reset} />
       <div className="mx-auto max-w-md px-6 pb-16 pt-20">
-        {step === "card" && card && (
-          <div className="space-y-8">
-            <CoverView card={card} />
-            <div className="space-y-3">
-              <Btn onClick={() => setStep("level")}>Открыть карту</Btn>
-              <Btn variant="ghost" onClick={draw}>
-                Вытянуть другую
-              </Btn>
-            </div>
-          </div>
-        )}
-
-        {step === "level" && card && (
-          <div className="space-y-6 animate-rise">
-            <ScenarioHeader card={card} />
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-gold">Контекст</p>
-              <p className="mt-2 leading-relaxed">{card.context}</p>
-            </div>
-            <p className="text-center font-display text-xl italic">
-              Выбери, с какой силой ты готова встретиться
-            </p>
-            <div className="space-y-3">
-              {(Object.keys(LEVEL_META) as LevelKey[]).map((k) => {
-                const m = LEVEL_META[k];
-                const on = level === k;
-                return (
-                  <div
-                    key={k}
-                    className={`overflow-hidden rounded-2xl border bg-card transition ${on ? "border-gold shadow-glow" : "border-border"}`}
-                  >
-                    <button
-                      onClick={() => setLevel(k)}
-                      className="flex w-full items-center gap-4 p-4 text-left"
-                    >
-                      <span
-                        className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-xl ${m.bg}`}
-                      >
-                        {m.icon}
-                      </span>
-                      <span>
-                        <span
-                          className={`block text-xs font-bold uppercase tracking-widest ${m.text}`}
-                        >
-                          {m.label}
-                        </span>
-                        <span className="font-display text-xl font-semibold">
-                          {card.levels[k].title}
-                        </span>
-                      </span>
-                    </button>
-                    {on && (
-                      <p className="animate-rise px-5 pb-5 leading-relaxed text-muted-foreground">
-                        {card.levels[k].text}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {level && <Btn onClick={() => setStep("questions")}>Войти в эту ситуацию</Btn>}
-            <p className="text-center text-xs text-muted-foreground">
-              Ты всегда можешь выбрать мягче. Это твой выбор.
-            </p>
-          </div>
-        )}
-
-        {step === "questions" && card && level && (
-          <div className="space-y-8 animate-rise">
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <p
-                className={`text-xs font-bold uppercase tracking-widest ${LEVEL_META[level].text}`}
-              >
-                {LEVEL_META[level].label} · {card.levels[level].title}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {card.levels[level].text}
-              </p>
-            </div>
-            <section className="space-y-3">
-              <p className="font-semibold">{hi}что ты чувствуешь, проживая сценарий на карте?</p>
-              <Chips items={FEELINGS} value={feelings} onChange={setFeelings} />
-              <p className="pt-2 text-sm text-muted-foreground">Где в теле отклик?</p>
-              <Chips items={BODY} value={body} onChange={setBody} />
-            </section>
-            <Btn onClick={() => setStep("dialogue")}>Попробовать диалог с ИИ</Btn>
-          </div>
-        )}
-
-        {step === "dialogue" && card && level && (
-          <div className="space-y-6 animate-rise">
-            <ScenarioHeader card={card} />
-            <div className="border-l-2 border-gold pl-4 text-sm leading-relaxed text-muted-foreground">
-              <p>{card.context}</p>
-              <p className="mt-3">{card.levels[level].text}</p>
-            </div>
-            {card.id && (
-              <IntroTrainer
-                key={`${card.id}-${level}`}
-                cardId={card.id}
-                level={level}
-                initialMessages={trainerMessages}
-                initialSummary={aiSummary}
-                onComplete={(turns, summary) => {
-                  setDialogue(turns);
-                  setAiSummary(summary);
-                  finishDay(turns, summary);
-                }}
-              />
-            )}
-            <Btn variant="ghost" onClick={() => setStep("questions")}>
-              Вернуться к чувствам
-            </Btn>
-          </div>
-        )}
+        {step === "card" && card && assignment && <ChallengeDay
+          key={assignment.cardId + assignment.theme}
+          introductory
+          day={1}
+          card={card}
+          theme={assignment.theme}
+          draft={assignment.draft}
+          onDraft={draft => {
+            const next = {...assignment, draft};
+            saveIntroChoices(next);
+            setAssignment(next);
+          }}
+          onComplete={entry => {
+            saveSeasonName(name.trim());
+            saveSeasonDay(entry);
+            clearIntroChoices();
+            setStep("cta");
+            window.scrollTo(0, 0);
+          }}
+        />}
 
         {step === "cta" && (
           <div className="space-y-6 animate-rise">
