@@ -1,7 +1,7 @@
 import { DEMO_CARDS } from '@/lib/demo-cards';
 import type { DayAnswer } from '@/lib/season-store';
 export const CHALLENGE_KEY = 'rapport-challenge-7-v1';
-export type ChallengeAnswer = DayAnswer & { practice: string[] };
+export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: string[] };
 export type Feedback = { takeaway: string; character: string; useful: string; difficult: string; change: string; format: string; rating: number };
 export type ChallengeState = {
   name: string;
