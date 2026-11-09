@@ -4,7 +4,6 @@ import box from "@/assets/rapport_box.webp.asset.json";
 import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
-import { seasonDayByStage } from "@/lib/season";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
 
 export const Route = createFileRoute("/")({
@@ -93,11 +92,9 @@ function Index() {
 
   const finishDay = () => {
     if (card && level) {
-      const day = seasonDayByStage(card.stage);
-      if (day) {
         saveSeasonName(name.trim());
         saveSeasonDay({
-          day: day.day,
+          day: 1,
           stage: card.stage,
           level,
           feelings,
@@ -107,7 +104,6 @@ function Index() {
           resource: a3,
           doneAt: new Date().toISOString(),
         });
-      }
     }
     setStep("cta");
   };

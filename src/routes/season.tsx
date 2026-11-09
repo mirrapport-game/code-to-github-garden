@@ -8,6 +8,7 @@ import { hasPreviousChallenge, assignDay, clearChallenge, loadChallenge, saveCha
 import { hasIntroCompleted, loadSeason } from '@/lib/season-store';
 import { useNavigate } from '@tanstack/react-router';
 import { ChoiceReflection } from '@/components/choice-reflection';
+import { PLAYABLE_CARDS } from '@/lib/official-cards';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
@@ -48,7 +49,7 @@ function Season() {
   const completed = challengeComplete(state);
   const passed = Object.keys(state.days).length;
   const feedback = state.feedback ?? initialFeedback;
-  const card = DEMO_CARDS.find(c => c.stage === state.assignments[activeDay]);
+  const card = PLAYABLE_CARDS.find(c => c.id === state.cardAssignments[activeDay]) ?? DEMO_CARDS.find(c => c.stage === state.assignments[activeDay]);
   const open = (day: number) => {
     if (!canOpenDay(state,day)) return;
     if (persist(assignDay(state,day))) {setActiveDay(day); go('day');}
@@ -86,7 +87,7 @@ function Season() {
         {state.startedAt && <Btn variant="ghost" onClick={() => setResetPrompt(true)}>Начать челлендж заново</Btn>}
         <p className="text-xs text-muted-foreground">Ответы хранятся только в этом браузере, не отправляются организатору и не доступны с другого устройства. Новый день открывается в полночь по местному времени; пропущенные дни можно пройти позже.</p>
       </div>}
-      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeDay key={activeDay} day={activeDay} card={card} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
+      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeDay key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay]} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
         if (!canOpenDay(state,activeDay)) return;
         if (persist({...state,days:{...state.days,[activeDay]:entry}})) go('overview');
       }} />}

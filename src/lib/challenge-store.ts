@@ -1,7 +1,8 @@
 import { DEMO_CARDS } from '@/lib/demo-cards';
+import { cardsForTheme } from '@/lib/official-cards';
 import type { DayAnswer } from '@/lib/season-store';
 export const CHALLENGE_KEY = 'rapport-challenge-7-v2';
-export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: string[]; choiceId?: string };
+export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: string[]; choiceId?: string; cardId?: string; cardStage?: string; responseText?: string };
 export type Feedback = { takeaway: string; character: string; useful: string; difficult: string; change: string; format: string; rating: number };
 export type ChallengeState = {
   name: string;
@@ -10,11 +11,12 @@ export type ChallengeState = {
   finalTest?: number[];
   testDrafts: { before?: number[]; after?: number[] };
   assignments: Record<number, string>;
+  cardAssignments: Record<number, string>;
   days: Record<number, ChallengeAnswer>;
   drafts: Record<number, Partial<ChallengeAnswer>>;
   feedback?: Feedback;
 };
-export function emptyChallenge(): ChallengeState { return { name: '', assignments: {}, days: {}, drafts: {}, testDrafts: {} }; }
+export function emptyChallenge(): ChallengeState { return { name: '', assignments: {}, cardAssignments: {}, days: {}, drafts: {}, testDrafts: {} }; }
 export function hasPreviousChallenge(): boolean {
   if (typeof window === 'undefined') return false;
   try { return Boolean(JSON.parse(window.localStorage.getItem('rapport-challenge-7-v1') || 'null')?.baseline); } catch { return false; }
@@ -34,5 +36,8 @@ export function assignDay(state: ChallengeState, day: number, random = Math.rand
   const used = Object.values(state.assignments);
   const pool = DEMO_CARDS.filter(c => !used.includes(c.stage));
   const card = pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
-  return card ? { ...state, assignments: { ...state.assignments, [day]: card.stage } } : state;
+  if (!card) return state;
+  const scenarios = cardsForTheme(card.stage).filter(c => !Object.values(state.cardAssignments ?? {}).includes(c.id ?? ''));
+  const scenario = scenarios[Math.min(scenarios.length - 1, Math.floor(random() * scenarios.length))];
+  return { ...state, assignments: { ...state.assignments, [day]: card.stage }, cardAssignments: {...state.cardAssignments, ...(scenario?.id ? {[day]:scenario.id} : {})} };
 }
