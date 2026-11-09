@@ -24,6 +24,11 @@ export type SeasonState = {
 
 const EMPTY: SeasonState = { name: "", days: {} };
 
+/** The introductory card must be finished before the challenge entry appears. */
+export function hasIntroCompleted(state: SeasonState): boolean {
+  return Boolean(state.days[1]);
+}
+
 export function loadSeason(): SeasonState {
   if (typeof window === "undefined") return EMPTY;
   try {
