@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- Season progress and answers persist in the browser (localStorage) until accounts exist; move them to a database table when a backend is added. Why: a 14-day season must survive reloads, but no login exists yet.
+- Card content comes only from the user's own files; never generate scenario, context or situation texts. Why: the cards are the product's real material.
+
