@@ -31,6 +31,7 @@ use the editor.
 
 ## Project rules
 
-- Season progress and answers persist in the browser (localStorage) until accounts exist; move them to a database table when a backend is added. Why: a 14-day season must survive reloads, but no login exists yet.
-- Card content comes only from the user's own files; never generate scenario, context or situation texts. Why: the cards are the product's real material.
+- Challenge progress, daily card assignments, drafts, tests and feedback persist in browser localStorage until accounts exist; migrate to database tables when a backend is added. Why: daily assignments and answers must survive reloads without login.
+- Keep challenge scheduling and scoring in browser-safe library modules, and orchestrate its screens on /season. Why: time gates and scoring are independently testable and cannot be bypassed through a second game entry point.
+- Use a separate versioned challenge storage key from the legacy season. Why: older answers are not valid baseline tests or daily assignments for the new challenge.
 
