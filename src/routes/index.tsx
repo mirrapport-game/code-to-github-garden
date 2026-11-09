@@ -5,7 +5,7 @@ import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
-import { drawShade } from "@/lib/shadow-shades";
+import { drawShade, SHADOW_SHADES } from "@/lib/shadow-shades";
 import shadowCover from "@/assets/shadow-shades-cover.jpg";
 
 export const Route = createFileRoute("/")({
@@ -58,8 +58,7 @@ function ScenarioHeader({ card }: { card: GameCard }) {
 
 function IntroShade({ shadeId }: { shadeId: string }) {
   const [opened, setOpened] = useState(false);
-  const shade = drawShade(undefined, shadeId, []) ?? undefined;
-  const current = opened ? shadeById(shadeId) : undefined;
+  const current = SHADOW_SHADES.find(s => s.id === shadeId);
   if (!current) return null;
   return (
     <section className="space-y-4">
