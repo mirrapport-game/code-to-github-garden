@@ -3,16 +3,19 @@ import { Btn, Chips } from '@/components/game-ui';
 import { BODY, FEELINGS, LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import { PRACTICES } from '@/lib/challenge';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
+import { THEME_REFLECTIONS, hasThemeAnswers } from '@/lib/theme-reflection';
+import { DayReflection } from '@/components/day-reflection';
 
 export function ChallengeDay({ day, card, name, suggested, draft, onDraft, onComplete }: { day: number; card: GameCard; name: string; suggested: LevelKey; draft?: Partial<ChallengeAnswer> | undefined; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
-  const [step, setStep] = useState<'cover' | 'level' | 'answers'>('cover');
+  const [step, setStep] = useState<'cover' | 'level' | 'answers' | 'reflection'>('cover');
   const [flipped, setFlipped] = useState(false);
   const [answer, setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? { feelings: [], body: [], hurt: '', shadow: '', resource: '', practice: [] });
   const practice = PRACTICES[day-1];
+  const theme = THEME_REFLECTIONS[card.stage];
   if (!practice) return null;
   const update = (values: Partial<ChallengeAnswer>) => { const next = {...answer,...values}; setAnswer(next); onDraft(next); };
   const next = (value: typeof step) => {setStep(value); window.scrollTo(0,0);};
-  const valid = Boolean(answer.level && answer.feelings?.length && answer.hurt?.trim() && answer.resource?.trim() && (day === 1 || answer.shadow?.trim()) && practice.questions.every((_,i) => answer.practice?.[i]?.trim()));
+  const valid = Boolean(answer.level && answer.feelings?.length && answer.hurt?.trim() && answer.resource?.trim() && answer.shadow?.trim() && hasThemeAnswers(answer) && practice.questions.every((_,i) => answer.practice?.[i]?.trim()));
   return <div className="space-y-6 animate-rise">
     <p className="text-sm uppercase text-gold">День {day} / 7 · {practice.title}</p>
     <h1 className="text-4xl font-semibold">{card.stage}</h1>
@@ -39,10 +42,16 @@ export function ChallengeDay({ day, card, name, suggested, draft, onDraft, onCom
       <p className="border-l-2 border-gold pl-4 text-sm leading-relaxed text-muted-foreground">{card.levels[answer.level].text}</p>
       <section className="border-y border-border py-5"><h2 className="text-2xl font-semibold">{practice.title}</h2><p className="mt-3 leading-relaxed">{practice.concept}</p></section>
       <section className="space-y-3"><h3 className="font-sans font-semibold">Что ты чувствуешь?</h3><Chips items={FEELINGS} value={answer.feelings ?? []} onChange={feelings => update({feelings})} /><p className="text-sm">Где в теле отклик?</p><Chips items={BODY} value={answer.body ?? []} onChange={body => update({body})} /></section>
-      {([['hurt','Что именно задевает: фраза, жест, действие?'], ...(day > 1 ? [['shadow','Что ты не разрешаешь себе в этой ситуации?']] : []), ['resource','Что бы ты ответила подруге?']] as [ 'hurt' | 'shadow' | 'resource', string][]).map(([key,label]) => <label key={key} className="block space-y-2 font-semibold">{label}<textarea aria-label={label} value={answer[key] ?? ''} onChange={e => update({[key]: e.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 font-normal outline-none focus:border-gold" /></label>)}
+      {theme && <section className="space-y-5 border-y border-border py-5"><h2 className="text-2xl font-semibold">{card.stage} в моей жизни</h2>{theme.questions.map((question,i) => <label key={question} className="block space-y-2 font-semibold">{question}<textarea aria-label={question} value={answer.topicAnswers?.[i] ?? ''} onChange={e => {const values = [...(answer.topicAnswers ?? [])]; values[i] = e.target.value; update({topicAnswers:values});}} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 font-normal outline-none focus:border-gold" /></label>)}</section>}
+      {([['hurt','Что именно задевает: фраза, жест, действие?'], ['shadow','Что ты не разрешаешь себе в этой ситуации?'], ['resource','Что бы ты ответила подруге?']] as [ 'hurt' | 'shadow' | 'resource', string][]).map(([key,label]) => <label key={key} className="block space-y-2 font-semibold">{label}<textarea aria-label={label} value={answer[key] ?? ''} onChange={e => update({[key]: e.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 font-normal outline-none focus:border-gold" /></label>)}
       {practice.questions.map((question,i) => <label key={question} className="block space-y-2 font-semibold">{question}<textarea aria-label={question} value={answer.practice?.[i] ?? ''} onChange={e => {const values = [...(answer.practice ?? [])]; values[i] = e.target.value; update({practice:values});}} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 font-normal outline-none focus:border-gold" /></label>)}
-      <Btn disabled={!valid} onClick={() => onComplete({day, stage:card.stage, level:answer.level ?? 'soft', feelings:answer.feelings ?? [], body:answer.body ?? [], hurt:answer.hurt ?? '', shadow:answer.shadow ?? '', resource:answer.resource ?? '', practice:answer.practice ?? [], doneAt:new Date().toISOString()})}>Сохранить день {day}</Btn>
+      <Btn disabled={!valid} onClick={() => next('reflection')}>Что мои ответы подсвечивают?</Btn>
       <Btn variant="ghost" onClick={() => next('level')}>Выбрать другую силу ситуации</Btn>
+    </>}
+    {step === 'reflection' && <>
+      <DayReflection stage={card.stage} answer={answer} />
+      <Btn disabled={!valid} onClick={() => onComplete({day, stage:card.stage, level:answer.level ?? 'soft', feelings:answer.feelings ?? [], body:answer.body ?? [], hurt:answer.hurt ?? '', shadow:answer.shadow ?? '', resource:answer.resource ?? '', practice:answer.practice ?? [], topicAnswers:answer.topicAnswers ?? [], doneAt:new Date().toISOString()})}>Сохранить день {day}</Btn>
+      <Btn variant="ghost" onClick={() => next('answers')}>Вернуться к ответам</Btn>
     </>}
   </div>;
 }
