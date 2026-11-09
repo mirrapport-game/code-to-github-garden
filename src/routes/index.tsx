@@ -56,6 +56,34 @@ function ScenarioHeader({ card }: { card: GameCard }) {
   );
 }
 
+function IntroShade({ shadeId }: { shadeId: string }) {
+  const [opened, setOpened] = useState(false);
+  const shade = drawShade(undefined, shadeId, []) ?? undefined;
+  const current = opened ? shadeById(shadeId) : undefined;
+  if (!current) return null;
+  return (
+    <section className="space-y-4">
+      <p className="text-center text-xs uppercase tracking-[0.2em] text-gold">Оттенки тени · {current.category}</p>
+      {!opened ? (
+        <div className="mx-auto w-full max-w-xs">
+          <button onClick={() => setOpened(true)} aria-label="Открыть оттенок тени" className="gold-frame block aspect-[2/3] w-full overflow-hidden rounded-2xl shadow-card">
+            <img src={shadowCover} alt="Колода «Оттенки тени»" width={1024} height={1536} className="h-full w-full object-contain" />
+          </button>
+        </div>
+      ) : (
+        <div className="gold-frame rounded-2xl bg-card p-6 shadow-card">
+          <h3 className="text-center text-3xl font-semibold">{current.name}</h3>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Это случайный ракурс для размышления, а не вывод о тебе. Тень — то, что может быть вытеснено или не разрешено; интеграция — то, как эта сила может помогать без разрушения. Оставь только то, что откликается.</p>
+          <div className="mt-5 space-y-4 text-sm leading-relaxed">
+            <p><span className="font-semibold text-gold">Теневое проявление: </span>{current.shadow}</p>
+            <p><span className="font-semibold text-gold">Интегрированное проявление: </span>{current.integrated}</p>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Index() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("intro");
