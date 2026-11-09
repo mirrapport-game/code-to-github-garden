@@ -6,7 +6,7 @@ import { Btn, Chips, Logo, Stop } from "@/components/game-ui";
 import { BODY, FEELINGS, LEVEL_META, drawCard, type GameCard, type LevelKey } from "@/lib/cards";
 import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
 import { IntroTrainer } from '@/components/intro-trainer';
-import { loadTrainer } from '@/lib/intro-trainer';
+import { clearTrainer, loadTrainer } from '@/lib/intro-trainer';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 import type { UIMessage } from 'ai';
 import type { DialogueTurn } from '@/lib/intro-dialogue';
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "reflection" | "cta";
+type Step = "intro" | "card" | "level" | "questions" | "dialogue" | "cta";
 
 function CoverView({ card }: { card: GameCard }) {
   const [flipped, setFlipped] = useState(false);
@@ -66,9 +66,6 @@ function Index() {
   const [level, setLevel] = useState<LevelKey | null>(null);
   const [feelings, setFeelings] = useState<string[]>([]);
   const [body, setBody] = useState<string[]>([]);
-  const [a1, setA1] = useState("");
-  const [a2, setA2] = useState("");
-  const [a3, setA3] = useState("");
   const [name, setName] = useState("");
   const [dialogue, setDialogue] = useState<DialogueTurn[]>([]);
   const [trainerMessages, setTrainerMessages] = useState<UIMessage[]>([]);
@@ -86,28 +83,24 @@ function Index() {
   }, []);
 
   const reset = () => {
+    clearTrainer();
     setStep("intro");
     setCard(null);
     setLevel(null);
     setFeelings([]);
     setBody([]);
-    setA1("");
-    setA2("");
-    setA3("");
     setDialogue([]);
     setTrainerMessages([]); setAiSummary('');
   };
 
   const draw = () => {
+    clearTrainer();
     saveSeasonName(name.trim());
     const next = drawCard(card ?? undefined) ?? null;
     setCard(next);
     setLevel(null);
     setFeelings([]);
     setBody([]);
-    setA1('');
-    setA2('');
-    setA3('');
     setDialogue([]);
     setTrainerMessages([]); setAiSummary('');
     setStep("card");
@@ -122,15 +115,16 @@ function Index() {
           level,
           feelings,
           body,
-          hurt: a1,
-          shadow: a2,
-          resource: a3,
+           hurt: '',
+           shadow: '',
+           resource: '',
           cardId: card.id,
            dialogue: completedDialogue,
            aiSummary: completedSummary,
           doneAt: new Date().toISOString(),
         });
     }
+    clearTrainer();
     setStep("cta");
   };
 
@@ -230,36 +224,7 @@ function Index() {
               <p className="mt-3">{card.levels[level].text}</p>
             </div>
             {card.id && <IntroTrainer key={`${card.id}-${level}`} cardId={card.id} level={level} initialMessages={trainerMessages} initialSummary={aiSummary} onComplete={(turns, summary) => { setDialogue(turns); setAiSummary(summary); finishDay(turns, summary); }} />}
-            <Btn variant="ghost" onClick={() => setStep('questions')}>Вернуться к чувствам и вопросам</Btn>
-          </div>
-        )}
-
-        {step === "reflection" && card && (
-          <div className="space-y-6 animate-rise">
-            <div className="gold-frame rounded-2xl bg-night-gradient p-8 text-night-foreground shadow-card">
-              <p className="font-display text-xl italic leading-relaxed text-gold-soft">
-                {hi}ты попробовала побыть в этой роли. Что оказалось знакомым? Посмотри на свои ответы: что тебя задело, что хотелось сказать и что может поддержать тебя.
-              </p>
-            </div>
-            {[
-              ["Что тебя задело", a1 || "—"],
-              ["Что хочется сказать или сделать", a2 || "Можно оставить этот вопрос открытым."],
-              ["Что может поддержать тебя", a3 || "Что поможет тебе почувствовать больше опоры?"],
-            ].map(([k, v]) => (
-              <div key={k} className="rounded-2xl border border-border bg-card p-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-gold">{k}</p>
-                <p className="mt-2 font-display text-2xl leading-snug">{v}</p>
-              </div>
-            ))}
-            {dialogue.length > 0 && <section className="space-y-3 border-t border-border pt-5">
-              <h3 className="text-2xl font-semibold">Твой диалог</h3>
-              {dialogue.map((turn, index) => <div key={index} className="border-l-2 border-gold pl-4">
-                <p className="text-xs text-muted-foreground">{turn.role === 'participant' ? 'Ты' : 'Предполагаемый ответ другой стороны'}</p>
-                <p className="mt-1 whitespace-pre-wrap break-words">{turn.text}</p>
-              </div>)}
-            </section>}
-            {feelings.length > 0 && <p className="text-center text-muted-foreground">Ты заметила: {feelings.join(", ")}{body.length ? ` — ${body.join(", ")}` : ""}</p>}
-            <Btn onClick={finishDay}>Дальше</Btn>
+            <Btn variant="ghost" onClick={() => setStep('questions')}>Вернуться к чувствам</Btn>
           </div>
         )}
 

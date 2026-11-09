@@ -36,3 +36,6 @@ export function loadTrainer(): TrainerSession | null {
 export function saveTrainer(session: TrainerSession) {
   window.localStorage.setItem(KEY, JSON.stringify({ ...session, messages: textOnlyMessages(session.messages) }));
 }
+export function clearTrainer() {
+  try { window.localStorage.removeItem(KEY); } catch { /* Storage unavailable. */ }
+}

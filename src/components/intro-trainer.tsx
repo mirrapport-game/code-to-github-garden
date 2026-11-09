@@ -21,6 +21,7 @@ export function IntroTrainer({ cardId, level, initialMessages, initialSummary, o
   const input = useRef<HTMLTextAreaElement>(null);
   const mode = useRef<'dialogue' | 'summary'>('dialogue');
   const summaryId = useRef<string | null>(null);
+  const summaryStart = useRef<number | null>(null);
   const transport = useMemo(() => new DefaultChatTransport({
     api: '/api/intro-trainer',
     prepareSendMessagesRequest: ({ messages }) => ({ body: { cardId, level, mode: mode.current, messages: textOnlyMessages(messages) } }),
@@ -46,18 +47,19 @@ export function IntroTrainer({ cardId, level, initialMessages, initialSummary, o
     },
   });
   const busy = status === 'submitted' || status === 'streaming';
-  const dialogueMessages = messages.filter(m => m.id !== summaryId.current && !m.parts.some(p => p.type === 'text' && p.text === 'Завершаю сцену. Подведи итог нашего разговора.'));
+  const dialogueMessages = useMemo(() => messages.filter((m, index) => (summaryStart.current === null || index < summaryStart.current) && m.id !== summaryId.current && !m.parts.some(p => p.type === 'text' && p.text === 'Завершаю сцену. Подведи итог нашего разговора.')), [messages]);
+  const liveSummary = summaryMode && summaryStart.current !== null ? messages.slice(summaryStart.current).filter(m => m.role === 'assistant').flatMap(m => m.parts.filter(p => p.type === 'text').map(p => p.text)).join('') : summary;
   useEffect(() => () => { void stop(); }, [stop]);
   useEffect(() => {
     try { saveTrainer({ cardId, level, messages: textOnlyMessages(dialogueMessages), summary }); }
     catch { setFailure('Не удалось сохранить разговор в этом браузере. Не закрывай страницу до завершения.'); }
-  }, [cardId, level, messages, summary]);
+  }, [cardId, level, dialogueMessages, summary]);
   useEffect(() => { if (!busy && !summaryMode) input.current?.focus(); }, [busy, summaryMode]);
   const finish = () => {
     onComplete(textOnlyMessages(dialogueMessages).map(m => ({ role: m.role === 'user' ? 'participant' : 'other', text: m.parts.filter(p => p.type === 'text').map(p => p.text).join('\n') })), summary);
   };
   const conclude = () => {
-    setFailure(''); mode.current = 'summary'; setSummaryMode(true);
+    setFailure(''); mode.current = 'summary'; summaryStart.current = messages.length; setSummaryMode(true);
     void sendMessage({ text: 'Завершаю сцену. Подведи итог нашего разговора.' });
   };
   return <section className="space-y-5">
@@ -81,7 +83,7 @@ export function IntroTrainer({ cardId, level, initialMessages, initialSummary, o
       <Btn disabled={busy || !dialogueMessages.some(m => m.role === 'assistant' && m.parts.some(p => p.type === 'text' && p.text.trim()))} onClick={conclude}>Завершить разговор · увидеть итог</Btn>
     </>}
     {summaryMode && <>
-      {summary && <div className="border-l-2 border-gold pl-4 leading-relaxed"><MessageResponse>{summary}</MessageResponse></div>}
+      {liveSummary && <div className="border-l-2 border-gold pl-4 leading-relaxed"><MessageResponse>{liveSummary}</MessageResponse></div>}
       {busy && <Shimmer>Собираем то, что стало заметно…</Shimmer>}
       {!busy && !summary && <Btn variant="ghost" onClick={() => { setSummaryMode(false); mode.current = 'dialogue'; }}>Вернуться к разговору</Btn>}
       {summary && <Btn disabled={busy} onClick={finish}>Дальше</Btn>}
