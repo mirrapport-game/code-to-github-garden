@@ -45,7 +45,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, on
     </>}
     {step === 'reflection' && selected && <>
       <ShadowReflection shadeId={shadeId} answers={answer.shadowAnswers} onAnswers={shadowAnswers => update({shadowAnswers})} />
-      <ChoiceReflection answer={{...answer,stage:theme,cardId:card.id,cardStage:card.stage}} />
+      <ChoiceReflection showShade={false} answer={{...answer,stage:theme,cardId:card.id,cardStage:card.stage}} />
       <Btn onClick={() => onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:[],body:[],hurt:selected.text,shadow:'',resource:selected.resource,practice:[],doneAt:new Date().toISOString()})}>Сохранить день {day}</Btn>
       <Btn variant="ghost" onClick={() => next('answers')}>Выбрать другой ответ</Btn>
     </>}
