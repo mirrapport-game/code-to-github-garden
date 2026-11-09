@@ -4,8 +4,8 @@ import { Btn } from '@/components/game-ui';
 import { SHADOW_SHADES } from '@/lib/shadow-shades';
 import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
 
-export function ShadowReflection({ shadeId, answers = [], onAnswers }: { shadeId?: string | undefined; answers?: string[] | undefined; onAnswers?: ((answers: string[]) => void) | undefined }) {
-  const [opened, setOpened] = useState(!onAnswers);
+export function ShadowReflection({ shadeId, answers = [], onAnswers, expanded = false }: { shadeId?: string | undefined; answers?: string[] | undefined; onAnswers?: ((answers: string[]) => void) | undefined; expanded?: boolean }) {
+  const [opened, setOpened] = useState(expanded || !onAnswers);
   const shade = SHADOW_SHADES.find(s => s.id === shadeId);
   if (!shade) return null;
   const image = SHADE_IMAGES[shade.id];
@@ -21,6 +21,7 @@ export function ShadowReflection({ shadeId, answers = [], onAnswers }: { shadeId
       <div className="mx-auto max-w-xs"><Btn variant="ghost" className="gold-frame aspect-[2/3] overflow-hidden rounded-lg p-0 shadow-card" onClick={() => setOpened(true)} aria-label="Открыть оттенок тени"><img src={cover} alt="Оттенки тени" width={1024} height={1536} loading="lazy" className="h-full w-full object-contain" /></Btn></div>
       <Btn onClick={() => setOpened(true)}>Открыть оттенок тени</Btn>
     </> : <>
+      {expanded && <div className="mx-auto max-w-xs"><img src={cover} alt="Оттенки тени" width={1024} height={1536} className="gold-frame aspect-[2/3] w-full rounded-lg object-contain shadow-card" /></div>}
       <p className="text-sm leading-relaxed text-muted-foreground">Эта карта выпала случайно. Примерь её образы к ситуации: что-то может быть знакомо, а что-то — совсем не про тебя. Это не оценка и не диагноз.</p>
       <p className="font-display text-xl italic text-gold">{image.associations}</p>
       <div className="border-l-2 border-gold pl-4"><h3 className="text-2xl font-semibold">Когда тень мешает</h3><p className="mt-2 leading-relaxed">{image.shadow}</p></div>
