@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useParticipant } from '@/components/participant-provider';
 export function ParticipantMenu(){
   const {pathname}=useLocation();
-  if(!['/season','/progress','/profile','/admin'].includes(pathname))return null;
+  if(!['/','/season','/progress','/profile','/admin'].includes(pathname))return null;
   return <nav aria-label="Главное меню" className="challenge-theme fixed inset-x-0 bottom-0 z-40 border-t border-border bg-night text-foreground"><div className="mx-auto grid max-w-lg grid-cols-3 pb-[env(safe-area-inset-bottom)]">{([{to:'/season',label:'Сегодня',icon:CalendarDays},{to:'/progress',label:'Прогресс',icon:ChartNoAxesCombined},{to:'/profile',label:'Профиль',icon:UserRound}] as const).map(item=><Button key={item.to} asChild variant="ghost" className={`h-16 flex-col gap-1 rounded-none text-xs ${pathname===item.to?'text-gold':'text-muted-foreground'}`}><Link to={item.to} aria-current={pathname===item.to?'page':undefined}><item.icon/><span>{item.label}</span></Link></Button>)}</div></nav>;
 }
 export function TelegramNotifications(){

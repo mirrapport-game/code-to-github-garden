@@ -2,7 +2,10 @@ import { SHADOW_SHADES } from '@/lib/shadow-shades';
 
 export type IntroIntegration = {
   quality: string;
-  step: 'meaning' | 'reaction' | 'balance' | 'resource' | 'summary';
+  step: 'meaning' | 'manifestations' | 'reaction' | 'feelings' | 'balance' | 'resource' | 'summary';
+  ratingBefore?: number;
+  ratingAfter?: number;
+  afterFeelings?: string[];
   meaning: string;
   where: string;
   afraid: string;
@@ -70,8 +73,10 @@ export function integrationReactions(quality: string) {
 export function canContinueIntegration(value: IntroIntegration): boolean {
   const filled = (...items: string[]) => items.every(item => Boolean(item.trim()));
   switch (value.step) {
-    case 'meaning': return Boolean(integrationProfile(value.quality)) && filled(value.meaning,value.where,value.afraid);
-    case 'reaction': return integrationReactions(value.quality).some(reaction => reaction.id === value.reactionId) && filled(value.after);
+    case 'meaning': return Boolean(integrationProfile(value.quality)) && filled(value.where,value.afraid) && Number.isInteger(value.ratingBefore) && (value.ratingBefore ?? 0) >= 1 && (value.ratingBefore ?? 11) <= 10;
+    case 'manifestations': return true;
+    case 'reaction': return integrationReactions(value.quality).some(reaction => reaction.id === value.reactionId);
+    case 'feelings': return Boolean(value.afterFeelings?.length) && Number.isInteger(value.ratingAfter) && (value.ratingAfter ?? 0) >= 1 && (value.ratingAfter ?? 11) <= 10;
     case 'balance': return filled(value.balance);
     case 'resource': return filled(value.resource,value.smallStep);
     case 'summary': return true;

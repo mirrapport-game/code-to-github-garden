@@ -41,6 +41,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       </RadioGroup>
       {answer.level && <p className="border-l-2 border-gold pl-4 leading-relaxed">{card.levels[answer.level].text}</p>}
       <Btn disabled={!answer.level} onClick={() => next('answers')}>К ответам</Btn>
+      <Btn variant="ghost" onClick={() => next('cover')}>Назад</Btn>
     </>}
     {step === 'answers' && answer.level && <>
       <p className="border-l-2 border-gold pl-4 leading-relaxed">{card.levels[answer.level].text}</p>
@@ -67,12 +68,11 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
     </>}
     {step === 'introSummary' && selected && introductory && <>
       <h2 className="text-3xl font-semibold">Итог</h2>
-      <section><h3 className="text-2xl font-semibold">Тень</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.shadow}</p><p className="mt-2 text-sm text-muted-foreground">То, что ты пока не позволяешь себе, по твоему выбору.</p></section>
+      <section><h3 className="text-2xl font-semibold">Тень</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.introReflection?.notAllowed.map(quality=>integrationProfile(quality)?.name ?? quality).join(', ')}</p><p className="mt-2 text-sm text-muted-foreground">То, что ты пока не позволяешь себе, по твоему выбору.</p></section>
       <section><h3 className="text-2xl font-semibold">Качество</h3><p className="mt-3 leading-relaxed">{answer.introReflection?.qualities.join(', ')}</p><p className="mt-2 text-sm text-muted-foreground">{answer.introReflection?.spheres.join(' · ')}</p></section>
       {answer.introReflection?.strength && <section><h3 className="text-2xl font-semibold">Сила</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.introReflection.strength}</p></section>}
       <section><h3 className="text-2xl font-semibold">Чего боюсь</h3><p className="mt-3 leading-relaxed">{answer.introReflection?.fears?.join(', ')}</p></section>
       <section><h3 className="text-2xl font-semibold">Ресурс</h3><p className="mt-3 leading-relaxed">{selected.resource}</p></section>
-      {integration?.step === 'summary' && <section className="border-t border-border pt-6"><h3 className="text-2xl font-semibold">Моя интеграция · {integrationProfile(integration.quality)?.name}</h3><p className="mt-3 whitespace-pre-line">{integration.resource}</p><h4 className="mt-4 text-xl">Маленький шаг</h4><p className="mt-2 whitespace-pre-line">{integration.smallStep}</p></section>}
       {integrationQuality ? <Btn onClick={()=>{if (!integration) update({introIntegration:emptyIntegration(integrationQuality)});next('integration');}}>{integration?.step === 'summary' ? 'Посмотреть интеграцию тени' : 'Интегрировать тень'}</Btn> : <p className="text-sm text-muted-foreground">Пока можно оставить «не знаю». Чтобы попробовать интеграцию, выбери в рефлексии качество, которое себе не позволяешь.</p>}
       <Btn onClick={complete}>Завершить первую карту</Btn>
       <Btn variant="ghost" onClick={() => next('reflection')}>К моим ответам</Btn>

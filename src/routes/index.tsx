@@ -75,7 +75,7 @@ function Index() {
   if (step === "intro") {
     return (
       <main className="min-h-screen bg-night-gradient text-night-foreground">
-        <div className="mx-auto flex min-h-screen max-w-md flex-col px-6 py-10">
+        <div className="mx-auto flex min-h-screen max-w-md flex-col px-6 pb-28 pt-10">
           <div className="flex flex-col items-center text-center animate-rise">
             <Logo className="h-16 w-16 text-4xl" />
             <h1 className="mt-5 text-5xl font-semibold leading-none text-gold-gradient">Раппорт</h1>
@@ -102,6 +102,8 @@ function Index() {
             </label>
             <input
               aria-label="Твоё имя"
+              name="participant-display-name"
+              autoComplete="off"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Твоё имя"
@@ -121,7 +123,7 @@ function Index() {
   return (
     <main className="challenge-theme min-h-screen bg-night-gradient text-foreground">
       <Stop onStop={reset} />
-      <div className="mx-auto max-w-md px-6 pb-16 pt-20">
+      <div className="mx-auto max-w-md px-6 pb-28 pt-20">
         {step === "card" && card && assignment && <ChallengeDay
           key={assignment.cardId + assignment.theme}
           introductory
@@ -167,9 +169,6 @@ function Index() {
             <p className="text-sm text-muted-foreground">
               Запись откроется, когда появится контакт организатора.
             </p>
-            <Btn variant="ghost" onClick={draw}>
-              Вытянуть ещё карту
-            </Btn>
           </div>
         )}
       </div>
