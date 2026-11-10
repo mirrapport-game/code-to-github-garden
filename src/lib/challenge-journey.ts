@@ -3,6 +3,13 @@ import type { GameCard } from '@/lib/cards';
 
 export const JOURNEY_STEPS = ['scenario', 'reflection', 'story', 'shadeMeaning', 'shadePlay', 'balance', 'resource'] as const;
 export type JourneyStep = typeof JOURNEY_STEPS[number];
+export type ShadeAssessment = {mode:'scale';rating:number} | {mode:'words';text:string};
+export function validShadeAssessment(value?: ShadeAssessment): boolean {
+  return value?.mode === 'scale' ? Number.isInteger(value.rating) && value.rating >= 1 && value.rating <= 10 : value?.mode === 'words' ? Boolean(value.text.trim()) : false;
+}
+export function shadeRatingChange(before?: ShadeAssessment, after?: ShadeAssessment): number | null {
+  return before?.mode === 'scale' && after?.mode === 'scale' && validShadeAssessment(before) && validShadeAssessment(after) ? after.rating - before.rating : null;
+}
 export function showShadeProgress(screen: string, step: JourneyStep = 'scenario', acquainted = 0): boolean {
   if (screen === 'day') return ['shadeMeaning', 'shadePlay', 'balance', 'resource'].includes(step);
   return ['overview', 'summary', 'feedback'].includes(screen) && acquainted > 0;
@@ -22,6 +29,8 @@ export type JourneyDraft = {
   balance: string;
   resource: string;
   smallStep: string;
+  shadeBefore?: ShadeAssessment;
+  shadeAfter?: ShadeAssessment;
 };
 export function emptyJourney(): JourneyDraft {
   return {step:'scenario',before:'',rejected:'',recognition:'',repelled:'',meaning:'',where:'',afraid:'',replay:'',after:'',manifestation:'',balance:'',resource:'',smallStep:''};
@@ -31,9 +40,9 @@ export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level
   switch (step) {
     case 'scenario': return level === 'soft' || level === 'medium' || level === 'hard';
     case 'reflection': return filled(draft.before,draft.rejected,draft.recognition,draft.repelled);
-    case 'shadeMeaning': return filled(draft.meaning,draft.where,draft.afraid);
+    case 'shadeMeaning': return filled(draft.meaning,draft.where,draft.afraid) && (!draft.shadeBefore || validShadeAssessment(draft.shadeBefore));
     case 'shadePlay': return filled(draft.replay,draft.after,draft.manifestation);
-    case 'balance': return filled(draft.balance);
+    case 'balance': return filled(draft.balance) && (!draft.shadeBefore || validShadeAssessment(draft.shadeAfter));
     case 'resource': return filled(draft.resource,draft.smallStep);
     case 'story': return true;
   }
