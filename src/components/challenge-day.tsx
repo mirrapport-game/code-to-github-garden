@@ -51,6 +51,9 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
     </>}
     {step === 'reflection' && selected && introductory && <>
       <h2 className="text-3xl font-semibold">Рефлексия</h2>
+      <p className="font-display text-2xl">Прочитай ещё раз сценарий и выбери чувства и качества, которые откликаются.</p>
+      <h3 className="text-2xl font-semibold">{card.scenario}</h3>
+      <p className="whitespace-pre-line border-l-2 border-gold pl-4 leading-relaxed">{answer.level ? card.levels[answer.level].text : card.context}</p>
       <IntroReflection answer={answer} onChange={update} />
       <Btn disabled={!introReflectionComplete(answer)} onClick={() => next('introSummary')}>ИТОГ</Btn>
       <Btn variant="ghost" onClick={() => next('answers')}>Выбрать другой ответ</Btn>
@@ -59,7 +62,8 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       <h2 className="text-3xl font-semibold">Итог</h2>
       <section><h3 className="text-2xl font-semibold">Тень</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.shadow}</p><p className="mt-2 text-sm text-muted-foreground">То, что ты пока не позволяешь себе, по твоему выбору.</p></section>
       <section><h3 className="text-2xl font-semibold">Качество</h3><p className="mt-3 leading-relaxed">{answer.introReflection?.qualities.join(', ')}</p><p className="mt-2 text-sm text-muted-foreground">{answer.introReflection?.spheres.join(' · ')}</p></section>
-      <section><h3 className="text-2xl font-semibold">Сила</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.introReflection?.strength}</p></section>
+      {answer.introReflection?.strength && <section><h3 className="text-2xl font-semibold">Сила</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.introReflection.strength}</p></section>}
+      <section><h3 className="text-2xl font-semibold">Чего боюсь</h3><p className="mt-3 leading-relaxed">{answer.introReflection?.fears?.join(', ')}</p></section>
       <section><h3 className="text-2xl font-semibold">Ресурс</h3><p className="mt-3 leading-relaxed">{selected.resource}</p></section>
       <Btn onClick={complete}>Завершить первую карту</Btn>
       <Btn variant="ghost" onClick={() => next('reflection')}>К моим ответам</Btn>

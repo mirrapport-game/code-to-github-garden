@@ -7,17 +7,23 @@ import { emptyChallenge, loadChallenge } from '@/lib/challenge-store';
 
 describe('Introductory four-answer card', () => {
   beforeEach(() => window.localStorage.clear());
-  it('requires feeling, quality and sphere selections and her own strength after one of four responses', () => {
-    const reflection = {qualities:['Резкость'],notAllowed:['Смелость'],spheres:['На работе','Дома'],strength:'Могу ясно сказать о важном'};
-    const draft = {choiceId:'2',feelings:['Злость','Обида'],hurt:'Резкость',shadow:'Смелость',introReflection:reflection};
+  it('requires feeling, quality, sphere and fear selections without requiring a strength answer', () => {
+    const reflection = {qualities:['Резкость'],notAllowed:['Смелой'],spheres:['На работе','Дома'],strength:'',fears:['Осуждения','Обвинений']};
+    const draft = {choiceId:'2',feelings:['Злость','Обида'],hurt:'Резкость',shadow:'Смелой',introReflection:reflection};
     expect(introReflectionComplete(draft)).toBe(true);
     expect(introReflectionComplete({...draft, feelings:[]})).toBe(false);
     expect(introReflectionComplete({...draft, introReflection:{...reflection,qualities:[]}})).toBe(false);
     expect(introReflectionComplete({...draft, introReflection:{...reflection,notAllowed:[]}})).toBe(false);
     expect(introReflectionComplete({...draft, introReflection:{...reflection,spheres:[]}})).toBe(false);
-    expect(introReflectionComplete({...draft, introReflection:{...reflection,strength:' '}})).toBe(false);
+    expect(introReflectionComplete({...draft, introReflection:{...reflection,fears:[]}})).toBe(false);
     saveIntroChoices({theme:'Границы',cardId:cardsForTheme('Границы')[0]?.id ?? '',draft});
     expect(loadIntroChoices()?.draft).toEqual(draft);
+  });
+  it('restores saved self-quality selections in feminine form without losing other answers',()=>{
+    const cardId=cardsForTheme('Границы')[0]?.id ?? '';
+    saveIntroChoices({theme:'Границы',cardId,draft:{introReflection:{qualities:['Наглость'],notAllowed:['Наглость','Смелость'],spheres:['Дома'],strength:'Моя прежняя запись'}}});
+    expect(loadIntroChoices()?.draft.introReflection?.notAllowed).toEqual(['Наглой','Смелой']);
+    expect(loadIntroChoices()?.draft.introReflection?.strength).toBe('Моя прежняя запись');
   });
   it('randomly assigns each of the nine themes with a matching official scenario', () => {
     DEMO_THEMES.forEach((theme, index) => {
