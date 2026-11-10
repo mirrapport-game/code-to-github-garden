@@ -26,6 +26,11 @@ describe('Selection-only challenge journey',()=>{
     expect(canContinueJourney('scenario',emptyJourney())).toBe(false);
     expect(canContinueJourney('scenario',emptyJourney(),'hard')).toBe(true);
   });
+  it('requires the first AI dialogue for new days while retaining saved legacy choices',()=>{
+    expect(canContinueJourney('scenario',{...emptyJourney(),firstDialogueComplete:false},'soft')).toBe(false);
+    expect(canContinueJourney('scenario',{...emptyJourney(),firstDialogueComplete:true},'soft')).toBe(true);
+    expect(canContinueJourney('scenario',{...emptyJourney(),firstReactionId:'clear'},'soft')).toBe(true);
+  });
   it('requires feelings, 3–5 listed qualities and listed spheres before shade exploration',()=>{
     const journey={...emptyJourney(),before:'Злость',rejected:selected('Наглость','Холодность','Контроль'),recognition:selected('Семья')};
     expect(canContinueJourney('reflection',journey)).toBe(true);

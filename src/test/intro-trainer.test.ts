@@ -1,7 +1,23 @@
 import { describe, it, expect } from "vitest";
-import { clearTrainer, loadTrainer, saveTrainer, trainerRequestSchema, textOnlyMessages } from "@/lib/intro-trainer";
+import { canFinishDialogue, dialogueUI, clearTrainer, loadTrainer, saveTrainer, trainerRequestSchema, textOnlyMessages } from "@/lib/intro-trainer";
 
 describe("Intro AI conversation boundaries", () => {
+  it('requires 5–8 scene messages ending in a partner reply before completion', () => {
+    const turns = dialogueUI(Array.from({length:8}, (_,i)=>({role:i%2===0?'participant' as const:'other' as const,text:`Реплика ${i}`})));
+    expect(canFinishDialogue(turns.slice(0,4))).toBe(false);
+    expect(canFinishDialogue(turns.slice(0,5))).toBe(false);
+    expect(canFinishDialogue(turns.slice(0,6))).toBe(true);
+    expect(canFinishDialogue(turns)).toBe(true);
+  });
+  it('keeps initial and integrated dialogue transcripts independent', () => {
+    const first = dialogueUI([{role:'participant',text:'Я промолчу.'}]);
+    const second = dialogueUI([{role:'participant',text:'Я скажу о своей границе.'}]);
+    const session={cardId:'taxi',level:'soft' as const,summary:''};
+    saveTrainer({...session,messages:first},'first');
+    saveTrainer({...session,messages:second},'integrated');
+    expect(JSON.parse(localStorage.getItem('rapport-intro-trainer-v1:first') ?? '{}').messages).toEqual(first);
+    expect(JSON.parse(localStorage.getItem('rapport-intro-trainer-v1:integrated') ?? '{}').messages).toEqual(second);
+  });
   it("keeps the selected scenario, transcript and summary together until completion", () => {
     const session = { cardId: "taxi", level: "soft" as const, messages: [{ id: "one", role: "user" as const, parts: [{ type: "text" as const, text: "Я не сяду в эту машину." }] }], summary: "Ты обозначила свой выбор." };
     saveTrainer(session);
