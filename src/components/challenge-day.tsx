@@ -30,12 +30,14 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
     <h1 className="text-4xl font-semibold">{card.stage}</h1>
     {!introductory && <p className="text-sm text-gold">{theme}{card.source !== 'official' && ' · Демо-сценарий'}</p>}
     {step === 'cover' && <>
+      <p className="leading-relaxed">Сейчас ты откроешь ситуацию из игры. Прочитай её и представь себя на месте героини: что тебя в ней задевает? Где ты узнаёшь себя? Пока просто замечай свой отклик — отвечать сразу не нужно.</p>
       <div className="mx-auto w-full max-w-xs"><Btn variant="ghost" className="gold-frame relative aspect-[2/3] overflow-auto rounded-lg p-0 shadow-card" onClick={() => setFlipped(!flipped)}>{flipped ? <div className="flex min-h-full flex-col justify-center gap-4 px-5 py-6"><span className="font-display text-2xl">{card.scenario}</span><span className="whitespace-pre-line text-sm font-normal leading-relaxed">{card.context}</span></div> : <img src={card.cover} alt={`Карта «${card.stage}»`} className="absolute inset-0 h-full w-full object-contain" />}</Btn></div>
       <Btn onClick={() => next('level')}>Открыть карту</Btn>
     </>}
     {step === 'level' && <>
       <h2 className="text-2xl font-semibold">{card.scenario}</h2><p className="leading-relaxed">{card.context}</p>
-      <h3 className="text-2xl">Какая сила ситуации тебе подходит сегодня?</h3>
+      <h3 className="text-2xl">Выбери степень жёсткости партнёра</h3>
+      <p className="leading-relaxed">Партнёр — это другой человек в ситуации. Мягкая, средняя или жёсткая: выбери, насколько напряжённым будет ваше взаимодействие сегодня. Затем прочитай выбранный вариант. Начни с того уровня, с которым тебе комфортно; его можно изменить.</p>
       <RadioGroup aria-label="Сила ситуации" value={answer.level ?? ''} onValueChange={value => update({level:value as LevelKey, choiceId:''})}>
         {(Object.keys(LEVEL_META) as LevelKey[]).map(key => <label key={key} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem id={`level-${day}-${key}`} value={key} /><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}
       </RadioGroup>
@@ -52,10 +54,11 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
         {choices.map(choice => <label key={choice.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem className="mt-1 shrink-0" id={`answer-${day}-${choice.id}`} value={choice.id} /><span className="leading-relaxed">{choice.text}</span></label>)}
       </RadioGroup>
       <Btn disabled={!selected} onClick={() => next('reflection')}>Узнать себя</Btn>
-      <Btn variant="ghost" onClick={() => next('level')}>Изменить силу ситуации</Btn>
+      <Btn variant="ghost" onClick={() => next('level')}>Изменить жёсткость партнёра</Btn>
     </>}
     {step === 'reflection' && selected && introductory && <>
       <h2 className="text-3xl font-semibold">Рефлексия</h2>
+      <p className="leading-relaxed">Теперь обрати внимание на свой отклик: что ты чувствуешь, какие качества другого человека тебя задевают и какой ты не разрешаешь быть себе. Можно выбрать несколько вариантов — здесь нет правильных или неправильных ответов.</p>
       <p className="font-display text-2xl">Прочитай ещё раз сценарий и выбери чувства и качества, которые откликаются.</p>
       <h3 className="text-2xl font-semibold">{card.scenario}</h3>
       <p className="whitespace-pre-line border-l-2 border-gold pl-4 leading-relaxed">{answer.level ? card.levels[answer.level].text : card.context}</p>
