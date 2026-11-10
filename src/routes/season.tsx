@@ -1,7 +1,8 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Btn, Logo, Stop } from '@/components/game-ui';
-import { ChallengeDay } from '@/components/challenge-day';
+import { ChallengeJourney } from '@/components/challenge-journey';
+import { ChallengeDaySummary, ChallengeInvitations } from '@/components/challenge-day-summary';
 import { DEMO_CARDS, DEMO_THEMES } from '@/lib/demo-cards';
 import { CHALLENGE_DAYS, canOpenDay, unlockAt, challengeComplete, needsEntryTest } from '@/lib/challenge';
 import { hasPreviousChallenge, assignDay, clearChallenge, loadChallenge, saveChallenge, type ChallengeState, type Feedback } from '@/lib/challenge-store';
@@ -14,14 +15,14 @@ import { SelfTest, TestProfile } from '@/components/self-test';
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
     { title: '7 дней с собой — Раппорт: ЖиваЯ' },
-    { name: 'description', content: 'Знакомство с игрой «Раппорт: ЖиваЯ» за семь дней: короткие истории, случайные карты, личные ответы и тест до и после.' },
+    { name: 'description', content: 'Семь дней знакомства с игрой «Раппорт: ЖиваЯ»: случайный сценарий, личная рефлексия, оттенки тени, поиск баланса и ресурс. Тест до и после.' },
     { property: 'og:title', content: '7 дней с собой — Раппорт: ЖиваЯ' },
     { property: 'og:description', content: 'Семь дней знакомства с игрой «Раппорт: ЖиваЯ» перед продолжением онлайн или вживую.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary_large_image' },
   ] }), component: Season,
 });
 
-type Screen = 'overview' | 'day' | 'feedback' | 'before' | 'after' | 'profile';
+type Screen = 'overview' | 'day' | 'summary' | 'feedback' | 'before' | 'after' | 'profile';
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ function Season() {
             <h2 className="mt-2 text-2xl font-semibold">{p.title}</h2>
             {(entry?.stage || state.assignments[day]) && <p className="mt-2 text-sm text-gold">{entry?.stage ?? state.assignments[day]}</p>}
             {entry ? <details className="mt-3"><summary className="cursor-pointer text-sm text-muted-foreground">{entry.stage} · Твои ответы</summary><div className="mt-4 space-y-4 text-sm">
-              <ChoiceReflection answer={entry} />
+              {entry.journey ? <ChallengeDaySummary answer={entry} /> : <ChoiceReflection answer={entry} />}
             </div></details> : available ? <Btn className="mt-4" onClick={() => open(day)}>{state.assignments[day] ? 'Продолжить день' : 'Открыть день'}</Btn> : <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{needsEntryTest(state) ? 'После входного теста' : !state.startedAt ? 'После начала челленджа' : date && now < date ? `Откроется ${date.toLocaleDateString('ru-RU')} по времени этого устройства, после предыдущего дня.` : 'Сначала заверши предыдущий день.'}</p>}
           </li>;
         })}</ol>
@@ -103,10 +104,16 @@ function Season() {
         {!state.baseline && <p className="text-sm text-muted-foreground">Это твой первый замер после прохождения. Входного результата нет, поэтому сравнение не рассчитываем.</p>}
         <Btn onClick={() => go(completed && state.finalTest ? 'feedback' : 'overview')}>{completed && state.finalTest ? 'К обратной связи' : 'К семи дням'}</Btn>
       </div>}
-      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeDay key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
+      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeJourney key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
         if (!canOpenDay(state,activeDay)) return;
-        if (persist({...state,days:{...state.days,[activeDay]:entry}})) go('overview');
+        if (persist({...state,days:{...state.days,[activeDay]:entry}})) go('summary');
       }} />}
+      {screen === 'summary' && state.days[activeDay] && <div className="space-y-7">
+        <ChallengeDaySummary answer={state.days[activeDay]} />
+        <p className="font-display text-2xl italic">{activeDay < 7 ? 'Возвращайся завтра — новая карта и ещё одна встреча с собой.' : 'Семь дней знакомства с игрой завершены. Что ты забираешь с собой?'}</p>
+        <ChallengeInvitations />
+        {activeDay < 7 ? <><Btn disabled={!canOpenDay(state,activeDay+1,now)} onClick={() => open(activeDay+1)}>Ближе к себе · День {activeDay+1}</Btn>{!canOpenDay(state,activeDay+1,now) && <p className="text-sm text-muted-foreground">Следующий день откроется {unlockAt(state,activeDay+1)?.toLocaleDateString('ru-RU')} в полночь по времени этого устройства.</p>}</> : <Btn onClick={() => go(state.finalTest ? 'feedback' : 'after')}>{state.finalTest ? 'К обратной связи' : 'Пройти тест после семи дней'}</Btn>}
+      </div>}
       {screen === 'feedback' && completed && <div className="space-y-6">
         <p className="text-sm uppercase text-gold">Семь дней пройдены</p><h1 className="text-4xl font-semibold">Что ты забираешь с собой?</h1>
         {([['takeaway','Что ты забираешь из челленджа?'],['useful','Что было полезным?'],['difficult','Что было сложно или не подошло?'],['change','Что стоит изменить в игре?']] as const).map(([key,label]) => <label key={key} className="block space-y-2 font-semibold">{label}<textarea aria-label={label} value={feedback[key]} onChange={e => updateFeedback({[key]:e.target.value})} className="min-h-24 w-full rounded-lg border border-input bg-card p-4 font-normal outline-none focus:border-gold" /></label>)}
