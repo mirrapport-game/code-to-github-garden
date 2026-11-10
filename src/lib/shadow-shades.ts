@@ -1,8 +1,25 @@
 import shades from '@/lib/shadow-shades.json';
 import { PLAYABLE_CARDS, THEME_CARD_IDS } from '@/lib/official-cards';
+import type { ChallengeState } from '@/lib/challenge-store';
 
 export const SHADOW_SHADES = shades;
 export type ShadowShade = (typeof shades)[number];
+/** Count unique revealed shades, not cards that have only been assigned. */
+export function shadeProgress(state: ChallengeState) {
+  const known = new Set(SHADOW_SHADES.map(shade => shade.id));
+  const seen = new Set<string>();
+  for (const [day, answer] of Object.entries(state.days)) {
+    const id = answer.shadeId ?? state.shadeAssignments[Number(day)];
+    if (id && known.has(id)) seen.add(id);
+  }
+  for (const [day, draft] of Object.entries(state.drafts)) {
+    const step = draft.journey?.step;
+    const revealed = step === 'shadeMeaning' || step === 'shadePlay' || step === 'balance' || step === 'resource' || Boolean(draft.shadowAnswers?.some(value => value.trim()));
+    const id = draft.shadeId ?? state.shadeAssignments[Number(day)];
+    if (revealed && id && known.has(id)) seen.add(id);
+  }
+  return { total: SHADOW_SHADES.length, acquainted: seen.size, remaining: SHADOW_SHADES.length - seen.size };
+}
 const stageShades: Record<string, string[]> = {
   'Девочка внутри':['Стыд','Слабость','Принятие','Творчество','Игра'],
   'Подруги и окружение':['Близость','Отвержение','Зависть','Границы','Манипуляция'],
