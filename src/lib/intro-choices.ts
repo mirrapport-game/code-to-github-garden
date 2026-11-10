@@ -6,14 +6,16 @@ export type IntroChoices = { theme: string; cardId: string; draft: Partial<Chall
 
 export const INTRO_FEELINGS = ['Злость', 'Страх', 'Обида', 'Грусть', 'Стыд', 'Вина', 'Тревога', 'Растерянность', 'Раздражение', 'Бессилие', 'Спокойствие', 'Интерес', 'Радость', 'Облегчение', 'Пока не понимаю'];
 export const INTRO_QUALITIES = ['Наглость', 'Напористость', 'Резкость', 'Холодность', 'Слабость', 'Уязвимость', 'Эгоизм', 'Упрямство', 'Контроль', 'Независимость', 'Смелость', 'Прямота', 'Требовательность', 'Мягкость', 'Пока не знаю'];
-export const INTRO_SPHERES = ['На работе', 'Дома', 'С друзьями', 'С коллегами', 'С близким человеком', 'С родителями', 'С детьми', 'В своём деле', 'С незнакомыми людьми', 'Пока нигде не замечаю'];
+export const INTRO_SELF_QUALITIES = ['Наглой', 'Напористой', 'Резкой', 'Холодной', 'Слабой', 'Уязвимой', 'Эгоистичной', 'Упрямой', 'Контролирующей', 'Независимой', 'Смелой', 'Прямой', 'Требовательной', 'Мягкой', 'Пока не знаю'];
+export const INTRO_SPHERES = ['На работе', 'Дома', 'С друзьями', 'С коллегами', 'С близким человеком', 'С родителями', 'С детьми', 'В своём деле', 'С незнакомыми людьми', 'Нигде — позволяю себе'];
+export const INTRO_FEARS = ['Осуждения', 'Обвинений', 'Отвержения', 'Конфликта', 'Непонимания', 'Насмешек', 'Потерять отношения', 'Обидеть другого', 'Ошибиться', 'Показаться эгоистичной', 'Потерять контроль', 'Наказания', 'Ничего не боюсь', 'Пока не знаю'];
 export function emptyIntroReflection(): NonNullable<ChallengeAnswer['introReflection']> {
-  return {qualities:[],notAllowed:[],spheres:[],strength:''};
+  return {qualities:[],notAllowed:[],spheres:[],strength:'',fears:[]};
 }
 
 export function introReflectionComplete(answer: Partial<ChallengeAnswer>): boolean {
   const reflection = answer.introReflection;
-  return Boolean(answer.choiceId && answer.feelings?.some(value => value.trim()) && reflection?.qualities.length && reflection.notAllowed.length && reflection.spheres.length && reflection.strength.trim());
+  return Boolean(answer.choiceId && answer.feelings?.some(value => value.trim()) && reflection?.qualities.length && reflection.notAllowed.length && reflection.spheres.length && reflection.fears?.length);
 }
 
 export function drawIntroChoices(random = Math.random): IntroChoices | null {
@@ -25,7 +27,10 @@ export function drawIntroChoices(random = Math.random): IntroChoices | null {
 export function loadIntroChoices(): IntroChoices | null {
   try {
     const data: IntroChoices | null = JSON.parse(window.localStorage.getItem(KEY) ?? 'null');
-    return data && PLAYABLE_CARDS.some(card => card.id === data.cardId) ? data : null;
+    if (!data || !PLAYABLE_CARDS.some(card => card.id === data.cardId)) return null;
+    const reflection = data.draft.introReflection;
+    if (reflection) reflection.notAllowed = reflection.notAllowed.map(value => INTRO_SELF_QUALITIES[INTRO_QUALITIES.indexOf(value)] ?? value);
+    return data;
   } catch { return null; }
 }
 export function saveIntroChoices(value: IntroChoices) {

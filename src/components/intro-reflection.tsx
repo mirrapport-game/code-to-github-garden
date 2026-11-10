@@ -1,5 +1,5 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import { emptyIntroReflection, INTRO_FEELINGS, INTRO_QUALITIES, INTRO_SPHERES } from '@/lib/intro-choices';
+import { emptyIntroReflection, INTRO_FEELINGS, INTRO_QUALITIES, INTRO_SELF_QUALITIES, INTRO_SPHERES, INTRO_FEARS } from '@/lib/intro-choices';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 
 function Selection({label,items,value,onChange}: {label:string;items:string[];value:string[];onChange:(value:string[])=>void}) {
@@ -17,8 +17,8 @@ export function IntroReflection({answer,onChange}: {answer:Partial<ChallengeAnsw
   return <div className="space-y-7">
     <Selection label="Что чувствуешь?" items={INTRO_FEELINGS} value={answer.feelings ?? []} onChange={feelings => onChange({feelings})} />
     <Selection label="Какие качества тебе трудно принять?" items={INTRO_QUALITIES} value={reflection.qualities} onChange={qualities => update({qualities})} />
-    <Selection label="Какой себе не позволяешь быть?" items={INTRO_QUALITIES} value={reflection.notAllowed} onChange={notAllowed => update({notAllowed})} />
-    <Selection label="Где ещё встречается?" items={INTRO_SPHERES} value={reflection.spheres} onChange={spheres => update({spheres})} />
-    <label className="block space-y-3"><span className="text-2xl font-semibold">В чём сила этих качеств?</span><textarea aria-label="В чём сила этих качеств?" value={reflection.strength} onChange={event => update({strength:event.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold" /></label>
+    <Selection label="Какой себе не позволяешь быть?" items={INTRO_SELF_QUALITIES} value={reflection.notAllowed} onChange={notAllowed => update({notAllowed})} />
+    <Selection label="Где не проявляешь эти качества?" items={INTRO_SPHERES} value={reflection.spheres} onChange={spheres => update({spheres})} />
+    <Selection label="Чего боишься?" items={INTRO_FEARS} value={reflection.fears ?? []} onChange={fears => update({fears})} />
   </div>;
 }
