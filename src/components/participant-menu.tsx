@@ -11,6 +11,6 @@ export function ParticipantMenu(){
 }
 export function TelegramNotifications(){
   const account=useParticipant();const [error,setError]=useState('');
-  const enable=async()=>{if(!account.user){setError('Войди в профиль, чтобы привязать уведомления.');return;}const {data,error:failure}=await supabase.rpc('prepare_telegram_link');if(failure){setError(failure.message);return;}window.open(`https://t.me/RapportDa_bot?start=link_${data}`,'_blank','noopener,noreferrer');};
+  const enable=async()=>{if(!account.user){setError('Войди в профиль, чтобы привязать уведомления.');return;}const {data,error:failure}=await supabase.rpc('prepare_telegram_link');if(failure){setError(failure.message);return;}window.open(`https://t.me/Rapport_zhivaya_bot?start=link_${data}`,'_blank','noopener,noreferrer');};
   return <div className="space-y-2 border-b border-border pb-5"><Button variant="ghost" className="h-auto max-w-full whitespace-normal text-gold" onClick={()=>void enable()}><Bell/>{account.telegram?'Уведомления в Telegram подключены':'Включить уведомления в Telegram'}</Button>{error&&<p role="alert" className="text-sm text-muted-foreground">{error}</p>}</div>;
 }

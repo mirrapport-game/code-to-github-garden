@@ -42,11 +42,15 @@ function Index() {
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
+    const restore=()=>{
     const season = loadSeason();
     setName(season.name);
     setCanReturnToChallenge(hasIntroCompleted(season) || Boolean(loadChallenge().startedAt) || hasPreviousChallenge());
     const saved = loadIntroChoices();
     if (saved) { setAssignment(saved); setStep("card"); }
+    };
+    restore();window.addEventListener('rapport-account-ready',restore);
+    return ()=>window.removeEventListener('rapport-account-ready',restore);
   }, []);
 
   const reset = () => {

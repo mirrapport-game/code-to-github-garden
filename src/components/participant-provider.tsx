@@ -42,8 +42,9 @@ export function ParticipantProvider({children}:{children:ReactNode}) {
         const localIntro=loadSeason(),localChallenge=loadChallenge();
         const same=owner===user.id || !owner;
         window.localStorage.setItem('rapport-season-1',JSON.stringify(same ? {...remoteIntro,...localIntro,days:{...remoteIntro.days,...localIntro.days}} : remoteIntro));
-        window.localStorage.setItem('rapport-challenge-7-v2',JSON.stringify(same && (!remoteChallenge.startedAt || remoteChallenge.startedAt===localChallenge.startedAt) ? {...remoteChallenge,...localChallenge,days:{...remoteChallenge.days,...localChallenge.days},drafts:{...remoteChallenge.drafts,...localChallenge.drafts}} : remoteChallenge));
+        window.localStorage.setItem('rapport-challenge-7-v2',JSON.stringify(same && localChallenge.startedAt && (!remoteChallenge.startedAt || remoteChallenge.startedAt===localChallenge.startedAt) ? {...remoteChallenge,...localChallenge,days:{...remoteChallenge.days,...localChallenge.days},drafts:{...remoteChallenge.drafts,...localChallenge.drafts}} : remoteChallenge));
         if(data.intro_draft && (!same || !loadIntroChoices()))window.localStorage.setItem('rapport-intro-choices-v1',JSON.stringify(data.intro_draft));
+        else if(!same)window.localStorage.removeItem('rapport-intro-choices-v1');
       }else if(owner && owner!==user.id){for(const key of ['rapport-season-1','rapport-challenge-7-v2','rapport-intro-choices-v1'])window.localStorage.removeItem(key);}
       window.localStorage.setItem('rapport-account-owner',user.id);
       const ref=window.localStorage.getItem('rapport-referral');if(ref){const result=await supabase.rpc('claim_game_referral',{p_code:ref});if(!result.error)window.localStorage.removeItem('rapport-referral');}

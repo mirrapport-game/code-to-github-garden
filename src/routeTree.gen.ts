@@ -15,6 +15,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as SeasonRouteImport } from './routes/season'
 import { Route as ApiIntroTrainerRouteImport } from './routes/api/intro-trainer'
+import { Route as ApiPublicJobsTelegramRemindersRouteImport } from './routes/api/public/jobs/telegram-reminders'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +48,12 @@ const ApiIntroTrainerRoute = ApiIntroTrainerRouteImport.update({
   path: '/api/intro-trainer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsTelegramRemindersRoute =
+  ApiPublicJobsTelegramRemindersRouteImport.update({
+    id: '/api/public/jobs/telegram-reminders',
+    path: '/api/public/jobs/telegram-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/progress': typeof ProgressRoute
   '/season': typeof SeasonRoute
   '/api/intro-trainer': typeof ApiIntroTrainerRoute
+  '/api/public/jobs/telegram-reminders': typeof ApiPublicJobsTelegramRemindersRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -70,6 +78,7 @@ export interface FileRoutesByTo {
   '/progress': typeof ProgressRoute
   '/season': typeof SeasonRoute
   '/api/intro-trainer': typeof ApiIntroTrainerRoute
+  '/api/public/jobs/telegram-reminders': typeof ApiPublicJobsTelegramRemindersRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
@@ -80,6 +89,7 @@ export interface FileRoutesById {
   '/progress': typeof ProgressRoute
   '/season': typeof SeasonRoute
   '/api/intro-trainer': typeof ApiIntroTrainerRoute
+  '/api/public/jobs/telegram-reminders': typeof ApiPublicJobsTelegramRemindersRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
@@ -91,6 +101,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/season'
     | '/api/intro-trainer'
+    | '/api/public/jobs/telegram-reminders'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -100,6 +111,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/season'
     | '/api/intro-trainer'
+    | '/api/public/jobs/telegram-reminders'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
@@ -109,6 +121,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/season'
     | '/api/intro-trainer'
+    | '/api/public/jobs/telegram-reminders'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -119,6 +132,7 @@ export interface RootRouteChildren {
   ProgressRoute: typeof ProgressRoute
   SeasonRoute: typeof SeasonRoute
   ApiIntroTrainerRoute: typeof ApiIntroTrainerRoute
+  ApiPublicJobsTelegramRemindersRoute: typeof ApiPublicJobsTelegramRemindersRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
@@ -166,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiIntroTrainerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/telegram-reminders': {
+      id: '/api/public/jobs/telegram-reminders'
+      path: '/api/public/jobs/telegram-reminders'
+      fullPath: '/api/public/jobs/telegram-reminders'
+      preLoaderRoute: typeof ApiPublicJobsTelegramRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -183,6 +204,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProgressRoute: ProgressRoute,
   SeasonRoute: SeasonRoute,
   ApiIntroTrainerRoute: ApiIntroTrainerRoute,
+  ApiPublicJobsTelegramRemindersRoute: ApiPublicJobsTelegramRemindersRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport
