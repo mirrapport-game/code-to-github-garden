@@ -44,7 +44,7 @@ export function IntroIntegration({value,selected,before,card,theme,level,scenari
       {value.feedback ? <>
         <section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{value.feedback}</p></section>
         <Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],personalReaction:''})}>Сыграть заново</Btn>
-      </> : level && <IntroTrainer cardId={card.id} level={level} quality={value.quality} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={[]} initialSummary="" onComplete={(dialogue,feedback)=>update({dialogue,feedback,personalReaction:dialogue.find(turn=>turn.role==='participant')?.text ?? ''})} />}
+      </> : level && <IntroTrainer cardId={card.id ?? """"} level={level} quality={value.quality} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={[]} initialSummary="" onComplete={(dialogue,feedback)=>update({dialogue,feedback,personalReaction:dialogue.find(turn=>turn.role==='participant')?.text ?? ''})} />}
       {next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>
