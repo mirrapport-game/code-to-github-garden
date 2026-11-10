@@ -32,6 +32,7 @@ export const Route = createFileRoute('/season')({
 type Screen = 'overview' | 'day' | 'summary' | 'feedback' | 'before' | 'after' | 'profile' | 'mode' | 'request';
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
+  const account = useParticipant();
   const navigate = useNavigate();
   const [state, setState] = useState<ChallengeState | null>(null);
   const [introDone, setIntroDone] = useState(false);
