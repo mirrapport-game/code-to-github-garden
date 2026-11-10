@@ -52,6 +52,7 @@ function write(state: SeasonState) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(KEY, JSON.stringify(state));
+    window.dispatchEvent(new Event('rapport-progress-changed'));
   } catch {
     // storage unavailable (private mode, quota) — the season simply is not remembered
   }

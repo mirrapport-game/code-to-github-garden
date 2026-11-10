@@ -23,7 +23,7 @@ export function unlockAt(state: ChallengeState, day: number): Date | null {
 }
 export function canOpenDay(state: ChallengeState, day: number, now = new Date()): boolean {
   const date = unlockAt(state, day);
-  return Boolean(!needsEntryTest(state) && date && day >= 1 && day <= 7 && now >= date && !state.days[day] && (day === 1 || state.days[day - 1]));
+  return Boolean(!needsEntryTest(state) && date && day >= 1 && day <= 7 && now >= date && !state.days[day]);
 }
 export function challengeComplete(state: ChallengeState): boolean {
   return Array.from({length: 7}, (_,i) => i+1).every(day => Boolean(state.days[day]));

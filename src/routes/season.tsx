@@ -13,6 +13,7 @@ import { PLAYABLE_CARDS } from '@/lib/official-cards';
 import { SelfTest, TestProfile } from '@/components/self-test';
 import { shadeProgress } from '@/lib/shadow-shades';
 import { showShadeProgress } from '@/lib/challenge-journey';
+import { TelegramNotifications } from '@/components/participant-menu';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
@@ -41,7 +42,9 @@ function Season() {
     setIntroDone(hasIntroCompleted(intro) || Boolean(saved.startedAt) || hasPreviousChallenge());
     setState({...saved, name: saved.name || intro.name});
     const id = setInterval(() => setNow(new Date()),30000);
-    return () => clearInterval(id);
+    const restore=()=>{const value=loadChallenge();setState(value);setIntroDone(hasIntroCompleted(loadSeason())||Boolean(value.startedAt)||hasPreviousChallenge());};
+    window.addEventListener('rapport-account-ready',restore);
+    return () => {clearInterval(id);window.removeEventListener('rapport-account-ready',restore);};
   },[]);
   const persist = (next: ChallengeState) => {
     try {saveChallenge(next); setState(next); setError(''); return true;}
@@ -62,7 +65,8 @@ function Season() {
   const updateFeedback = (values: Partial<Feedback>) => persist({...state, feedback: {...feedback,...values}});
   return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground">
     <Stop onStop={() => go('overview')} />
-    <div className="mx-auto max-w-lg px-5 pb-16 pt-20">
+    <div className="mx-auto max-w-lg px-5 pb-28 pt-20">
+      <div className="mb-6"><TelegramNotifications/></div>
       {error && <p role="alert" className="mb-5 rounded-lg border border-destructive p-4 text-destructive">{error}</p>}
       {showShadeProgress(screen, state.drafts[activeDay]?.journey?.step, shades.acquainted) && <section aria-label="Знакомство с оттенками тени" className="mb-7 border-b border-border pb-5">
         <p className="text-sm text-gold">Оттенки тени · Всего {shades.total}</p>
@@ -103,7 +107,8 @@ function Season() {
         {completed && state.finalTest && <><TestProfile before={state.baseline ?? state.finalTest} after={state.baseline ? state.finalTest : undefined} /><Btn onClick={() => go('feedback')}>Обратная связь и следующий шаг</Btn></>}
         <Link to="/" className="block text-center text-sm text-muted-foreground underline underline-offset-4">Раппорт: ЖиваЯ</Link>
         {state.startedAt && <Btn variant="ghost" onClick={() => setResetPrompt(true)}>Начать челлендж заново</Btn>}
-        <p className="text-xs text-muted-foreground">Ответы хранятся только в этом браузере, не отправляются организатору и не доступны с другого устройства. Новый день открывается в полночь по местному времени; пропущенные дни можно пройти позже.</p>
+        <p className="text-xs text-muted-foreground">Без входа ответы хранятся в этом браузере. Войди в профиль для сохранения между устройствами. Организатор видит прогресс вошедших участниц. Новый день открывается в полночь; пропущенные дни можно пройти позже.</p>
+        <footer className="flex items-center justify-between border-t border-border pt-5"><span className="text-xs text-muted-foreground">Сезон 1</span><Btn className="w-auto py-2" variant="ghost" disabled>Подписка · скоро</Btn></footer>
       </div>}
       {(screen === 'before' || (screen === 'after' && completed)) && <SelfTest key={screen} repeated={screen === 'after'} initial={state.testDrafts[screen]} onDraft={answers => persist({...state,testDrafts:{...state.testDrafts,[screen]:answers}})} onComplete={answers => {
         const next = screen === 'before' ? {...state,baseline:answers,startedAt:Object.keys(state.days).length ? state.startedAt ?? new Date().toISOString() : new Date().toISOString()} : {...state,finalTest:answers};
