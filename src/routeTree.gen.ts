@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as SeasonRouteImport } from './routes/season'
 import { Route as ApiIntroTrainerRouteImport } from './routes/api/intro-trainer'
@@ -31,6 +32,11 @@ const AdminRoute = AdminRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgramsRoute = ProgramsRouteImport.update({
+  id: '/programs',
+  path: '/programs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProgressRoute = ProgressRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/profile': typeof ProfileRoute
+  '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/season': typeof SeasonRoute
   '/api/intro-trainer': typeof ApiIntroTrainerRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/profile': typeof ProfileRoute
+  '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/season': typeof SeasonRoute
   '/api/intro-trainer': typeof ApiIntroTrainerRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/profile': typeof ProfileRoute
+  '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/season': typeof SeasonRoute
   '/api/intro-trainer': typeof ApiIntroTrainerRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/profile'
+    | '/programs'
     | '/progress'
     | '/season'
     | '/api/intro-trainer'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/profile'
+    | '/programs'
     | '/progress'
     | '/season'
     | '/api/intro-trainer'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/profile'
+    | '/programs'
     | '/progress'
     | '/season'
     | '/api/intro-trainer'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   ProfileRoute: typeof ProfileRoute
+  ProgramsRoute: typeof ProgramsRoute
   ProgressRoute: typeof ProgressRoute
   SeasonRoute: typeof SeasonRoute
   ApiIntroTrainerRoute: typeof ApiIntroTrainerRoute
@@ -157,6 +170,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/programs': {
+      id: '/programs'
+      path: '/programs'
+      fullPath: '/programs'
+      preLoaderRoute: typeof ProgramsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/progress': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ProfileRoute: ProfileRoute,
+  ProgramsRoute: ProgramsRoute,
   ProgressRoute: ProgressRoute,
   SeasonRoute: SeasonRoute,
   ApiIntroTrainerRoute: ApiIntroTrainerRoute,
