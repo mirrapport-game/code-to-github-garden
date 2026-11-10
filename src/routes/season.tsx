@@ -14,6 +14,8 @@ import { SelfTest, TestProfile } from '@/components/self-test';
 import { shadeProgress } from '@/lib/shadow-shades';
 import { showShadeProgress } from '@/lib/challenge-journey';
 import { TelegramNotifications } from '@/components/participant-menu';
+import { ChallengeRequestEditor } from '@/components/challenge-request';
+import { activeRequest, requestReady } from '@/lib/challenge-request';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
@@ -25,7 +27,7 @@ export const Route = createFileRoute('/season')({
   ] }), component: Season,
 });
 
-type Screen = 'overview' | 'day' | 'summary' | 'feedback' | 'before' | 'after' | 'profile';
+type Screen = 'overview' | 'day' | 'summary' | 'feedback' | 'before' | 'after' | 'profile' | 'mode' | 'request';
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
   const navigate = useNavigate();
@@ -57,6 +59,9 @@ function Season() {
   const passed = Object.keys(state.days).length;
   const shades = shadeProgress(state);
   const feedback = state.feedback ?? initialFeedback;
+  const choosingMode = screen === 'mode' || (screen === 'overview' && !requestReady(state.request) && state.request?.mode !== 'with');
+  const writingRequest = screen === 'request' || (screen === 'overview' && state.request?.mode === 'with' && !requestReady(state.request));
+  const requestText = activeRequest(state.request);
   const card = PLAYABLE_CARDS.find(c => c.id === state.cardAssignments[activeDay]) ?? DEMO_CARDS.find(c => c.stage === state.assignments[activeDay]);
   const open = (day: number) => {
     if (!canOpenDay(state,day)) return;
@@ -68,6 +73,8 @@ function Season() {
     <div className="mx-auto max-w-lg px-5 pb-28 pt-20">
       <div className="mb-6"><TelegramNotifications/></div>
       {error && <p role="alert" className="mb-5 rounded-lg border border-destructive p-4 text-destructive">{error}</p>}
+      {choosingMode && <section className="space-y-6"><p className="text-sm uppercase text-gold">Знакомство с игрой «Раппорт: ЖиваЯ»</p><h1 className="text-4xl font-semibold">7 дней с собой</h1><Btn onClick={() => {if(persist({...state,request:{mode:'with',method:state.request?.method ?? 'situation',text:state.request?.text ?? '',confirmed:false}}))go('request');}}>Играть с запросом</Btn><Btn variant="ghost" onClick={() => {if(persist({...state,request:{mode:'without',method:state.request?.method ?? 'situation',text:state.request?.text ?? '',confirmed:true}}))go('overview');}}>Играть без запроса</Btn><Btn variant="ghost" onClick={() => navigate({to:'/'})}>Назад</Btn></section>}
+      {writingRequest && state.request && <ChallengeRequestEditor value={state.request} onChange={request=>persist({...state,request})} onContinue={() => {if(persist({...state,request:{...state.request,mode:'with',method:state.request?.method ?? 'situation',text:state.request?.text ?? '',confirmed:true}}))go('overview');}} onBack={()=>go('mode')}/>}
       {showShadeProgress(screen, state.drafts[activeDay]?.journey?.step, shades.acquainted) && <section aria-label="Знакомство с оттенками тени" className="mb-7 border-b border-border pb-5">
         <p className="text-sm text-gold">Оттенки тени · Всего {shades.total}</p>
         <div className="mt-3 grid grid-cols-2 gap-4">
@@ -75,7 +82,7 @@ function Season() {
           <p className="text-sm text-muted-foreground">Осталось открыть<span className="mt-1 block font-display text-3xl text-foreground">{shades.remaining}</span></p>
         </div>
       </section>}
-      {screen === 'overview' && <div className="space-y-8">
+      {screen === 'overview' && !choosingMode && !writingRequest && <div className="space-y-8">
         <header className="border-b border-border pb-7">
           <div className="flex items-center gap-4"><Logo className="h-12 w-12 text-2xl" /><p className="text-sm text-muted-foreground">Раппорт: ЖиваЯ</p></div>
           <h1 className="mt-5 text-5xl font-semibold text-gold-gradient">7 дней с собой</h1>
@@ -85,6 +92,7 @@ function Season() {
           <p className="mt-4 text-sm text-muted-foreground">{passed} из 7 дней пройдено</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gold-gradient" style={{width:`${passed/7*100}%`}} /></div>
         </header>
+        <section className="space-y-3 border-b border-border pb-5"><h2 className="text-2xl">{requestText ? 'Мой запрос' : 'Игра без запроса'}</h2>{requestText && <p className="whitespace-pre-line break-words leading-relaxed">{requestText}</p>}<Btn variant="ghost" onClick={()=>go('mode')}>Изменить выбор</Btn></section>
         {(needsEntryTest(state) || !state.startedAt) && <section className="space-y-4">
           <label className="block font-semibold">Как к тебе обращаться?<input aria-label="Твоё имя" name="challenge-display-name" autoComplete="off" value={state.name} onChange={e => persist({...state,name:e.target.value})} placeholder="Твоё имя" className="mt-2 w-full rounded-lg border border-input bg-card px-4 py-3 outline-none focus:border-gold" /></label>
           {needsEntryTest(state) ? <Btn disabled={!state.name.trim()} onClick={() => go('before')}>Пройти тест перед челленджем</Btn> : <Btn disabled={!state.name.trim()} onClick={() => persist({...state, startedAt:new Date().toISOString()})}>Начать 7 дней с собой</Btn>}
@@ -119,7 +127,7 @@ function Season() {
         {!state.baseline && <p className="text-sm text-muted-foreground">Это твой первый замер после прохождения. Входного результата нет, поэтому сравнение не рассчитываем.</p>}
         <Btn onClick={() => go(completed && state.finalTest ? 'feedback' : 'overview')}>{completed && state.finalTest ? 'К обратной связи' : 'К семи дням'}</Btn>
       </div>}
-      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeJourney key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
+      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeJourney key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} requestText={requestText} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
         if (!canOpenDay(state,activeDay)) return;
         if (persist({...state,days:{...state.days,[activeDay]:entry}})) go('summary');
       }} />}
@@ -144,7 +152,7 @@ function Season() {
         }}>Скачать мою обратную связь</Btn>
         <Btn onClick={() => go('overview')}>Вернуться к своим семи дням</Btn>
       </div>}
-      {screen !== 'overview' && <Btn className="mt-8" variant="ghost" onClick={() => go('overview')}>К моим дням</Btn>}
+      {screen !== 'overview' && !choosingMode && !writingRequest && <Btn className="mt-8" variant="ghost" onClick={() => go('overview')}>К моим дням</Btn>}
     </div>
     {resetPrompt && <div className="fixed inset-0 z-50 grid place-items-center bg-night/70 p-5"><section className="w-full max-w-sm rounded-lg bg-card p-6"><h2 className="text-3xl">Начать заново?</h2><p className="my-4 text-sm">Ответы и карты текущего челленджа будут удалены. Материалы прежнего сезона останутся сохранены.</p><div className="space-y-3"><Btn onClick={() => {clearChallenge(); setState(loadChallenge()); setResetPrompt(false); go('overview');}}>Удалить и начать заново</Btn><Btn variant="ghost" onClick={() => setResetPrompt(false)}>Сохранить мои ответы</Btn></div></section></div>}
   </main>;

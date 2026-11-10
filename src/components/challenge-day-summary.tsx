@@ -19,6 +19,8 @@ export function ChallengeDaySummary({answer}: {answer:ChallengeAnswer}) {
       ['Мой новый ответ',journey?.replay ?? answer.personalAnswer ?? ''],
       ['Мой ресурс',journey?.resource ?? answer.resource],
       ['Маленький шаг',journey?.smallStep ?? ''],
+      ['Мой запрос',journey?.requestText ?? ''],
+      ['Как интеграция тени поможет в моём запросе',journey?.requestReflection ?? ''],
     ].filter(([,text])=>text).map(([title,text])=><section key={title} className="border-b border-border pb-5"><h3 className="text-2xl font-semibold">{title}</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{text}</p></section>)}
     <ShadeComparison before={journey?.shadeBefore} after={journey?.shadeAfter} />
   </div>;

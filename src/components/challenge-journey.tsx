@@ -12,10 +12,10 @@ import { practiceRatingQuestion, practiceReactions, practiceSupport } from '@/li
 import { PracticeFeelings, PracticeRating } from '@/components/practice-controls';
 import { ShadeComparison } from '@/components/shade-assessment';
 
-export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
+export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;requestText?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
   const [answer,setAnswer]=useState<Partial<ChallengeAnswer>>(draft??{});
   const journey={...emptyJourney(),...answer.journey};
-  const step=journey.step==='balance'?'feelings':journey.step;
+  const step=journey.step==='balance'?'feelings':journey.step==='request' && !requestText ? 'resource' : journey.step;
   const shade=SHADOW_SHADES.find(item=>item.id===shadeId);
   const image=shade?SHADE_IMAGES[shade.id]:undefined;
   const name=shade?.name??theme;
@@ -23,11 +23,11 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplet
   const support=practiceSupport(name,integrated);
   const reactions=practiceReactions(name,integrated);
   const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answer,...extra,journey:{...journey,...changes}};setAnswer(value);onDraft(value);};
-  const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{})});window.scrollTo(0,0);};
+  const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{}),...(target==='request' && requestText ? {requestText} : {})});window.scrollTo(0,0);};
   const field=(key:'before'|'rejected'|'recognition'|'repelled'|'where'|'afraid',label:string)=><label className="block space-y-3"><span className="font-semibold">{label}</span><textarea autoComplete="off" aria-label={label} value={journey[key]} onChange={event=>update({[key]:event.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold"/></label>;
   const next=(label:string,target:JourneyStep)=><Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={()=>go(target)}>{label}</Btn>;
   const scenario=answer.level?card.levels[answer.level].text:card.context;
-  const steps:JourneyStep[]=['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings','resource'];
+  const steps:JourneyStep[]=['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings',...(requestText ? ['request' as const] : []),'resource'];
   const index=steps.indexOf(step);
   if(step==='story')return <><ChallengeStory day={day} completeLabel="Интегрировать тень" onComplete={()=>go('shadeMeaning')}/><Btn className="mt-6" variant="ghost" onClick={()=>go('reflection')}>Назад</Btn></>;
   return <div className="space-y-6 animate-rise">
@@ -62,12 +62,17 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplet
     {step==='feelings'&&<>
       <PracticeFeelings value={journey.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>
       <PracticeRating phase="после" question="Насколько ты теперь готова проявлять это качество?" value={journey.shadeAfter?.mode==='scale'?journey.shadeAfter.rating:undefined} onChange={rating=>update({shadeAfter:{mode:'scale',rating}})}/>
-      {next('Ресурс и маленький шаг','resource')}
+      {next(requestText ? 'Вернуться к запросу' : 'Ресурс и маленький шаг',requestText ? 'request' : 'resource')}
+    </>}
+    {step==='request' && requestText && <>
+      <h1 className="text-4xl font-semibold">Вернись к своему запросу</h1><h2 className="text-2xl">Мой запрос</h2><p className="whitespace-pre-line break-words border-l-2 border-gold pl-4 leading-relaxed">{requestText}</p>
+      <label className="block space-y-3"><span className="text-2xl font-semibold">Как интеграция тени поможет в твоём запросе?</span><textarea aria-label="Как интеграция тени поможет в твоём запросе?" autoComplete="off" value={journey.requestReflection ?? ''} onChange={event=>update({requestText,requestReflection:event.target.value})} className="min-h-32 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold"/></label>
+      <Btn disabled={!journey.requestReflection?.trim()} onClick={()=>go('resource')}>Ресурс и маленький шаг</Btn>
     </>}
     {step==='resource'&&<>
       <h1 className="text-4xl font-semibold">Ресурс</h1><p className="leading-relaxed">{support.resource}</p><h2 className="text-3xl">Маленький шаг</h2><p className="leading-relaxed">{support.smallStep}</p>
       <ShadeComparison before={journey.shadeBefore} after={journey.shadeAfter}/>
-      <Btn onClick={()=>{const entry=finishJourney(answer,{...journey,...support,step:'resource'},card,day,theme,shadeId);if(entry)onComplete(entry);}}>ИТОГ</Btn>
+      <Btn disabled={Boolean(requestText && !journey.requestReflection?.trim())} onClick={()=>{const entry=finishJourney(answer,{...journey,...support,step:'resource'},card,day,theme,shadeId,requestText);if(entry)onComplete(entry);}}>ИТОГ</Btn>
     </>}
     {index>0&&<Btn variant="ghost" onClick={()=>{const previous=steps[index-1];if(previous)go(previous);}}>Назад</Btn>}
   </div>;

@@ -7,6 +7,7 @@ export type ChallengeAnswer = DayAnswer & { practice: string[]; topicAnswers?: s
 export type Feedback = { takeaway: string; character: string; useful: string; difficult: string; change: string; format: string; rating: number };
 export type ChallengeState = {
   name: string;
+  request?: import('@/lib/challenge-request').ChallengeRequest;
   startedAt?: string;
   baseline?: number[];
   finalTest?: number[];
