@@ -18,8 +18,13 @@ it('offers four reactions including two integrated and two shadow reactions and 
   expect(choices).toHaveLength(4);
   expect(choices.filter(item=>item.kind==='integrated')).toHaveLength(2);
   expect(choices.filter(item=>item.kind==='shadow')).toHaveLength(2);
-  for (const reaction of choices) expect(canContinueIntegration({...emptyIntegration('Наглой'),step:'reaction',reactionId:reaction.id,after:'Злюсь'})).toBe(true);
-  expect(canContinueIntegration({...emptyIntegration('Наглой'),step:'reaction',reactionId:'missing',after:'Злюсь'})).toBe(false);
+});
+it('starts at the shade view and requires a written reaction with dialogue feedback',()=>{
+  expect(emptyIntegration('Наглой').step).toBe('manifestations');
+  const base={...emptyIntegration('Наглой'),step:'reaction' as const};
+  expect(canContinueIntegration({...base,personalReaction:'Я тоже хочу'})).toBe(false);
+  expect(canContinueIntegration({...base,personalReaction:'',feedback:'Итог'})).toBe(false);
+  expect(canContinueIntegration({...base,personalReaction:'Я тоже хочу',feedback:'Итог'})).toBe(true);
 });
 it('changes the integrated reaction with the selected quality',()=>{
   expect(integrationReactions('Слабой').find(item=>item.id==='clear')?.text).toContain('Мне нужна помощь');
