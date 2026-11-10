@@ -27,6 +27,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplet
   if (step === 'story') return <><ChallengeStory day={day} completeLabel="Оттенки тени" onComplete={() => {go('shadeMeaning');}} /><Btn className="mt-6" variant="ghost" onClick={() => go('reflection')}>К моей рефлексии</Btn></>;
   return <div className="space-y-6 animate-rise">
     <p className="text-sm uppercase text-gold">День {day} / 7 · Знакомство с игрой</p>
+    <p className="text-sm text-muted-foreground">Шаг {step === 'scenario' ? 1 : step === 'reflection' ? 2 : step === 'shadeMeaning' ? 3 : step === 'shadePlay' ? 4 : step === 'balance' ? 5 : 6} из 7</p>
     {step === 'scenario' && <>
       <h1 className="text-4xl font-semibold">{card.stage}</h1>
       <img src={card.cover} alt={`Карта «${card.stage}»`} className="gold-frame mx-auto aspect-[2/3] w-full max-w-64 rounded-lg object-contain shadow-card" />

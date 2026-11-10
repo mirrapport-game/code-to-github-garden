@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import box from "@/assets/rapport_box.webp.asset.json";
 import cardsPhoto from "@/assets/rapport_cards.webp.asset.json";
 import { Btn, Logo, Stop } from "@/components/game-ui";
-import { loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
+import { hasIntroCompleted, loadSeason, saveSeasonDay, saveSeasonName } from "@/lib/season-store";
+import { hasPreviousChallenge, loadChallenge } from "@/lib/challenge-store";
 import { ChallengeDay } from "@/components/challenge-day";
 import { clearIntroChoices, drawIntroChoices, loadIntroChoices, saveIntroChoices, type IntroChoices } from "@/lib/intro-choices";
 import { PLAYABLE_CARDS } from "@/lib/official-cards";
@@ -34,11 +35,14 @@ function Index() {
   const [step, setStep] = useState<Step>("intro");
   const [assignment, setAssignment] = useState<IntroChoices | null>(null);
   const [name, setName] = useState("");
+  const [canReturnToChallenge, setCanReturnToChallenge] = useState(false);
   const card = PLAYABLE_CARDS.find(item => item.id === assignment?.cardId);
   const hi = name.trim() ? `${name.trim()}, ` : "";
 
   useEffect(() => {
-    setName(loadSeason().name);
+    const season = loadSeason();
+    setName(season.name);
+    setCanReturnToChallenge(hasIntroCompleted(season) || Boolean(loadChallenge().startedAt) || hasPreviousChallenge());
     const saved = loadIntroChoices();
     if (saved) { setAssignment(saved); setStep("card"); }
   }, []);
@@ -94,6 +98,7 @@ function Index() {
               className="w-full rounded-full border border-gold/50 bg-night/40 px-6 py-4 text-center text-lg outline-none placeholder:text-night-foreground/40 focus:border-gold"
             />
             {name.trim() && <Btn onClick={draw}>Вытянуть карту</Btn>}
+            {canReturnToChallenge && <Btn variant="night" onClick={() => navigate({ to: "/season" })}>Продолжить челлендж · 7 дней с собой</Btn>}
           </div>
           <p className="mt-4 text-center text-xs text-night-foreground/60">
             Это игра-зеркало, а не психотерапия.
