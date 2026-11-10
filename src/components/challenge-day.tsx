@@ -8,6 +8,7 @@ import { ChoiceReflection } from '@/components/choice-reflection';
 import { ChallengeStory } from '@/components/challenge-story';
 import { CHALLENGE_STORIES } from '@/lib/challenge-story';
 import { introReflectionComplete } from '@/lib/intro-choices';
+import { IntroReflection } from '@/components/intro-reflection';
 
 export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, introductory = false, onDraft, onComplete }: { day: number; card: GameCard; theme?: string; shadeId?: string | undefined; draft?: Partial<ChallengeAnswer> | undefined; introductory?: boolean; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
   const [step, setStep] = useState<'story' | 'cover' | 'level' | 'answers' | 'reflection' | 'introSummary' | 'personal'>(!introductory && !draft?.storyRead ? 'story' : draft?.choiceId ? 'reflection' : introductory && draft?.level ? 'answers' : 'cover');
@@ -18,7 +19,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
   const choices = answer.level ? cardChoices(theme, answer.level, card.id) : [];
   const selected = choices.find(item => item.id === answer.choiceId);
   const story = CHALLENGE_STORIES[day - 1];
-  const complete = () => { if (!selected || (introductory && !introReflectionComplete(answer))) return; onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:answer.feelings ?? [],body:[],hurt:introductory ? answer.hurt ?? '' : selected.text,shadow:answer.shadow ?? '',resource:selected.resource,practice:introductory ? [selected.smallStep] : [],storyRead:answer.storyRead ?? false,personalAnswer:answer.personalAnswer ?? '',revisitedChoiceId:answer.revisitedChoiceId ?? '',doneAt:new Date().toISOString()}); };
+  const complete = () => { if (!selected || (introductory && !introReflectionComplete(answer))) return; onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:answer.feelings ?? [],body:[],hurt:introductory ? answer.hurt ?? '' : selected.text,shadow:answer.shadow ?? '',introReflection:answer.introReflection,resource:selected.resource,practice:introductory ? [selected.smallStep] : [],storyRead:answer.storyRead ?? false,personalAnswer:answer.personalAnswer ?? '',revisitedChoiceId:answer.revisitedChoiceId ?? '',doneAt:new Date().toISOString()}); };
   if (step === 'story') return <ChallengeStory day={day} onComplete={() => {update({storyRead:true}); next('cover');}} />;
   return <div className="space-y-6 animate-rise">
     <p className="text-sm uppercase text-gold">{introductory ? 'Первая карта' : `День ${day} / 7`}</p>
@@ -50,15 +51,16 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
     </>}
     {step === 'reflection' && selected && introductory && <>
       <h2 className="text-3xl font-semibold">Рефлексия</h2>
-      {([['feelings','Что чувствуешь?'],['hurt','Какие качества не принимаешь?'],['shadow','Какой себе не позволяешь быть?']] as const).map(([key,label]) => <label key={key} className="block space-y-3"><span className="font-semibold">{label}</span><textarea aria-label={label} value={key === 'feelings' ? answer.feelings?.[0] ?? '' : answer[key] ?? ''} onChange={event => update(key === 'feelings' ? {feelings:[event.target.value]} : {[key]:event.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold" /></label>)}
+      <IntroReflection answer={answer} onChange={update} />
       <Btn disabled={!introReflectionComplete(answer)} onClick={() => next('introSummary')}>ИТОГ</Btn>
       <Btn variant="ghost" onClick={() => next('answers')}>Выбрать другой ответ</Btn>
     </>}
     {step === 'introSummary' && selected && introductory && <>
       <h2 className="text-3xl font-semibold">Итог</h2>
-      <section><h3 className="text-2xl font-semibold">Твоя тень</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.shadow}</p></section>
-      <section><h3 className="text-2xl font-semibold">Твой ресурс</h3><p className="mt-3 leading-relaxed">{selected.resource}</p></section>
-      <section><h3 className="text-2xl font-semibold">Маленький шаг</h3><p className="mt-3 leading-relaxed">{selected.smallStep}</p></section>
+      <section><h3 className="text-2xl font-semibold">Тень</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.shadow}</p><p className="mt-2 text-sm text-muted-foreground">То, что ты пока не позволяешь себе, по твоему выбору.</p></section>
+      <section><h3 className="text-2xl font-semibold">Качество</h3><p className="mt-3 leading-relaxed">{answer.introReflection?.qualities.join(', ')}</p><p className="mt-2 text-sm text-muted-foreground">{answer.introReflection?.spheres.join(' · ')}</p></section>
+      <section><h3 className="text-2xl font-semibold">Сила</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.introReflection?.strength}</p></section>
+      <section><h3 className="text-2xl font-semibold">Ресурс</h3><p className="mt-3 leading-relaxed">{selected.resource}</p></section>
       <Btn onClick={complete}>Завершить первую карту</Btn>
       <Btn variant="ghost" onClick={() => next('reflection')}>К моим ответам</Btn>
     </>}
