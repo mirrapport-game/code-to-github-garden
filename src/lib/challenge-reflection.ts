@@ -170,7 +170,8 @@ function build(raw: Raw[], scene: string, level: string): ScenarioReactionOption
   return raw.map(([id,kind,text,feedback]) => {
     const value = text(scene);
     const bound = value.includes(scene) ? value : `В ситуации «${scene}» ${value.charAt(0).toLowerCase()}${value.slice(1)}`;
-    return {id,kind,text:bound,feedback:level ? `${feedback} (Партнёр: «${level}».)` : feedback};
+    void level;
+    return {id,kind,text:bound,feedback};
   });
 }
 const sceneOf = (card: GameCard) => card.scenario.replace(/[«»]/g, '');
