@@ -20,6 +20,10 @@ it('offers four reactions including two integrated and two shadow reactions and 
   for (const reaction of choices) expect(canContinueIntegration({...emptyIntegration('Наглой'),step:'reaction',reactionId:reaction.id,after:'Злюсь'})).toBe(true);
   expect(canContinueIntegration({...emptyIntegration('Наглой'),step:'reaction',reactionId:'missing',after:'Злюсь'})).toBe(false);
 });
+it('changes the integrated reaction with the selected quality',()=>{
+  expect(integrationReactions('Слабой').find(item=>item.id==='clear')?.text).toContain('Мне нужна помощь');
+  expect(integrationReactions('Наглой').find(item=>item.id==='clear')?.text).toContain('Я тоже хочу заявить о своём желании');
+});
 it('persists the chosen quality, stage and new reaction without changing challenge progress',()=>{
   const assignment=drawIntroChoices(()=>0.2);
   if (!assignment) throw new Error('No introductory assignment');
