@@ -86,7 +86,7 @@ function Season() {
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gold-gradient" style={{width:`${passed/7*100}%`}} /></div>
         </header>
         {(needsEntryTest(state) || !state.startedAt) && <section className="space-y-4">
-          <label className="block font-semibold">Как к тебе обращаться?<input aria-label="Твоё имя" value={state.name} onChange={e => persist({...state,name:e.target.value})} placeholder="Твоё имя" className="mt-2 w-full rounded-lg border border-input bg-card px-4 py-3 outline-none focus:border-gold" /></label>
+          <label className="block font-semibold">Как к тебе обращаться?<input aria-label="Твоё имя" name="challenge-display-name" autoComplete="off" value={state.name} onChange={e => persist({...state,name:e.target.value})} placeholder="Твоё имя" className="mt-2 w-full rounded-lg border border-input bg-card px-4 py-3 outline-none focus:border-gold" /></label>
           {needsEntryTest(state) ? <Btn disabled={!state.name.trim()} onClick={() => go('before')}>Пройти тест перед челленджем</Btn> : <Btn disabled={!state.name.trim()} onClick={() => persist({...state, startedAt:new Date().toISOString()})}>Начать 7 дней с собой</Btn>}
           <p className="text-sm text-muted-foreground">Ты играешь роль, а не себя. Нет правильных ответов. Можно остановиться без объяснений. Это игра-зеркало, не психотерапия.</p>
         </section>}

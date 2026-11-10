@@ -28,7 +28,7 @@ export function Btn({
     ghost: "border border-gold/60 text-current hover:bg-gold/10",
   }[variant];
   return (
-    <Button type="button" onClick={onClick} disabled={disabled} className={`h-auto w-full whitespace-normal rounded-full px-6 py-4 text-base font-semibold tracking-wide transition disabled:cursor-not-allowed disabled:opacity-40 ${v} ${className}`}>
+    <Button variant="ghost" type="button" onClick={onClick} disabled={disabled} className={`h-auto w-full whitespace-normal rounded-full px-6 py-4 text-base font-semibold tracking-wide transition disabled:cursor-not-allowed disabled:opacity-40 ${v} ${className}`}>
       {children}
     </Button>
   );
