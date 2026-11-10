@@ -3,7 +3,7 @@ import { Btn } from '@/components/game-ui';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
-import { canContinueJourney, emptyJourney, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
+import { canContinueJourney, emptyJourney, finishJourney, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
 import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN, SEED_ACTIONS, SEED_GOODS, scenarioReaction, scenarioReactions, habitReactions } from '@/lib/challenge-reflection';
 import { ComingSoonButton } from '@/components/coming-soon-button';
 import { SHADOW_SHADES } from '@/lib/shadow-shades';
@@ -45,7 +45,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       {answer.level&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>}
       {answer.level&&<section className="rounded-lg border border-gold/40 bg-card p-4"><h3 className="text-xl font-semibold text-gold">Что говорит твой выбор</h3><p className="mt-2 leading-relaxed">{scenarioReaction(card,answer.level,theme)}</p></section>}
       {answer.level&&<><h3 className="text-2xl">Как я обычно реагирую</h3><RadioGroup aria-label="Привычная реакция" value={journey.firstReactionId??''} onValueChange={firstReactionId=>{const chosen=habits.find(item=>item.id===firstReactionId);if(chosen)update({firstReactionId,firstReactionText:chosen.text});}}>{habits.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>{journey.firstReactionId&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{habits.find(item=>item.id===journey.firstReactionId)?.feedback}</p>}</>}
-      {next('Рефлексия','reflection')}
+      {journey.firstReactionId?next('Рефлексия','reflection'):<Btn disabled>Рефлексия</Btn>}
     </>}
     {step==='reflection'&&<>
       <h1 className="text-4xl font-semibold">Рефлексия</h1><p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
@@ -90,6 +90,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <PracticeChoices legend="Какое новое действие посеешь?" hint="Выбери одно маленькое действие." options={SEED_ACTIONS} value={journey.seedAction?[journey.seedAction]:[]} onChange={actions=>update({seedAction:actions[actions.length-1] ?? ''})} max={1}/>
       <h2 className="text-3xl font-semibold">Ресурс</h2><p className="leading-relaxed">{support.resource}</p><h3 className="text-2xl">Маленький шаг</h3><p className="leading-relaxed">{support.smallStep}</p>
       <ComingSoonButton hint="Итог откроется позже">ИТОГ</ComingSoonButton>
+      <Btn variant="ghost" disabled={!canContinueJourney('resource',{...journey,...support}) || Boolean(requestText && !journey.requestReflection?.trim())} onClick={()=>{const entry=finishJourney(answer,{...journey,...support,step:'resource'},card,day,theme,shadeId,requestText);if(entry)onComplete(entry);}}>Сохранить день {day}</Btn>
     </>}
     {index>0&&<Btn variant="ghost" onClick={()=>{const previous=steps[index-1];if(previous)go(previous);}}>Назад</Btn>}
   </div>;

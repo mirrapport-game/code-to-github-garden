@@ -1,6 +1,6 @@
 import { Btn } from '@/components/game-ui';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { canContinueIntegration, emptyIntegration, integrationProfile, integrationReactions, type IntroIntegration as Integration } from '@/lib/intro-integration';
+import { canContinueIntegration, emptyIntegration, integrationProfile, type IntroIntegration as Integration } from '@/lib/intro-integration';
 import { practiceRatingQuestion, practiceSupport } from '@/lib/integration-practice';
 import { PracticeFeelings, PracticeRating } from '@/components/practice-controls';
 import { PracticeChoices } from '@/components/practice-controls';
