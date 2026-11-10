@@ -8,6 +8,7 @@ import { hasPreviousChallenge, loadChallenge } from "@/lib/challenge-store";
 import { ChallengeDay } from "@/components/challenge-day";
 import { clearIntroChoices, drawIntroChoices, loadIntroChoices, saveIntroChoices, type IntroChoices } from "@/lib/intro-choices";
 import { PLAYABLE_CARDS } from "@/lib/official-cards";
+import { IntroVideo } from "@/components/intro-video";
 
 
 export const Route = createFileRoute("/")({
@@ -33,6 +34,7 @@ type Step = "intro" | "card" | "cta";
 function Index() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("intro");
+  const [showVideo, setShowVideo] = useState(true);
   const [assignment, setAssignment] = useState<IntroChoices | null>(null);
   const [name, setName] = useState("");
   const [canReturnToChallenge, setCanReturnToChallenge] = useState(false);
@@ -61,6 +63,10 @@ function Index() {
     setStep("card");
     window.scrollTo(0, 0);
   };
+
+  if (showVideo) {
+    return <IntroVideo onContinue={() => { setShowVideo(false); window.scrollTo(0, 0); }} />;
+  }
 
   if (step === "intro") {
     return (

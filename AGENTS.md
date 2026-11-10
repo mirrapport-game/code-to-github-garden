@@ -49,3 +49,4 @@ use the editor.
 - Keep AI access denials in a server-only database guard and preserve upstream status/messages without retries. Why: blocked providers must remain paused across reloads and server restarts.
 - Keep seven paginated stories between personal reflection and shade exploration, separate from random scenarios and shade IDs. Why: each day starts with the card while the season retains its continuous narrative.
 - Require the entry test for new challenge participants and offer the repeated test after seven days; preserve access for participants with saved completed days. Why: restoring tests must not erase or block existing progress.
+- Show the introductory video on each fresh visit to / before resuming the existing introductory flow; import its CDN asset pointer and keep video dismissal in component state. Why: QR links to the app start with the video without modifying saved game answers.
