@@ -33,6 +33,9 @@ export type JourneyDraft = {
   resource: string;
   smallStep: string;
   reactionId?: string;
+  /** AI feedback after the written new-reaction dialogue. */
+  feedback?: string;
+  dialogue?: { role: 'participant' | 'other'; text: string }[];
   firstReactionId?: string;
   firstReactionText?: string;
   afterFeelings?: string[];
@@ -62,8 +65,8 @@ export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level
     }
     case 'shadeMeaning': return splitSelected(draft.where).length > 0 && splitSelected(draft.afraid).length > 0 && [...splitSelected(draft.where), ...splitSelected(draft.afraid)].every(item => CHALLENGE_SPHERES.includes(item));
     case 'shadeView': return true;
-    case 'shadePlay': return draft.reactionId ? ['pressure','clear','hide','pause'].includes(draft.reactionId) : Boolean(draft.replay.trim() && draft.after.trim() && draft.manifestation);
-    case 'feelings': return draft.reactionId ? Boolean(draft.afterFeelings?.length) : Boolean(draft.after.trim());
+    case 'shadePlay': return draft.feedback !== undefined ? Boolean(draft.replay.trim() && draft.feedback.trim()) : draft.reactionId ? ['pressure','clear','hide','pause'].includes(draft.reactionId) : Boolean(draft.replay.trim() && draft.after.trim() && draft.manifestation);
+    case 'feelings': return draft.reactionId || draft.feedback ? Boolean(draft.afterFeelings?.length) : Boolean(draft.after.trim());
     case 'balance': return Boolean(draft.balance.trim());
     case 'resource': return Boolean(draft.resource.trim() && draft.smallStep.trim() && draft.seedGood?.length && draft.seedAction);
     case 'story': return true;

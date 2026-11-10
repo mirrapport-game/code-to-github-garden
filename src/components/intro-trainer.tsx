@@ -25,12 +25,14 @@ export function IntroTrainer({
   initialMessages,
   initialSummary,
   quality,
+  shadeId,
   minMessages = 0,
   maxParticipantMessages,
   placeholder = "Я хочу сказать…",
   onComplete,
 }: {
   quality?: string;
+  shadeId?: string;
   minMessages?: number;
   maxParticipantMessages?: number;
   placeholder?: string;
@@ -53,7 +55,7 @@ export function IntroTrainer({
       new DefaultChatTransport({
         api: "/api/intro-trainer",
         prepareSendMessagesRequest: ({ messages }) => ({
-          body: { cardId, level, mode: mode.current, ...(quality ? { quality } : {}), messages: textOnlyMessages(messages) },
+          body: { cardId, level, mode: mode.current, ...(quality ? { quality } : {}), ...(shadeId ? { shadeId } : {}), messages: textOnlyMessages(messages) },
         }),
         fetch: async (url, init) => {
           const response = await fetch(url, init);
@@ -70,7 +72,7 @@ export function IntroTrainer({
           return response;
         },
       }),
-    [cardId, level, quality],
+    [cardId, level, quality, shadeId],
   );
   const { messages, sendMessage, status, stop } = useChat({
     id: `intro-${cardId}-${level}-${quality ?? ""}`,

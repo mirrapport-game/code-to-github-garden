@@ -7,6 +7,7 @@ export const trainerRequestSchema = z
     level: z.enum(["soft", "medium", "hard"]),
     mode: z.enum(["dialogue", "summary"]),
     quality: z.string().max(60).optional(),
+    shadeId: z.string().max(100).optional(),
     messages: z
       .array(
         z.object({

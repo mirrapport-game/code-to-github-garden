@@ -22,9 +22,16 @@ export async function handleIntroTrainer(request: Request) {
   const parsed = trainerRequestSchema.safeParse(input);
   if (!parsed.success)
     return Response.json({ message: "Проверь сообщение или начни новую карту." }, { status: 400 });
-  const { cardId, level, mode, messages, quality } = parsed.data;
+  const { cardId, level, mode, messages, quality, shadeId } = parsed.data;
   const { integrationProfile } = await import("@/lib/intro-integration");
-  const shade = quality ? integrationProfile(quality) : undefined;
+  let shade: { name: string; shadow: string; integrated: string } | undefined = quality ? integrationProfile(quality) : undefined;
+  if (!shade && shadeId) {
+    const { SHADOW_SHADES } = await import("@/lib/shadow-shades");
+    const { SHADE_IMAGES } = await import("@/lib/shadow-shade-images");
+    const found = SHADOW_SHADES.find((s) => s.id === shadeId);
+    const image = SHADE_IMAGES[shadeId];
+    if (found) shade = { name: found.name, shadow: image?.shadow ?? String((found as Record<string, unknown>)["shadow"] ?? ""), integrated: image?.integrated ?? String((found as Record<string, unknown>)["integrated"] ?? "") };
+  }
   const card = PLAYABLE_CARDS.find((c) => c.id === cardId);
   if (!card) return Response.json({ message: "Эта карта недоступна." }, { status: 400 });
   const apiKey = process.env["LOVABLE_API_KEY"];
