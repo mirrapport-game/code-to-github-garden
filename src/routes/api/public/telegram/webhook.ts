@@ -3,7 +3,7 @@ import { createHash,timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 const updateSchema=z.object({update_id:z.number().int(),message:z.object({text:z.string().max(4096).optional(),chat:z.object({id:z.number().int(),type:z.string()})}).optional()});
 export const Route=createFileRoute('/api/public/telegram/webhook')({server:{handlers:{POST:async({request})=>{
- const key=process.env['TELEGRAM_API_KEY'],gateway=process.env['LOVABLE_API_KEY'];if(!key||!gateway)return new Response('Not configured',{status:503});
+ const key=process.env['TELEGRAM_API_KEY_1'],gateway=process.env['LOVABLE_API_KEY'];if(!key||!gateway)return new Response('Not configured',{status:503});
  const expected=createHash('sha256').update(`telegram-webhook:${key}`).digest('base64url'),actual=request.headers.get('X-Telegram-Bot-Api-Secret-Token')??'';
  if(actual.length!==expected.length||!timingSafeEqual(Buffer.from(actual),Buffer.from(expected)))return new Response('Unauthorized',{status:401});
  const parsed=updateSchema.safeParse(await request.json());if(!parsed.success)return new Response('Invalid update',{status:400});const message=parsed.data.message;if(!message||message.chat.type!=='private')return Response.json({ok:true});
