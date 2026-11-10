@@ -6,6 +6,7 @@ export const trainerRequestSchema = z
     cardId: z.string().min(1).max(100),
     level: z.enum(["soft", "medium", "hard"]),
     mode: z.enum(["dialogue", "summary"]),
+    quality: z.string().max(60).optional(),
     messages: z
       .array(
         z.object({

@@ -1,5 +1,5 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import { emptyIntroReflection, INTRO_FEELINGS, INTRO_QUALITIES, INTRO_SELF_QUALITIES, INTRO_SPHERES, INTRO_FEARS } from '@/lib/intro-choices';
+import { emptyIntroReflection, INTRO_FEELINGS, INTRO_QUALITIES, INTRO_SELF_QUALITIES, INTRO_FEARS } from '@/lib/intro-choices';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 
 function Selection({label,items,value,onChange}: {label:string;items:string[];value:string[];onChange:(value:string[])=>void}) {
@@ -15,10 +15,9 @@ export function IntroReflection({answer,onChange}: {answer:Partial<ChallengeAnsw
     onChange({introReflection:next,hurt:next.qualities.join(', '),shadow:next.notAllowed.join(', ')});
   };
   return <div className="space-y-7">
-    <Selection label="Что чувствуешь?" items={INTRO_FEELINGS} value={answer.feelings ?? []} onChange={feelings => onChange({feelings})} />
-    <Selection label="Какие качества тебе трудно принять?" items={INTRO_QUALITIES} value={reflection.qualities} onChange={qualities => update({qualities})} />
-    <Selection label="Какой себе не позволяешь быть?" items={INTRO_SELF_QUALITIES} value={reflection.notAllowed} onChange={notAllowed => update({notAllowed})} />
-    <Selection label="Где не проявляешь эти качества?" items={INTRO_SPHERES} value={reflection.spheres} onChange={spheres => update({spheres})} />
-    <Selection label="Чего боишься?" items={INTRO_FEARS} value={reflection.fears ?? []} onChange={fears => update({fears})} />
+    <Selection label="Что чувствуешь в этой ситуации?" items={INTRO_FEELINGS} value={answer.feelings ?? []} onChange={feelings => onChange({feelings})} />
+    <Selection label="Какие качества партнёра тебе трудно принять?" items={INTRO_QUALITIES} value={reflection.qualities} onChange={qualities => update({qualities})} />
+    <Selection label="Какой в этой ситуации ты не позволяешь себе быть?" items={INTRO_SELF_QUALITIES} value={reflection.notAllowed} onChange={notAllowed => update({notAllowed})} />
+    <Selection label="Чего боишься в этой ситуации?" items={INTRO_FEARS} value={reflection.fears ?? []} onChange={fears => update({fears})} />
   </div>;
 }
