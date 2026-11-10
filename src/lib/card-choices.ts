@@ -1,5 +1,7 @@
 import type { LevelKey } from '@/lib/cards';
 import { THEME_REFLECTIONS } from '@/lib/theme-reflection';
+import { PLAYABLE_CARDS } from '@/lib/official-cards';
+import { habitReactions } from '@/lib/challenge-reflection';
 
 export type CardChoice = { id: string; text: string; reflection: string; recommendation: string; resource: string; smallStep: string };
 const RESPONSES: Record<string, [string, string, string, string]> = {
@@ -20,16 +22,13 @@ const DIRECTIONS = [
   { reflection: 'В этом ответе ты выбираешь паузу, другой источник поддержки или подходящие условия. Возможно, тебе важно сначала восстановить опору. Проверь, помогает ли пауза выбрать себя или откладывает важный разговор.', recommendation: 'Используй паузу для конкретного решения: чего ты хочешь, что безопасно и когда готова вернуться к вопросу.' },
 ];
 export function cardChoices(stage: string, level: LevelKey, cardId?: string): CardChoice[] {
-  const responses = cardId ? [
-    'Узнаю себя: мне проще уступить и скрыть свои потребности, чтобы сохранить отношения.',
-    'Узнаю себя: я начинаю оправдываться, спорить или говорить намёками, чтобы меня услышали.',
-    'Мне близко назвать свои чувства и потребности прямо, даже если другой человек не согласится.',
-    'Мне ближе взять паузу, выбрать безопасную дистанцию или найти поддержку, прежде чем отвечать.',
-  ] : RESPONSES[stage];
+  const card = cardId ? PLAYABLE_CARDS.find(item => item.id === cardId) : undefined;
+  const habits = card ? habitReactions(card, stage, level) : [];
+  const responses = card ? habits.map(item => item.text) : RESPONSES[stage];
   const theme = THEME_REFLECTIONS[stage];
   if (!responses || !theme) return [];
   return responses.map((text, index) => {
     const direction = DIRECTIONS[index];
-    return { id: String(index + 1), text, reflection: direction?.reflection ?? '', recommendation: `${direction?.recommendation ?? ''}${level === 'hard' ? ' Если есть угроза или твой отказ игнорируют, важнее безопасный выход и поддержка, а не тренировка ответа.' : ''}`, resource: theme.resource, smallStep: theme.recommendation };
+    return { id: String(index + 1), text, reflection: [habits[index]?.feedback, direction?.reflection].filter(Boolean).join(' '), recommendation: `${direction?.recommendation ?? ''}${level === 'hard' ? ' Если есть угроза или твой отказ игнорируют, важнее безопасный выход и поддержка, а не тренировка ответа.' : ''}`, resource: theme.resource, smallStep: theme.recommendation };
   });
 }

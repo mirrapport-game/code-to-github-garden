@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, SEED_ACTIONS, SEED_GOODS, scenarioReaction, scenarioReactions } from '@/lib/challenge-reflection';
+import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, SEED_ACTIONS, SEED_GOODS, scenarioReaction, scenarioReactions, habitReactions } from '@/lib/challenge-reflection';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 
 const themes = ['Границы','Просьба о помощи','Влияние','Дистанция','Слабость','Наглость','Жертва','Манипуляция','Холодность'];
@@ -52,5 +52,24 @@ describe('Scenario-specific reactions',()=>{
     const hard = scenarioReaction(card, 'hard', 'Границы');
     expect(soft).not.toBe(hard);
     for (const level of ['soft','medium','hard'] as const) expect(scenarioReaction(card, level, 'Границы')).toContain(card.scenario);
+  });
+});
+
+describe('Two reaction passes',()=>{
+  it('gives every theme a unique first pass that differs from the second pass and has per-option feedback',()=>{
+    const card = PLAYABLE_CARDS[0];
+    if (!card) throw new Error('Missing official scenario');
+    const firsts = new Set<string>();
+    for (const theme of themes) {
+      const first = habitReactions(card, theme, 'soft');
+      const second = scenarioReactions(card, 'Напористость', 'говорить прямо', theme, 'soft');
+      expect(first).toHaveLength(4);
+      firsts.add(first.map(item=>item.text).join('|'));
+      for (const item of first) expect(second.map(option=>option.text)).not.toContain(item.text);
+      const feedback = [...first, ...second].map(item=>item.feedback);
+      expect(new Set(feedback).size).toBe(8);
+      for (const item of first) expect(item.text).toContain(card.scenario.replace(/[«»]/g, ''));
+    }
+    expect(firsts.size).toBe(themes.length);
   });
 });

@@ -33,6 +33,8 @@ export type JourneyDraft = {
   resource: string;
   smallStep: string;
   reactionId?: string;
+  firstReactionId?: string;
+  firstReactionText?: string;
   afterFeelings?: string[];
   requestText?: string;
   /** The only free-text answer in the challenge: how the day connects to the request. */
