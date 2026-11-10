@@ -40,7 +40,7 @@ it('persists the chosen quality, stage and new reaction without changing challen
   expect(loadChallenge()).toEqual(emptyChallenge());
 });
 it('requires the 1–10 baseline and both location answers before introductory manifestations',()=>{
-  const value={...emptyIntegration('Напористой'),where:'На работе',afraid:'Дома'};
+  const value={...emptyIntegration('Напористой'),step:'meaning' as const,where:'На работе',afraid:'Дома'};
   expect(canContinueIntegration(value)).toBe(false);
   for (const ratingBefore of [1,10]) expect(canContinueIntegration({...value,ratingBefore})).toBe(true);
   for (const ratingBefore of [0,11,3.5]) expect(canContinueIntegration({...value,ratingBefore})).toBe(false);
