@@ -31,6 +31,8 @@ use the editor.
 
 ## Project rules
 
+- Build external Node in Timeweb mode.
+
 - Serialize three-way progress sync and send Telegram summaries from saved records with unique claims. Why: stale devices and duplicate clicks must not erase answers or resend summaries.
 
 - Keep guest progress in browser storage and sync signed-in progress to owner-scoped Cloud records through the participant provider; keep points in a server-written idempotent ledger and roles in user_roles. Why: reloads preserve guest answers while accounts share progress securely across devices.
