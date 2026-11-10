@@ -29,6 +29,7 @@ export function loadChallenge(): ChallengeState {
 }
 export function saveChallenge(state: ChallengeState) {
   window.localStorage.setItem(CHALLENGE_KEY, JSON.stringify(state));
+  window.dispatchEvent(new Event('rapport-progress-changed'));
   return state;
 }
 export function clearChallenge() { window.localStorage.removeItem(CHALLENGE_KEY); }

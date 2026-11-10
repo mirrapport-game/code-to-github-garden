@@ -35,12 +35,194 @@ export type Database = {
         }
         Relationships: []
       }
+      participant_progress: {
+        Row: {
+          challenge: Json
+          completed_cards: number
+          current_path: string
+          first_seen: string
+          intro: Json
+          intro_draft: Json | null
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          challenge?: Json
+          completed_cards?: number
+          current_path?: string
+          first_seen?: string
+          intro?: Json
+          intro_draft?: Json | null
+          last_seen?: string
+          user_id: string
+        }
+        Update: {
+          challenge?: Json
+          completed_cards?: number
+          current_path?: string
+          first_seen?: string
+          intro?: Json
+          intro_draft?: Json | null
+          last_seen?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      points_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          event_key: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          event_key: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          event_key?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          invite_code: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          id: string
+          invite_code?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          invite_code?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          invited_user: string
+          inviter_user: string
+        }
+        Insert: {
+          created_at?: string
+          invited_user: string
+          inviter_user: string
+        }
+        Update: {
+          created_at?: string
+          invited_user?: string
+          inviter_user?: string
+        }
+        Relationships: []
+      }
+      story_submissions: {
+        Row: {
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          status: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      telegram_links: {
+        Row: {
+          chat_id: number | null
+          enabled: boolean
+          last_notified: string | null
+          link_code: string
+          user_id: string
+        }
+        Insert: {
+          chat_id?: number | null
+          enabled?: boolean
+          last_notified?: string | null
+          link_code?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: number | null
+          enabled?: boolean
+          last_notified?: string | null
+          link_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          role: string
+          user_id: string
+        }
+        Insert: {
+          role: string
+          user_id: string
+        }
+        Update: {
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_game_referral: { Args: { p_code: string }; Returns: undefined }
+      is_game_admin: { Args: never; Returns: boolean }
+      jsonb_object_length_safe: { Args: { value: Json }; Returns: number }
+      prepare_telegram_link: { Args: never; Returns: string }
+      review_game_story: {
+        Args: { p_approve: boolean; p_id: string }
+        Returns: undefined
+      }
+      sync_game_progress: {
+        Args: {
+          p_challenge: Json
+          p_draft: Json
+          p_intro: Json
+          p_offset?: number
+          p_path: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
