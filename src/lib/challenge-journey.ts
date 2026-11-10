@@ -1,7 +1,7 @@
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 import type { GameCard } from '@/lib/cards';
 
-export const JOURNEY_STEPS = ['scenario', 'reflection', 'story', 'shadeMeaning', 'shadeView', 'shadePlay', 'feelings', 'balance', 'resource'] as const;
+export const JOURNEY_STEPS = ['scenario', 'reflection', 'story', 'shadeMeaning', 'shadeView', 'shadePlay', 'feelings', 'balance', 'request', 'resource'] as const;
 export type JourneyStep = typeof JOURNEY_STEPS[number];
 export type ShadeAssessment = {mode:'scale';rating:number} | {mode:'words';text:string};
 export function validShadeAssessment(value?: ShadeAssessment): boolean {
@@ -11,7 +11,7 @@ export function shadeRatingChange(before?: ShadeAssessment, after?: ShadeAssessm
   return before?.mode === 'scale' && after?.mode === 'scale' && validShadeAssessment(before) && validShadeAssessment(after) ? after.rating - before.rating : null;
 }
 export function showShadeProgress(screen: string, step: JourneyStep = 'scenario', acquainted = 0): boolean {
-  if (screen === 'day') return ['shadeMeaning', 'shadeView', 'shadePlay', 'feelings', 'balance', 'resource'].includes(step);
+  if (screen === 'day') return ['shadeMeaning', 'shadeView', 'shadePlay', 'feelings', 'balance', 'request', 'resource'].includes(step);
   return ['overview', 'summary', 'feedback'].includes(screen) && acquainted > 0;
 }
 export type JourneyDraft = {
@@ -31,6 +31,8 @@ export type JourneyDraft = {
   smallStep: string;
   reactionId?: string;
   afterFeelings?: string[];
+  requestText?: string;
+  requestReflection?: string;
   shadeBefore?: ShadeAssessment;
   shadeAfter?: ShadeAssessment;
 };
@@ -49,9 +51,11 @@ export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level
     case 'balance': return filled(draft.balance) && (!draft.shadeBefore || validShadeAssessment(draft.shadeAfter));
     case 'resource': return filled(draft.resource,draft.smallStep);
     case 'story': return true;
+    case 'request': return !draft.requestText?.trim() || Boolean(draft.requestReflection?.trim());
   }
 }
-export function finishJourney(answer: Partial<ChallengeAnswer>, journey: JourneyDraft, card: GameCard, day: number, theme: string, shadeId?: string): ChallengeAnswer | null {
+export function finishJourney(answer: Partial<ChallengeAnswer>, journey: JourneyDraft, card: GameCard, day: number, theme: string, shadeId?: string, requestText?: string): ChallengeAnswer | null {
+  journey = {...journey,...(requestText ? {requestText} : {})};
   const required = journey.reactionId ? JOURNEY_STEPS.filter(step => step !== 'balance') : JOURNEY_STEPS.filter(step => step !== 'shadeMeaning');
   if (!journey.reactionId && ![journey.meaning,journey.where,journey.afraid].every(value=>value.trim())) return null;
   if (!required.every(step => canContinueJourney(step,journey,answer.level))) return null;
