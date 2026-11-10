@@ -107,7 +107,8 @@ export function scenarioReactions(card: GameCard, shadeName: string, integrated:
     {id:'hide',kind:'shadow',text:`Откажусь от своего желания и соглашусь, хотя внутри мне это не подходит.`},
     {id:'pause',kind:'integrated',text:'Возьму паузу, замечу свои потребности и вернусь к разговору без давления. Если небезопасно — выйду из ситуации.'},
   ];
-  return sets[theme] ?? fallback;
+  const bind = (options: ScenarioReactionOption[]) => options.map(option => option.text.includes(scene) ? option : {...option, text: `В ситуации «${scene}» ${option.text.charAt(0).toLowerCase()}${option.text.slice(1)}`});
+  return bind(sets[theme] ?? fallback);
 }
 
 /** Ready-made «что заметить в себе хорошего» items for the closing block. */
