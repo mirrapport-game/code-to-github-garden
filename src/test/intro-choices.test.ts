@@ -7,12 +7,15 @@ import { emptyChallenge, loadChallenge } from '@/lib/challenge-store';
 
 describe('Introductory four-answer card', () => {
   beforeEach(() => window.localStorage.clear());
-  it('requires all three personal answers after choosing one of four responses', () => {
-    const draft = {choiceId:'2',feelings:['Злость'],hurt:'Резкость',shadow:'Смелой'};
+  it('requires feeling, quality and sphere selections and her own strength after one of four responses', () => {
+    const reflection = {qualities:['Резкость'],notAllowed:['Смелость'],spheres:['На работе','Дома'],strength:'Могу ясно сказать о важном'};
+    const draft = {choiceId:'2',feelings:['Злость','Обида'],hurt:'Резкость',shadow:'Смелость',introReflection:reflection};
     expect(introReflectionComplete(draft)).toBe(true);
     expect(introReflectionComplete({...draft, feelings:[]})).toBe(false);
-    expect(introReflectionComplete({...draft, hurt:' '})).toBe(false);
-    expect(introReflectionComplete({...draft, shadow:''})).toBe(false);
+    expect(introReflectionComplete({...draft, introReflection:{...reflection,qualities:[]}})).toBe(false);
+    expect(introReflectionComplete({...draft, introReflection:{...reflection,notAllowed:[]}})).toBe(false);
+    expect(introReflectionComplete({...draft, introReflection:{...reflection,spheres:[]}})).toBe(false);
+    expect(introReflectionComplete({...draft, introReflection:{...reflection,strength:' '}})).toBe(false);
     saveIntroChoices({theme:'Границы',cardId:cardsForTheme('Границы')[0]?.id ?? '',draft});
     expect(loadIntroChoices()?.draft).toEqual(draft);
   });
