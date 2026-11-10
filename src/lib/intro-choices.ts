@@ -4,6 +4,10 @@ import { PLAYABLE_CARDS } from '@/lib/official-cards';
 const KEY = 'rapport-intro-choices-v1';
 export type IntroChoices = { theme: string; cardId: string; draft: Partial<ChallengeAnswer> };
 
+export function introReflectionComplete(answer: Partial<ChallengeAnswer>): boolean {
+  return Boolean(answer.choiceId && answer.feelings?.[0]?.trim() && answer.hurt?.trim() && answer.shadow?.trim());
+}
+
 export function drawIntroChoices(random = Math.random): IntroChoices | null {
   const assigned = assignDay(emptyChallenge(), 1, random);
   const theme = assigned.assignments[1];
