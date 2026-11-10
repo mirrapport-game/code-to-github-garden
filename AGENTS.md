@@ -31,7 +31,7 @@ use the editor.
 
 ## Project rules
 
-- Challenge progress, daily card assignments, drafts, tests and feedback persist in browser localStorage until accounts exist; migrate to database tables when a backend is added. Why: daily assignments and answers must survive reloads without login.
+- Keep guest progress in browser storage and sync signed-in progress to owner-scoped Cloud records through the participant provider; keep points in a server-written idempotent ledger and roles in user_roles. Why: reloads preserve guest answers while accounts share progress securely across devices.
 - Keep challenge scheduling and scoring in browser-safe library modules, and orchestrate its screens on /season. Why: time gates and scoring are independently testable and cannot be bypassed through a second game entry point.
 - Use a separate versioned challenge storage key from the legacy season. Why: older answers are not valid baseline tests or daily assignments for the new challenge.
 - Keep the original introductory card flow on / and open the challenge on /season after its completion; existing challenge participants retain access. Why: the challenge is an optional continuation, not a replacement for the first experience.
@@ -51,3 +51,5 @@ use the editor.
 - Require the entry test for new challenge participants and offer the repeated test after seven days; preserve access for participants with saved completed days. Why: restoring tests must not erase or block existing progress.
 - Show the introductory video on each fresh visit to / before resuming the existing introductory flow; import its CDN asset pointer and keep video dismissal in component state. Why: QR links to the app start with the video without modifying saved game answers.
 - Embed the uploaded soundtrack into the introductory MP4, autoplay muted, and restart playback when the participant enables sound. Why: browsers require user interaction for audible playback and participants should hear the recording from its beginning.
+- Use separate progress, profile and admin routes, with isolated in-memory admin day previews and shared bottom navigation. Why: inspecting a future day must not change participant assignments, completion or points.
+- Link Telegram chats through one-time opaque codes delivered to a secret-verified webhook; keep Telegram calls in authenticated server functions or verified webhook handlers. Why: bot notifications must not expose credentials or permit forged account linking.

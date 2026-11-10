@@ -1,0 +1,12 @@
+import { expect,it } from 'vitest';
+import { emptyChallenge } from '@/lib/challenge-store';
+import { dayTrack,localDayPoints,POINTS,shadowTracker } from '@/lib/participant-progress';
+import { emptyIntegration } from '@/lib/intro-integration';
+const start=new Date(2026,10,10,12);
+const state=()=>({...emptyChallenge(),startedAt:start.toISOString()});
+const entry=(doneAt:Date)=>({day:1,stage:'Границы',level:'soft' as const,feelings:['Злость'],body:[],hurt:'',shadow:'',resource:'Опора',practice:[],doneAt:doneAt.toISOString()});
+it('awards exactly 50 for a completed day',()=>{const value={...state(),days:{1:entry(new Date(2026,10,10,15))}};expect(localDayPoints(value,new Date(2026,10,10,18))).toBe(50);});
+it('deducts exactly 50 only after a missed day ends',()=>{expect(localDayPoints(state(),new Date(2026,10,10,23,59))).toBe(0);expect(localDayPoints(state(),new Date(2026,10,11,0))).toBe(-50);});
+it('keeps missed-day deduction when the day is completed later',()=>{const value={...state(),days:{1:entry(new Date(2026,10,11,12))}};expect(dayTrack(value,new Date(2026,10,11,13))[0]).toMatchObject({status:'late',points:0,completed:true,missed:true});});
+it('has the supplied referral and reviewed-story amounts',()=>{expect(POINTS.referral).toBe(100);expect(POINTS.story).toBe(50);});
+it('does not mark a completed negative reaction as integrated',()=>{const answer={...entry(new Date()),introReflection:{qualities:['Наглость'],notAllowed:['Наглой'],spheres:['Дома'],strength:''},introIntegration:{...emptyIntegration('Наглой'),step:'summary' as const,reactionId:'pressure'}};expect(shadowTracker({name:'',days:{1:answer}},emptyChallenge())[0]?.integrated).toBe(false);expect(shadowTracker({name:'',days:{1:{...answer,introIntegration:{...answer.introIntegration,reactionId:'clear'}}}},emptyChallenge())[0]?.integrated).toBe(true);});
