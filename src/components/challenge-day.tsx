@@ -7,9 +7,10 @@ import { cardChoices } from '@/lib/card-choices';
 import { ChoiceReflection } from '@/components/choice-reflection';
 import { ChallengeStory } from '@/components/challenge-story';
 import { CHALLENGE_STORIES } from '@/lib/challenge-story';
+import { introReflectionComplete } from '@/lib/intro-choices';
 
 export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, introductory = false, onDraft, onComplete }: { day: number; card: GameCard; theme?: string; shadeId?: string | undefined; draft?: Partial<ChallengeAnswer> | undefined; introductory?: boolean; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
-  const [step, setStep] = useState<'story' | 'cover' | 'level' | 'answers' | 'reflection' | 'personal'>(!introductory && !draft?.storyRead ? 'story' : draft?.choiceId ? 'reflection' : introductory && draft?.level ? 'answers' : 'cover');
+  const [step, setStep] = useState<'story' | 'cover' | 'level' | 'answers' | 'reflection' | 'introSummary' | 'personal'>(!introductory && !draft?.storyRead ? 'story' : draft?.choiceId ? 'reflection' : introductory && draft?.level ? 'answers' : 'cover');
   const [flipped, setFlipped] = useState(false);
   const [answer, setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? {});
   const update = (values: Partial<ChallengeAnswer>) => { const next = {...answer, ...values, shadeId, stage:theme, cardId:card.id, cardStage:card.stage, day}; setAnswer(next); onDraft(next); };
@@ -17,12 +18,12 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
   const choices = answer.level ? cardChoices(theme, answer.level, card.id) : [];
   const selected = choices.find(item => item.id === answer.choiceId);
   const story = CHALLENGE_STORIES[day - 1];
-  const complete = () => { if (!selected) return; onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:[],body:[],hurt:selected.text,shadow:'',resource:selected.resource,practice:[],storyRead:answer.storyRead ?? false,personalAnswer:answer.personalAnswer ?? '',revisitedChoiceId:answer.revisitedChoiceId ?? '',doneAt:new Date().toISOString()}); };
+  const complete = () => { if (!selected || (introductory && !introReflectionComplete(answer))) return; onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:answer.feelings ?? [],body:[],hurt:introductory ? answer.hurt ?? '' : selected.text,shadow:answer.shadow ?? '',resource:selected.resource,practice:introductory ? [selected.smallStep] : [],storyRead:answer.storyRead ?? false,personalAnswer:answer.personalAnswer ?? '',revisitedChoiceId:answer.revisitedChoiceId ?? '',doneAt:new Date().toISOString()}); };
   if (step === 'story') return <ChallengeStory day={day} onComplete={() => {update({storyRead:true}); next('cover');}} />;
   return <div className="space-y-6 animate-rise">
     <p className="text-sm uppercase text-gold">{introductory ? 'Первая карта' : `День ${day} / 7`}</p>
     <h1 className="text-4xl font-semibold">{card.stage}</h1>
-    <p className="text-sm text-gold">{theme}{card.source !== 'official' && ' · Демо-сценарий'}</p>
+    {!introductory && <p className="text-sm text-gold">{theme}{card.source !== 'official' && ' · Демо-сценарий'}</p>}
     {step === 'cover' && <>
       <div className="mx-auto w-full max-w-xs"><Btn variant="ghost" className="gold-frame relative aspect-[2/3] overflow-auto rounded-lg p-0 shadow-card" onClick={() => setFlipped(!flipped)}>{flipped ? <div className="flex min-h-full flex-col justify-center gap-4 px-5 py-6"><span className="font-display text-2xl">{card.scenario}</span><span className="whitespace-pre-line text-sm font-normal leading-relaxed">{card.context}</span></div> : <img src={card.cover} alt={`Карта «${card.stage}»`} className="absolute inset-0 h-full w-full object-contain" />}</Btn></div>
       <Btn onClick={() => next('level')}>Открыть карту</Btn>
@@ -39,7 +40,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
     {step === 'answers' && answer.level && <>
       <p className="border-l-2 border-gold pl-4 leading-relaxed">{card.levels[answer.level].text}</p>
       <h2 className="text-3xl font-semibold">Узнаёшь себя в этой ситуации?</h2>
-      <p className="font-display text-2xl">{theme}: где это проявляется в твоей жизни?</p>
+      {!introductory && <p className="font-display text-2xl">{theme}: где это проявляется в твоей жизни?</p>}
       <p className="text-sm text-muted-foreground">Нет правильного ответа. Что ближе тебе сейчас?</p>
       <RadioGroup aria-label="Твой ответ на карту" value={answer.choiceId ?? ''} onValueChange={choiceId => update({choiceId})}>
         {choices.map(choice => <label key={choice.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem className="mt-1 shrink-0" id={`answer-${day}-${choice.id}`} value={choice.id} /><span className="leading-relaxed">{choice.text}</span></label>)}
@@ -47,7 +48,21 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       <Btn disabled={!selected} onClick={() => next('reflection')}>Узнать себя</Btn>
       <Btn variant="ghost" onClick={() => next('level')}>Изменить силу ситуации</Btn>
     </>}
-    {step === 'reflection' && selected && <>
+    {step === 'reflection' && selected && introductory && <>
+      <h2 className="text-3xl font-semibold">Рефлексия</h2>
+      {([['feelings','Что чувствуешь?'],['hurt','Какие качества не принимаешь?'],['shadow','Какой себе не позволяешь быть?']] as const).map(([key,label]) => <label key={key} className="block space-y-3"><span className="font-semibold">{label}</span><textarea aria-label={label} value={key === 'feelings' ? answer.feelings?.[0] ?? '' : answer[key] ?? ''} onChange={event => update(key === 'feelings' ? {feelings:[event.target.value]} : {[key]:event.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold" /></label>)}
+      <Btn disabled={!introReflectionComplete(answer)} onClick={() => next('introSummary')}>ИТОГ</Btn>
+      <Btn variant="ghost" onClick={() => next('answers')}>Выбрать другой ответ</Btn>
+    </>}
+    {step === 'introSummary' && selected && introductory && <>
+      <h2 className="text-3xl font-semibold">Итог</h2>
+      <section><h3 className="text-2xl font-semibold">Твоя тень</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.shadow}</p></section>
+      <section><h3 className="text-2xl font-semibold">Твой ресурс</h3><p className="mt-3 leading-relaxed">{selected.resource}</p></section>
+      <section><h3 className="text-2xl font-semibold">Маленький шаг</h3><p className="mt-3 leading-relaxed">{selected.smallStep}</p></section>
+      <Btn onClick={complete}>Завершить первую карту</Btn>
+      <Btn variant="ghost" onClick={() => next('reflection')}>К моим ответам</Btn>
+    </>}
+    {step === 'reflection' && selected && !introductory && <>
       <ChoiceReflection showShade={!introductory} onShadowAnswers={shadowAnswers => update({shadowAnswers})} answer={{...answer,shadeId,stage:theme,cardId:card.id,cardStage:card.stage}} />
       {!introductory && <Btn onClick={() => next('personal')}>Ответить ещё раз своими словами</Btn>}
       <Btn variant={introductory ? 'gold' : 'ghost'} onClick={complete}>{introductory ? 'Завершить первую карту' : `Сохранить день ${day}`}</Btn>

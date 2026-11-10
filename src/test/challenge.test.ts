@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DEMO_CARDS, DEMO_THEMES } from '@/lib/demo-cards';
 import { assignDay, clearChallenge, emptyChallenge, loadChallenge, saveChallenge, type ChallengeState } from '@/lib/challenge-store';
 import { canOpenDay, CHALLENGE_LENGTH, challengeComplete, PRACTICES } from '@/lib/challenge';
-import { profileBand, REVERSED_QUESTIONS, scoreTest, TEST_QUESTIONS } from '@/lib/self-test';
+import { profileBand, REVERSED_QUESTIONS, scoreTest, TEST_QUESTIONS, compareTests } from '@/lib/self-test';
 
 const started = () => ({...emptyChallenge(), baseline:Array(24).fill(3), startedAt:new Date(2026,10,9,22,7).toISOString()});
 const entry = (day: number) => ({day, stage:'Границы', level:'soft' as const, feelings:['обида'], body:['грудь'],hurt:'Нет времени',shadow:'Отказывать',resource:'Я могу выбрать',practice:['Мой ответ'],doneAt:new Date(2026,10,9,22,8).toISOString()});
@@ -31,6 +31,13 @@ describe('Seven-day challenge', () => {
   it('persists baseline, final test, drafts and feedback', () => {const state={...started(),finalTest:Array(24).fill(4), drafts:{1:entry(1)},feedback:{takeaway:'Право на паузу',character:'Границы',useful:'Просьбы',difficult:'Отказ',change:'Темп',format:'Онлайн-игра',rating:4}};saveChallenge(state); expect(loadChallenge()).toEqual(state);});
 });
 describe('Author test scoring', () => {
+  it('compares the initial and repeated test without losing reverse scoring', () => {
+    const comparison = compareTests(Array(24).fill(3), Array(24).fill(4));
+    expect(comparison.map(g => g.before)).toEqual([3,3,3,3,3]);
+    expect(comparison.map(g => g.after)).toEqual([4,3.6,3.6,3.2,4]);
+    expect(comparison.map(g => g.change)).toEqual([1,0.6,0.6,0.2,1]);
+    expect(compareTests(Array(24).fill(3),Array(24).fill(3)).map(g => g.change)).toEqual([0,0,0,0,0]);
+  });
   it('uses all 24 uploaded statements', () => expect(TEST_QUESTIONS).toHaveLength(24));
   it.each([8,11,17,20])('inverts question %i using 6 minus answer', number => {const answers=Array(24).fill(3); answers[number-1]=1;const scores=scoreTest(answers);const group=scores.find(g => g.start <= number-1 && g.end > number-1);expect(group?.value).toBe(3+2/5);});
   it('inverts no extra questions', () => {expect(REVERSED_QUESTIONS).toEqual([8,11,17,20]); const answers=Array(24).fill(5); expect(scoreTest(answers).map(g => g.value)).toEqual([5,4.2,4.2,3.4,5]);});
