@@ -166,19 +166,24 @@ const FALLBACK_HABIT: Raw[] = [
   ['habit-4','integrated',s=>`В «${s}» возьму паузу или найду поддержку, прежде чем отвечать.`,'Пауза и поддержка помогают выбрать ответ, а не реагировать на автомате.'],
 ];
 
-function build(raw: Raw[], scene: string, level: string): ScenarioReactionOption[] {
+function build(raw: Raw[], card: GameCard, level?: LevelKey): ScenarioReactionOption[] {
+  const scene = sceneOf(card);
+  // Quote only actual author text; do not invent a partner or change the source scenario.
+  const source = level ? card.levels[level].text : card.context;
+  const quote = source.match(/«([^»]+)»/)?.[1];
+  const detail = quote ?? source.split(/(?<=[.!?])\s/)[0] ?? source;
   return raw.map(([id,kind,text,feedback]) => {
     const value = text(scene);
     const bound = value.includes(scene) ? value : `В ситуации «${scene}» ${value.charAt(0).toLowerCase()}${value.slice(1)}`;
-    void level;
-    return {id,kind,text:bound,feedback};
+    const lead = quote ? `После слов «${detail}»` : `Когда происходит это: «${detail}»`;
+    return {id,kind,text:`${lead}. ${bound}`,feedback:`${feedback} Здесь твой выбор — ответ на ${quote ? 'слова' : 'ситуацию'} «${detail}», а не характеристика тебя.`};
   });
 }
 const sceneOf = (card: GameCard) => card.scenario.replace(/[«»]/g, '');
 
 /** Pass 1: «как я обычно реагирую» — scene-bound, per theme. */
 export function habitReactions(card: GameCard, theme: string, level?: LevelKey): ScenarioReactionOption[] {
-  return build(HABIT_SETS[theme] ?? FALLBACK_HABIT, sceneOf(card), level ? card.levels[level].title : '');
+  return build(HABIT_SETS[theme] ?? FALLBACK_HABIT, card, level);
 }
 
 /** Pass 2: «как я могла бы отреагировать иначе» — differs from pass 1 for every theme. */
@@ -189,7 +194,7 @@ export function scenarioReactions(card: GameCard, shadeName: string, integrated:
     ['hide','shadow',()=>`Откажусь от своего желания и соглашусь, хотя внутри мне это не подходит.`,'Отказ от себя ради мира — знакомая, но дорогая стратегия.'],
     ['pause','integrated',()=>'Возьму паузу, замечу свои потребности и вернусь к разговору без давления. Если небезопасно — выйду из ситуации.','Пауза — способ выбрать, а не среагировать.'],
   ];
-  return build(ALT_SETS[theme] ?? fallback, sceneOf(card), level ? card.levels[level].title : '');
+  return build(ALT_SETS[theme] ?? fallback, card, level);
 }
 
 /** Ready-made «что заметить в себе хорошего» items for the closing block. */
