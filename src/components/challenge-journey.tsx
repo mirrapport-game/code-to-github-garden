@@ -84,7 +84,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <h1 className="text-4xl font-semibold">Присматриваться к лучшему и сеять новое</h1>
       <p className="leading-relaxed">В конце дня заметь, что уже получилось, и выбери одно маленькое действие — семя, которое ты посеешь на этой неделе.</p>
       <PracticeChoices legend="Что хорошего ты заметила в себе сегодня?" hint="Выбери от 1 до 3 пунктов." options={SEED_GOODS} value={journey.seedGood??[]} onChange={seedGood=>update({seedGood})} min={1} max={3}/>
-      <PracticeChoices legend="Какое новое действие посеешь?" hint="Выбери одно маленькое действие." options={SEED_ACTIONS} value={journey.seedAction?[journey.seedAction]:[]} onChange={actions=>update({seedAction:actions[actions.length-1]})} max={1}/>
+      <PracticeChoices legend="Какое новое действие посеешь?" hint="Выбери одно маленькое действие." options={SEED_ACTIONS} value={journey.seedAction?[journey.seedAction]:[]} onChange={actions=>update({seedAction:actions[actions.length-1] ?? ''})} max={1}/>
       <h2 className="text-3xl font-semibold">Ресурс</h2><p className="leading-relaxed">{support.resource}</p><h3 className="text-2xl">Маленький шаг</h3><p className="leading-relaxed">{support.smallStep}</p>
       <Btn disabled={!canContinueJourney('resource',{...journey,...support}) || Boolean(requestText && !journey.requestReflection?.trim())} onClick={()=>{const entry=finishJourney(answer,{...journey,...support,step:'resource'},card,day,theme,shadeId,requestText);if(entry)onComplete(entry);}}>ИТОГ</Btn>
     </>}
