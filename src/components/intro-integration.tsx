@@ -1,4 +1,5 @@
 import { Btn } from '@/components/game-ui';
+import { useRef } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { canContinueIntegration, emptyIntegration, integrationProfile, type IntroIntegration as Integration } from '@/lib/intro-integration';
 import { practiceRatingQuestion, practiceSupport } from '@/lib/integration-practice';
@@ -10,13 +11,15 @@ import { IntroTrainer } from '@/components/intro-trainer';
 import { dialogueUI } from '@/lib/intro-trainer';
 
 export function IntroIntegration({value,selected,before,card,theme,level,scenario,onChange,onBack,onFinish}: {value:Integration;selected:string[];scenario:string;card:GameCard;theme:string;level?:LevelKey | undefined;before:string[];onChange:(value:Integration)=>void;onBack:()=>void;onFinish:()=>void}) {
+  const valueRef=useRef(value);
+  valueRef.current=value;
   const profile=integrationProfile(value.quality);
   if(!profile)return null;
   const reactions=scenarioReactions(card,profile.name,profile.integrated,theme,level);
   const reaction=reactions.find(item=>item.id===value.reactionId);
   const support=practiceSupport(profile.name,profile.integrated);
   const step=value.feedback && ['balance','feelings','resource','summary'].includes(value.step) ? 'reaction' : value.step==='balance' ? 'feelings' : value.step;
-  const update=(changes:Partial<Integration>)=>onChange({...value,...changes});
+  const update=(changes:Partial<Integration>)=>{const next={...valueRef.current,...changes};valueRef.current=next;onChange(next);};
   const go=(target:Integration['step'])=>{update({step:target,...(target==='resource'?support:{})});window.scrollTo(0,0);};
   const field=(key:'where'|'afraid',label:string)=><PracticeChoices legend={label} options={CHALLENGE_SPHERES} value={value[key].split(', ').filter(Boolean)} onChange={items=>update({[key]:items.join(', ')})}/>;
   const next=(label:string,target:Integration['step'])=><Btn disabled={!canContinueIntegration({...value,step})} onClick={()=>go(target)}>{label}</Btn>;
