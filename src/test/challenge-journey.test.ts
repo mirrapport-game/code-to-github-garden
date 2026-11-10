@@ -43,7 +43,7 @@ describe('Written challenge journey',()=>{
   });
   it('starts with the scenario and strength selection, before reflection and shade exploration',()=>{
     expect(emptyJourney().step).toBe('scenario');
-    expect(JOURNEY_STEPS).toEqual(['scenario','reflection','story','shadeMeaning','shadePlay','balance','resource']);
+    expect(JOURNEY_STEPS).toEqual(['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings','balance','resource']);
     expect(canContinueJourney('scenario',emptyJourney())).toBe(false);
     expect(canContinueJourney('scenario',emptyJourney(),'hard')).toBe(true);
   });
@@ -53,9 +53,9 @@ describe('Written challenge journey',()=>{
     expect(canContinueJourney('reflection',{...journey,recognition:''})).toBe(false);
   });
   it('asks for the meaning, expression and fear of the shade before replaying it',()=>{
-    const journey={...emptyJourney(),meaning:'занять место',where:'на работе',afraid:'в семье'};
+    const journey={...emptyJourney(),where:'на работе',afraid:'в семье',shadeBefore:{mode:'scale' as const,rating:4}};
     expect(canContinueJourney('shadeMeaning',journey)).toBe(true);
-    expect(canContinueJourney('shadeMeaning',{...journey,meaning:''})).toBe(false);
+    expect(canContinueJourney('shadeMeaning',{...journey,where:''})).toBe(false);
   });
   it('keeps the chosen manifestation, own replay and after feelings separate',()=>{
     const journey={...emptyJourney(),replay:'Я тоже хочу сказать',after:'спокойнее',manifestation:'integrated' as const};
