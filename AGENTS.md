@@ -50,3 +50,4 @@ use the editor.
 - Keep seven paginated stories between personal reflection and shade exploration, separate from random scenarios and shade IDs. Why: each day starts with the card while the season retains its continuous narrative.
 - Require the entry test for new challenge participants and offer the repeated test after seven days; preserve access for participants with saved completed days. Why: restoring tests must not erase or block existing progress.
 - Show the introductory video on each fresh visit to / before resuming the existing introductory flow; import its CDN asset pointer and keep video dismissal in component state. Why: QR links to the app start with the video without modifying saved game answers.
+- Embed the uploaded soundtrack into the introductory MP4, autoplay muted, and restart playback when the participant enables sound. Why: browsers require user interaction for audible playback and participants should hear the recording from its beginning.
