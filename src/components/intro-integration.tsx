@@ -7,6 +7,7 @@ import { PracticeChoices } from '@/components/practice-controls';
 import { CHALLENGE_SPHERES, scenarioReactions } from '@/lib/challenge-reflection';
 import type { GameCard, LevelKey } from '@/lib/cards';
 import { IntroTrainer } from '@/components/intro-trainer';
+import { dialogueUI } from '@/lib/intro-trainer';
 
 export function IntroIntegration({value,selected,before,card,theme,level,scenario,onChange,onBack}: {value:Integration;selected:string[];scenario:string;card:GameCard;theme:string;level?:LevelKey | undefined;before:string[];onChange:(value:Integration)=>void;onBack:()=>void}) {
   const profile=integrationProfile(value.quality);
@@ -40,11 +41,13 @@ export function IntroIntegration({value,selected,before,card,theme,level,scenari
       <h3 className="text-2xl font-semibold">Моя новая реакция</h3>
       <p className="font-display text-xl">{card.scenario}</p>
       <p className="whitespace-pre-line border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
+      <section className="border-l-2 border-gold pl-4"><h4 className="text-2xl">Интегрированная тень · {profile.name}</h4><p className="mt-2 leading-relaxed">{profile.integrated}</p></section>
+      <p className="font-display text-2xl">Интегрируй тень или примени в диалоге навык: возьми силу этого качества, сохраняя свои и чужие границы.</p>
       <p className="leading-relaxed">Вернись в эту ситуацию. Напиши своими словами, что ты скажешь партнёру, опираясь на интегрированную сторону качества «{profile.name}». Партнёр ответит — сыграйте короткий диалог из 5–8 сообщений, затем ты получишь итог и обратную связь.</p>
       {value.feedback ? <>
         <section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{value.feedback}</p></section>
         <Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],personalReaction:''})}>Сыграть заново</Btn>
-      </> : level && <IntroTrainer cardId={card.id ?? ''} level={level} quality={value.quality} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={[]} initialSummary="" onComplete={(dialogue,feedback)=>update({dialogue,feedback,personalReaction:dialogue.find(turn=>turn.role==='participant')?.text ?? ''})} />}
+      </> : level && <IntroTrainer sessionId={`intro-${card.id}-integrated-${value.quality}`} cardId={card.id ?? ''} level={level} quality={value.quality} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={dialogueUI(value.dialogue)} initialSummary="" onProgress={dialogue=>update({dialogue})} onComplete={(dialogue,feedback)=>update({dialogue,feedback,personalReaction:dialogue.find(turn=>turn.role==='participant')?.text ?? ''})} />}
       {next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>
