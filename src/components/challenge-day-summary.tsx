@@ -3,6 +3,7 @@ import type { ChallengeAnswer } from '@/lib/challenge-store';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 import { DEMO_CARDS } from '@/lib/demo-cards';
 import { SHADOW_SHADES } from '@/lib/shadow-shades';
+import { ShadeComparison } from '@/components/shade-assessment';
 
 export function ChallengeDaySummary({answer}: {answer:ChallengeAnswer}) {
   const card=PLAYABLE_CARDS.find(item=>item.id===answer.cardId) ?? DEMO_CARDS.find(item=>item.stage===answer.stage);
@@ -19,6 +20,7 @@ export function ChallengeDaySummary({answer}: {answer:ChallengeAnswer}) {
       ['Мой ресурс',journey?.resource ?? answer.resource],
       ['Маленький шаг',journey?.smallStep ?? ''],
     ].filter(([,text])=>text).map(([title,text])=><section key={title} className="border-b border-border pb-5"><h3 className="text-2xl font-semibold">{title}</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{text}</p></section>)}
+    <ShadeComparison before={journey?.shadeBefore} after={journey?.shadeAfter} />
   </div>;
 }
 

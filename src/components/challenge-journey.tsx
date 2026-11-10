@@ -3,7 +3,8 @@ import { Btn } from '@/components/game-ui';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
-import { canContinueJourney, emptyJourney, finishJourney, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
+import { canContinueJourney, emptyJourney, finishJourney, validShadeAssessment, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
+import { ShadeAssessment, ShadeComparison } from '@/components/shade-assessment';
 import { SHADOW_SHADES } from '@/lib/shadow-shades';
 import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
 import cover from '@/assets/shadow-shades-cover.jpg';
@@ -22,7 +23,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplet
   };
   const go = (next:JourneyStep) => {update({step:next}); window.scrollTo(0,0);};
   const field = (key: keyof Pick<JourneyDraft,'before'|'rejected'|'recognition'|'repelled'|'meaning'|'where'|'afraid'|'replay'|'after'|'balance'|'resource'|'smallStep'>, label:string) => <label key={key} className="block space-y-3"><span className="font-semibold">{label}</span><textarea aria-label={label} value={journey[key]} onChange={event => update({[key]:event.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold" /></label>;
-  const next = (label:string,target:JourneyStep) => <Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={() => go(target)}>{label}</Btn>;
+  const next = (label:string,target:JourneyStep) => <Btn disabled={!canContinueJourney(step,journey,answer.level) || (step === 'shadeMeaning' && !validShadeAssessment(journey.shadeBefore)) || (step === 'balance' && !validShadeAssessment(journey.shadeAfter))} onClick={() => go(target)}>{label}</Btn>;
   const scenario = answer.level ? card.levels[answer.level].text : card.context;
   if (step === 'story') return <><ChallengeStory day={day} completeLabel="Оттенки тени" onComplete={() => {go('shadeMeaning');}} /><Btn className="mt-6" variant="ghost" onClick={() => go('reflection')}>К моей рефлексии</Btn></>;
   return <div className="space-y-6 animate-rise">
@@ -55,6 +56,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplet
       {field('meaning',`Что для тебя «${name}»?`)}
       {field('where',`Где и как ты проявляешь это качество — «${name}»?`)}
       {field('afraid',`Где ты боишься проявить это качество — «${name}»?`)}
+      <ShadeAssessment phase="before" name={name} value={journey.shadeBefore} onChange={shadeBefore => update({shadeBefore})} />
       {next('Примерить тень в сценарии','shadePlay')}<Btn variant="ghost" onClick={() => go('reflection')}>К моей рефлексии</Btn>
     </>}
     {step === 'shadePlay' && <>
@@ -73,6 +75,8 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplet
       {image && <p className="border-l-2 border-gold pl-4 leading-relaxed">{image.integrated}</p>}
       {name === 'Наглость' && <p className="leading-relaxed">Не расталкивать всех локтями, а подвинуть себе стул. Сказать: «Я тоже хочу», попросить своё и оставить другому право ответить «нет».</p>}
       {field('balance',`Как ты используешь «${name}» в этой ситуации, сохраняя свои и чужие границы?`)}
+      <ShadeAssessment phase="after" name={name} value={journey.shadeAfter} onChange={shadeAfter => update({shadeAfter})} />
+      {journey.shadeAfter && <ShadeComparison before={journey.shadeBefore} after={journey.shadeAfter} />}
       <p className="font-display text-2xl">В игре ты сможешь отыграть сценарий с живым человеком, получить обратную связь и попробовать свою тень в действии — чтобы заметить привычные автоматические реакции и поискать другой ответ.</p>
       <p className="text-sm text-muted-foreground">Не нужно терпеть давление или насилие. При угрозе важнее безопасность и поддержка.</p>
       {next('Забери ресурс','resource')}<Btn variant="ghost" onClick={() => go('shadePlay')}>К отыгрышу тени</Btn>

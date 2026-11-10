@@ -1,10 +1,33 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { canContinueJourney, emptyJourney, finishJourney, JOURNEY_STEPS, showShadeProgress } from '@/lib/challenge-journey';
+import { canContinueJourney, emptyJourney, finishJourney, JOURNEY_STEPS, showShadeProgress, validShadeAssessment, shadeRatingChange } from '@/lib/challenge-journey';
 import { clearChallenge, emptyChallenge, loadChallenge, saveChallenge } from '@/lib/challenge-store';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 
 describe('Written challenge journey',()=>{
   beforeEach(clearChallenge);
+  it('accepts only integer shade ratings from 1 through 10',()=>{
+    expect(validShadeAssessment({mode:'scale',rating:1})).toBe(true);
+    expect(validShadeAssessment({mode:'scale',rating:10})).toBe(true);
+    for(const rating of [0,11,5.5,NaN]) expect(validShadeAssessment({mode:'scale',rating})).toBe(false);
+  });
+  it('accepts a written assessment instead of a scale and keeps both observations after reload',()=>{
+    const journey={...emptyJourney(),shadeBefore:{mode:'words' as const,text:'Мне трудно просить'},shadeAfter:{mode:'words' as const,text:'Могу попросить без давления'}};
+    expect(validShadeAssessment(journey.shadeBefore)).toBe(true);
+    expect(validShadeAssessment({mode:'words',text:' '})).toBe(false);
+    saveChallenge({...emptyChallenge(),drafts:{1:{journey}}});
+    expect(loadChallenge().drafts[1]?.journey?.shadeBefore).toEqual(journey.shadeBefore);
+    expect(loadChallenge().drafts[1]?.journey?.shadeAfter).toEqual(journey.shadeAfter);
+  });
+  it('compares numeric before and after ratings without inventing scores for written answers',()=>{
+    expect(shadeRatingChange({mode:'scale',rating:3},{mode:'scale',rating:8})).toBe(5);
+    expect(shadeRatingChange({mode:'scale',rating:8},{mode:'scale',rating:3})).toBe(-5);
+    expect(shadeRatingChange({mode:'words',text:'Стало легче'},{mode:'scale',rating:8})).toBeNull();
+  });
+  it('requires a valid follow-up assessment when a baseline shade assessment exists',()=>{
+    const journey={...emptyJourney(),balance:'Прошу без давления',shadeBefore:{mode:'scale' as const,rating:3}};
+    expect(canContinueJourney('balance',journey)).toBe(false);
+    expect(canContinueJourney('balance',{...journey,shadeAfter:{mode:'scale',rating:8}})).toBe(true);
+  });
   it('reveals shade progress only when the participant reaches shade exploration',()=>{
     expect(showShadeProgress('overview','scenario',0)).toBe(false);
     for (const step of ['scenario','reflection','story'] as const) {
