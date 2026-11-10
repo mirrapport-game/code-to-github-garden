@@ -1,5 +1,15 @@
 import { z } from "zod";
 import type { UIMessage } from "ai";
+import type { DialogueTurn } from '@/lib/intro-dialogue';
+
+export function dialogueUI(turns: DialogueTurn[] = []): UIMessage[] {
+  return turns.map((turn, index) => ({ id: `turn-${index}`, role: turn.role === 'participant' ? 'user' : 'assistant', parts: [{ type: 'text', text: turn.text }] }));
+}
+
+export function canFinishDialogue(messages: UIMessage[], minimum = 5): boolean {
+  const turns = textOnlyMessages(messages);
+  return turns.length >= minimum && turns.at(-1)?.role === 'assistant';
+}
 
 export const trainerRequestSchema = z
   .object({
@@ -64,9 +74,9 @@ export function loadTrainer(): TrainerSession | null {
     return null;
   }
 }
-export function saveTrainer(session: TrainerSession) {
+export function saveTrainer(session: TrainerSession, scope?: string) {
   window.localStorage.setItem(
-    KEY,
+    scope ? `${KEY}:${scope}` : KEY,
     JSON.stringify({ ...session, messages: textOnlyMessages(session.messages) }),
   );
 }
