@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useServerFn } from '@tanstack/react-start';
 import { Btn, Logo, Stop } from '@/components/game-ui';
 import { ChallengeJourney } from '@/components/challenge-journey';
 import { ChallengeDaySummary, ChallengeInvitations } from '@/components/challenge-day-summary';
@@ -33,6 +34,10 @@ type Screen = 'overview' | 'day' | 'summary' | 'feedback' | 'before' | 'after' |
 const initialFeedback: Feedback = { takeaway:'', character:'', useful:'', difficult:'', change:'', format:'', rating:0 };
 function Season() {
   const account = useParticipant();
+  const notify = useServerFn(notifyDayComplete);
+  const finishing = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const [notification, setNotification] = useState('');
   const navigate = useNavigate();
   const [state, setState] = useState<ChallengeState | null>(null);
   const [introDone, setIntroDone] = useState(false);
@@ -54,6 +59,14 @@ function Season() {
   const persist = (next: ChallengeState) => {
     try {saveChallenge(next); setState(next); setError(''); return true;}
     catch {setError('Не удалось сохранить ответы в этом браузере. Разреши хранение данных или освободи место и попробуй снова.'); return false;}
+  };
+  const sendSummary = async (day: number) => {
+    setNotification('');
+    try {
+      if (!await account.flush()) {setNotification('День сохранён в этом браузере, но ещё не в аккаунте. Попробуй отправить итог снова.');return;}
+      const result = await notify({data:{day}});
+      setNotification(result.sent ? 'Итог отправлен в Telegram.' : result.warning);
+    } catch {setNotification('Не удалось отправить итог в Telegram. Ответы сохранены; попробуй ещё раз.');}
   };
   const go = (next: Screen) => {setScreen(next); window.scrollTo(0,0);};
   if (!state) return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground" />;
@@ -130,15 +143,22 @@ function Season() {
         {!state.baseline && <p className="text-sm text-muted-foreground">Это твой первый замер после прохождения. Входного результата нет, поэтому сравнение не рассчитываем.</p>}
         <Btn onClick={() => go(completed && state.finalTest ? 'feedback' : 'overview')}>{completed && state.finalTest ? 'К обратной связи' : 'К семи дням'}</Btn>
       </div>}
-      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeJourney key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} requestText={requestText} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
-        if (!canOpenDay(state,activeDay)) return;
-        if (persist({...state,days:{...state.days,[activeDay]:entry}})) {
-          go('summary');
-          if (account.user) void notifyDayComplete({data:{day:activeDay,scenario:card.scenario.slice(0,400),reaction:(entry.journey?.replay ?? '').slice(0,1500),feedback:(entry.journey?.feedback ?? '').slice(0,3000),resource:(entry.resource ?? '').slice(0,800),smallStep:(entry.journey?.smallStep ?? '').slice(0,800)}}).catch(() => undefined);
-        }
+      {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeJourney key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} requestText={requestText} draft={state.drafts[activeDay]} onDraft={draft => {const latest=loadChallenge();persist({...latest,drafts:{...latest.drafts,[activeDay]:draft}});}} onComplete={async entry => {
+        if (finishing.current || !canOpenDay(state,activeDay)) return;
+        finishing.current=true;setSaving(true);
+        try {
+          const latest=loadChallenge();
+          if (persist({...latest,days:{...latest.days,[activeDay]:entry}})) {
+            go('summary');
+            if (account.user) await sendSummary(activeDay);
+          }
+        } finally {finishing.current=false;setSaving(false);}
       }} />}
       {screen === 'summary' && state.days[activeDay] && <div className="space-y-7">
         <ChallengeDaySummary answer={state.days[activeDay]} />
+        {saving && <p role="status">Сохраняем день и отправляем итог…</p>}
+        {notification && <p role="status" className="text-sm text-gold">{notification}</p>}
+        {account.user && notification && !notification.startsWith('Итог отправлен') && <Btn variant="ghost" disabled={saving} onClick={async()=>{setSaving(true);try{await sendSummary(activeDay);}finally{setSaving(false);}}}>Повторить отправку итога</Btn>}
         <p className="font-display text-2xl italic">{activeDay < 7 ? 'Возвращайся завтра — новая карта и ещё одна встреча с собой.' : 'Семь дней знакомства с игрой завершены. Что ты забираешь с собой?'}</p>
         <ChallengeInvitations />
         {activeDay < 7 ? <><Btn disabled={!canOpenDay(state,activeDay+1,now)} onClick={() => open(activeDay+1)}>Ближе к себе · День {activeDay+1}</Btn>{!canOpenDay(state,activeDay+1,now) && <p className="text-sm text-muted-foreground">Следующий день откроется {unlockAt(state,activeDay+1)?.toLocaleDateString('ru-RU')} в полночь по времени этого устройства.</p>}</> : <Btn onClick={() => go(state.finalTest ? 'profile' : 'after')}>{state.finalTest ? 'Что изменилось · До и после' : 'Пройти тест после семи дней'}</Btn>}

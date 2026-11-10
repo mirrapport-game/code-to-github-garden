@@ -35,6 +35,27 @@ export type Database = {
         }
         Relationships: []
       }
+      day_notifications: {
+        Row: {
+          created_at: string
+          event_key: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_key: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_key?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       participant_progress: {
         Row: {
           challenge: Json
@@ -205,9 +226,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_game_progress: {
+        Args: {
+          p_challenge: Json
+          p_draft: Json
+          p_intro: Json
+          p_offset?: number
+          p_path: string
+        }
+        Returns: undefined
+      }
       claim_game_referral: { Args: { p_code: string }; Returns: undefined }
       is_game_admin: { Args: never; Returns: boolean }
       jsonb_object_length_safe: { Args: { value: Json }; Returns: number }
+      merge_game_json: {
+        Args: { base: Json; local_value: Json; remote_value: Json }
+        Returns: Json
+      }
       prepare_telegram_link: { Args: never; Returns: string }
       review_game_story: {
         Args: { p_approve: boolean; p_id: string }
@@ -222,6 +257,17 @@ export type Database = {
           p_path: string
         }
         Returns: undefined
+      }
+      sync_game_progress_safe: {
+        Args: {
+          p_base?: Json
+          p_challenge: Json
+          p_draft: Json
+          p_intro: Json
+          p_offset?: number
+          p_path: string
+        }
+        Returns: Json
       }
     }
     Enums: {

@@ -22,7 +22,7 @@ export function shadowTracker(intro:SeasonState,challenge:ChallengeState):Shadow
       const profile=integrationProfile(quality); if(!profile) continue;
       const value=entry.introIntegration?.quality===quality ? entry.introIntegration : undefined;
       const reaction=integrationReactions(quality).find(item=>item.id===value?.reactionId);
-      result.push({key:`intro:${entry.cardId}:${quality}`,name:profile.name,source:'Первая карта',integrated:value?.step==='summary' && reaction?.kind==='integrated',before:entry.feelings.join(', '),after:value?.after ?? '',shadow:profile.shadow,balanced:profile.integrated,resource:value?.resource ?? '',smallStep:value?.smallStep ?? ''});
+      result.push({key:`intro:${entry.cardId}:${quality}`,name:profile.name,source:'Первая карта',integrated:Boolean(value?.feedback?.trim() && value.dialogue?.some(turn=>turn.role==='participant')) || (value?.step==='summary' && reaction?.kind==='integrated'),before:entry.feelings.join(', '),after:value?.after ?? '',shadow:profile.shadow,balanced:profile.integrated,resource:value?.resource ?? '',smallStep:value?.smallStep ?? ''});
     }
   }
   for(const [day,entry] of Object.entries({...challenge.drafts,...challenge.days})) {

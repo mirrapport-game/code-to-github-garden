@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Btn } from '@/components/game-ui';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
@@ -19,6 +19,7 @@ const split=(value:string)=>value.split(', ').map(item=>item.trim()).filter(Bool
 
 export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;requestText?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
   const [answer,setAnswer]=useState<Partial<ChallengeAnswer>>(draft??{});
+  const answerRef=useRef(answer);
   const journey={...emptyJourney(),...answer.journey,firstDialogueComplete:answer.journey?.firstDialogueComplete ?? Boolean(answer.journey?.firstReactionId)};
   const step=journey.feedback && ['balance','feelings','resource'].includes(journey.step) ? 'shadePlay' : journey.step==='balance'?'feelings':journey.step==='request' && !requestText ? 'shadePlay' : journey.step;
   const shade=SHADOW_SHADES.find(item=>item.id===shadeId);
@@ -26,7 +27,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
   const name=shade?.name??theme;
   const integrated=image?.integrated??shade?.integrated??'Обозначать свои потребности, уважая свои и чужие границы.';
   const support=practiceSupport(name,integrated);
-  const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answer,...extra,journey:{...journey,...changes}};setAnswer(value);onDraft(value);};
+  const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answerRef.current,...extra,journey:{...emptyJourney(),...answerRef.current.journey,...changes}};answerRef.current=value;setAnswer(value);onDraft(value);};
   const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{}),...(target==='request' && requestText ? {requestText} : {})});window.scrollTo(0,0);};
   const next=(label:string,target:JourneyStep)=><Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={()=>go(target)}>{label}</Btn>;
   const scenario=answer.level?card.levels[answer.level].text:card.context;

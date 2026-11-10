@@ -15,6 +15,13 @@
       "when": 1794320251772,
       "tag": "0001_participant_progress_rewards_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794343934338,
+      "tag": "0002_safe_progress_and_day_notifications",
+      "breakpoints": true
     }
   ]
 }
