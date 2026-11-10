@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Btn } from '@/components/game-ui';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
@@ -19,7 +19,8 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
   const [step, setStep] = useState<'story' | 'cover' | 'level' | 'answers' | 'reflection' | 'introSummary' | 'integration' | 'personal'>(introductory && draft?.introIntegration ? 'integration' : !introductory && !draft?.storyRead ? 'story' : draft?.choiceId || draft?.firstDialogueComplete ? 'reflection' : introductory && draft?.level ? 'answers' : 'cover');
   const [flipped, setFlipped] = useState(false);
   const [answer, setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? {});
-  const update = (values: Partial<ChallengeAnswer>) => { const next = {...answer, ...values, shadeId, stage:theme, cardId:card.id, cardStage:card.stage, day}; setAnswer(next); onDraft(next); };
+  const answerRef=useRef(answer);
+  const update = (values: Partial<ChallengeAnswer>) => { const next = {...answerRef.current, ...values, shadeId, stage:theme, cardId:card.id, cardStage:card.stage, day}; answerRef.current=next; setAnswer(next); onDraft(next); };
   const next = (value: typeof step) => { setStep(value); window.scrollTo(0,0); };
   const choices = answer.level ? cardChoices(theme, answer.level, card.id) : [];
   const selected = choices.find(item => item.id === answer.choiceId);
