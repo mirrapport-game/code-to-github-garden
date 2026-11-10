@@ -35,15 +35,15 @@ const THEME_READINGS: Record<string, (scene: string) => string> = {
 };
 
 /** Scenario-specific reading shown right after the partner-intensity choice. */
-export function scenarioReaction(card: GameCard, level: LevelKey): string {
-  const reading = THEME_READINGS[card.stage] ?? (scene => `Сцена «${scene}» — про то, как ты встречаешься с собой в отношениях. Твой выбор показывает, что сейчас откликается в тебе сильнее всего.`);
+export function scenarioReaction(card: GameCard, level: LevelKey, theme: string): string {
+  const reading = THEME_READINGS[theme] ?? (scene => `Сцена «${scene}» — про то, как ты встречаешься с собой в отношениях. Твой выбор показывает, что сейчас откликается в тебе сильнее всего.`);
   return `${reading(card.scenario)} ${LEVEL_READINGS[level]}`;
 }
 
 export type ScenarioReactionOption = { id: string; kind: 'shadow' | 'integrated'; text: string };
 
 /** Four new-reaction options tied to the specific scene of the card. */
-export function scenarioReactions(card: GameCard, shadeName: string, integrated: string): ScenarioReactionOption[] {
+export function scenarioReactions(card: GameCard, shadeName: string, integrated: string, theme: string): ScenarioReactionOption[] {
   const scene = card.scenario.replace(/[«»]/g, '');
   const sets: Record<string, ScenarioReactionOption[]> = {
     'Границы': [
@@ -107,7 +107,7 @@ export function scenarioReactions(card: GameCard, shadeName: string, integrated:
     {id:'hide',kind:'shadow',text:`Откажусь от своего желания и соглашусь, хотя внутри мне это не подходит.`},
     {id:'pause',kind:'integrated',text:'Возьму паузу, замечу свои потребности и вернусь к разговору без давления. Если небезопасно — выйду из ситуации.'},
   ];
-  return sets[card.stage] ?? fallback;
+  return sets[theme] ?? fallback;
 }
 
 /** Ready-made «что заметить в себе хорошего» items for the closing block. */

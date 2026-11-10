@@ -23,7 +23,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
   const name=shade?.name??theme;
   const integrated=image?.integrated??shade?.integrated??'Обозначать свои потребности, уважая свои и чужие границы.';
   const support=practiceSupport(name,integrated);
-  const reactions=scenarioReactions(card,name,integrated);
+  const reactions=scenarioReactions(card,name,integrated,theme);
   const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answer,...extra,journey:{...journey,...changes}};setAnswer(value);onDraft(value);};
   const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{}),...(target==='request' && requestText ? {requestText} : {})});window.scrollTo(0,0);};
   const next=(label:string,target:JourneyStep)=><Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={()=>go(target)}>{label}</Btn>;
@@ -41,7 +41,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <p className="leading-relaxed">Партнёр — это другой человек в ситуации. Мягкая, средняя или жёсткая: выбери, насколько напряжённым будет ваше взаимодействие сегодня. Затем прочитай выбранный вариант. Начни с того уровня, с которым тебе комфортно; его можно изменить.</p>
       <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
       {answer.level&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>}
-      {answer.level&&<section className="rounded-lg border border-gold/40 bg-card p-4"><h3 className="text-xl font-semibold text-gold">Что говорит твой выбор</h3><p className="mt-2 leading-relaxed">{scenarioReaction(card,answer.level)}</p></section>}
+      {answer.level&&<section className="rounded-lg border border-gold/40 bg-card p-4"><h3 className="text-xl font-semibold text-gold">Что говорит твой выбор</h3><p className="mt-2 leading-relaxed">{scenarioReaction(card,answer.level,theme)}</p></section>}
       {next('Рефлексия','reflection')}
     </>}
     {step==='reflection'&&<>

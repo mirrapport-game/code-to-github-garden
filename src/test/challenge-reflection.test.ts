@@ -23,24 +23,22 @@ describe('Challenge reflection lists',()=>{
 
 describe('Scenario-specific reactions',()=>{
   it('gives each of the nine themes its own reading that names the scene',()=>{
+    const card = PLAYABLE_CARDS[0];
+    if (!card) throw new Error('Missing official scenario');
     const readings = new Set<string>();
     for (const theme of themes) {
-      const card = PLAYABLE_CARDS.find(item => item.stage === theme || item.id?.startsWith('family'));
-      const themed = PLAYABLE_CARDS.find(item => item.stage === theme);
-      const source = themed ?? card;
-      if (!source) continue;
-      const reading = scenarioReaction({...source, stage: theme}, 'soft');
-      expect(reading).toContain(source.scenario);
-      readings.add(reading.replace(source.scenario, ''));
+      const reading = scenarioReaction(card, 'soft', theme);
+      expect(reading).toContain(card.scenario);
+      readings.add(reading.replace(card.scenario, ''));
     }
     expect(readings.size).toBe(themes.length);
   });
   it('gives each theme four reaction options tied to the scene, not a shared template',()=>{
+    const card = PLAYABLE_CARDS[0];
+    if (!card) throw new Error('Missing official scenario');
     const perTheme = new Set<string>();
     for (const theme of themes) {
-      const card = PLAYABLE_CARDS.find(item => item.stage === theme);
-      if (!card) throw new Error(`Missing card for ${theme}`);
-      const options = scenarioReactions(card, 'Напористость', 'говорить прямо');
+      const options = scenarioReactions(card, 'Напористость', 'говорить прямо', theme);
       expect(options.map(option => option.id)).toEqual(['pressure','clear','hide','pause']);
       for (const option of options) expect(option.text).toContain(card.scenario.replace(/[«»]/g, ''));
       perTheme.add(options.map(option => option.text).join('|'));
@@ -50,9 +48,9 @@ describe('Scenario-specific reactions',()=>{
   it('varies the reading by chosen partner intensity',()=>{
     const card = PLAYABLE_CARDS[0];
     if (!card) throw new Error('Missing official scenario');
-    const soft = scenarioReaction(card, 'soft');
-    const hard = scenarioReaction(card, 'hard');
+    const soft = scenarioReaction(card, 'soft', 'Границы');
+    const hard = scenarioReaction(card, 'hard', 'Границы');
     expect(soft).not.toBe(hard);
-    for (const level of ['soft','medium','hard'] as const) expect(scenarioReaction(card, level)).toContain(card.scenario);
+    for (const level of ['soft','medium','hard'] as const) expect(scenarioReaction(card, level, 'Границы')).toContain(card.scenario);
   });
 });
