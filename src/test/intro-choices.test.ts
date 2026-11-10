@@ -7,6 +7,11 @@ import { emptyChallenge, loadChallenge } from '@/lib/challenge-store';
 
 describe('Introductory four-answer card', () => {
   beforeEach(() => window.localStorage.clear());
+  it('accepts a completed first dialogue instead of a legacy four-choice answer',()=>{
+    const draft={firstDialogueComplete:true,feelings:['Злость'],introReflection:{qualities:['Напористость'],notAllowed:['Напористой'],spheres:[],strength:'',fears:['Осуждения']}};
+    expect(introReflectionComplete(draft)).toBe(true);
+    expect(introReflectionComplete({...draft,firstDialogueComplete:false})).toBe(false);
+  });
   it('requires feeling, quality, sphere and fear selections without requiring a strength answer', () => {
     const reflection = {qualities:['Резкость'],notAllowed:['Смелой'],spheres:['На работе','Дома'],strength:'',fears:['Осуждения','Обвинений']};
     const draft = {choiceId:'2',feelings:['Злость','Обида'],hurt:'Резкость',shadow:'Смелой',introReflection:reflection};

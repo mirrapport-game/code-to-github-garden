@@ -15,7 +15,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Btn, Logo } from "@/components/game-ui";
-import { saveTrainer, textOnlyMessages } from "@/lib/intro-trainer";
+import { canFinishDialogue, saveTrainer, textOnlyMessages } from "@/lib/intro-trainer";
 import type { LevelKey } from "@/lib/cards";
 import type { DialogueTurn } from "@/lib/intro-dialogue";
 
@@ -29,8 +29,14 @@ export function IntroTrainer({
   minMessages = 0,
   maxParticipantMessages,
   placeholder = "Я хочу сказать…",
+  sessionId,
+  withFeedback = true,
+  onProgress,
   onComplete,
 }: {
+  sessionId?: string;
+  withFeedback?: boolean;
+  onProgress?: (dialogue: DialogueTurn[]) => void;
   quality?: string;
   shadeId?: string;
   minMessages?: number;
@@ -50,6 +56,8 @@ export function IntroTrainer({
   const mode = useRef<"dialogue" | "summary">("dialogue");
   const summaryId = useRef<string | null>(null);
   const summaryStart = useRef<number | null>(null);
+  const progressCallback = useRef(onProgress);
+  progressCallback.current = onProgress;
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
@@ -75,7 +83,7 @@ export function IntroTrainer({
     [cardId, level, quality, shadeId],
   );
   const { messages, sendMessage, status, stop } = useChat({
-    id: `intro-${cardId}-${level}-${quality ?? ""}`,
+    id: sessionId ?? `intro-${cardId}-${level}-${quality ?? shadeId ?? ""}`,
     messages: initialMessages,
     transport,
     onError: (error) => setFailure(error.message),
@@ -123,13 +131,16 @@ export function IntroTrainer({
   );
   useEffect(() => {
     try {
-      saveTrainer({ cardId, level, messages: textOnlyMessages(dialogueMessages), summary });
+      saveTrainer({ cardId, level, messages: textOnlyMessages(dialogueMessages), summary }, sessionId);
     } catch {
       setFailure(
         "Не удалось сохранить разговор в этом браузере. Не закрывай страницу до завершения.",
       );
     }
-  }, [cardId, level, dialogueMessages, summary]);
+  }, [cardId, level, dialogueMessages, summary, sessionId]);
+  useEffect(() => {
+    if (!busy) progressCallback.current?.(textOnlyMessages(dialogueMessages).map(m => ({ role: m.role === 'user' ? 'participant' : 'other', text: m.parts.filter(p => p.type === 'text').map(p => p.text).join('\n') })));
+  }, [dialogueMessages, busy]);
   useEffect(() => {
     if (!busy && !summaryMode) input.current?.focus();
   }, [busy, summaryMode]);
@@ -165,7 +176,7 @@ export function IntroTrainer({
       </header>
       {!summaryMode && (
         <>
-          <Conversation className="h-80 min-h-60 border-y border-border" aria-label="Разговор с ИИ">
+          <Conversation className={dialogueMessages.length ? "h-80 border-y border-border" : "h-20 border-y border-border"} aria-label="Разговор с ИИ">
             <ConversationContent className="px-0 py-5">
               {!dialogueMessages.length && (
                 <p className="font-display text-xl italic text-muted-foreground">
@@ -233,15 +244,11 @@ export function IntroTrainer({
           <Btn
             disabled={
               busy ||
-              dialogueMessages.length < minMessages ||
-              !dialogueMessages.some(
-                (m) =>
-                  m.role === "assistant" && m.parts.some((p) => p.type === "text" && p.text.trim()),
-              )
+              !canFinishDialogue(dialogueMessages, minMessages) || Boolean(failure)
             }
-            onClick={conclude}
+            onClick={withFeedback ? conclude : finish}
           >
-            Завершить разговор · увидеть итог
+            {withFeedback ? 'Завершить разговор · увидеть итог' : 'Завершить разговор · к рефлексии'}
           </Btn>
         </>
       )}
@@ -276,7 +283,7 @@ export function IntroTrainer({
           {failure}
         </p>
       )}
-      {!busy && !summary && (
+      {!busy && !summary && minMessages === 0 && (
         <Btn variant="ghost" onClick={finish}>
           Продолжить без итога
         </Btn>

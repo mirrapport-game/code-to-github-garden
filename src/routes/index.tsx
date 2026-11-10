@@ -19,10 +19,10 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Вытяни случайную карту, выбери один из четырёх ответов и найди свой ресурс. Ближе к себе, ближе к другим.",
+          "Вытяни случайную карту, сыграй диалог с ИИ и попробуй новую реакцию с опорой на свой ресурс. Ближе к себе, ближе к другим.",
       },
       { property: "og:title", content: "Раппорт: ЖиваЯ — вытяни свою карту" },
-      { property: "og:description", content: "Случайная тема, четыре ответа и бережное знакомство с собой через карты игры." },
+      { property: "og:description", content: "Случайная карта, диалог с ИИ и бережное знакомство с собой через игру." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

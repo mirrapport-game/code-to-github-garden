@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 import { canContinueJourney, emptyJourney, finishJourney, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
-import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN, SEED_ACTIONS, SEED_GOODS, scenarioReaction, scenarioReactions, habitReactions, reactionContext } from '@/lib/challenge-reflection';
+import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN, SEED_ACTIONS, SEED_GOODS } from '@/lib/challenge-reflection';
 import { ComingSoonButton } from '@/components/coming-soon-button';
 import { SHADOW_SHADES } from '@/lib/shadow-shades';
 import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
@@ -13,25 +13,25 @@ import { ChallengeStory } from '@/components/challenge-story';
 import { practiceSupport } from '@/lib/integration-practice';
 import { IntroTrainer } from '@/components/intro-trainer';
 import { PracticeChoices, PracticeFeelings } from '@/components/practice-controls';
+import { dialogueUI } from '@/lib/intro-trainer';
 
 const split=(value:string)=>value.split(', ').map(item=>item.trim()).filter(Boolean);
 
 export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;requestText?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
   const [answer,setAnswer]=useState<Partial<ChallengeAnswer>>(draft??{});
-  const journey={...emptyJourney(),...answer.journey};
-  const step=journey.step==='balance'?'feelings':journey.step==='request' && !requestText ? 'resource' : journey.step;
+  const journey={...emptyJourney(),...answer.journey,firstDialogueComplete:answer.journey?.firstDialogueComplete ?? Boolean(answer.journey?.firstReactionId)};
+  const step=journey.feedback && ['balance','feelings','resource'].includes(journey.step) ? 'shadePlay' : journey.step==='balance'?'feelings':journey.step==='request' && !requestText ? 'shadePlay' : journey.step;
   const shade=SHADOW_SHADES.find(item=>item.id===shadeId);
   const image=shade?SHADE_IMAGES[shade.id]:undefined;
   const name=shade?.name??theme;
   const integrated=image?.integrated??shade?.integrated??'Обозначать свои потребности, уважая свои и чужие границы.';
   const support=practiceSupport(name,integrated);
-  const reactions=scenarioReactions(card,name,integrated,theme,answer.level);
-  const habits=habitReactions(card,theme,answer.level);
   const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answer,...extra,journey:{...journey,...changes}};setAnswer(value);onDraft(value);};
   const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{}),...(target==='request' && requestText ? {requestText} : {})});window.scrollTo(0,0);};
   const next=(label:string,target:JourneyStep)=><Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={()=>go(target)}>{label}</Btn>;
   const scenario=answer.level?card.levels[answer.level].text:card.context;
-  const steps:JourneyStep[]=['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings',...(requestText ? ['request' as const] : []),'resource'];
+  const steps:JourneyStep[]=['scenario','reflection','story','shadeMeaning','shadeView','shadePlay',...(requestText ? ['request' as const] : [])];
+  const finish=()=>{const entry=finishJourney(answer,{...journey,...support},card,day,theme,shadeId,requestText);if(entry)onComplete(entry);};
   const index=steps.indexOf(step);
   if(step==='story')return <><ChallengeStory day={day} completeLabel="Интегрировать тень" onComplete={()=>go('shadeMeaning')}/><Btn className="mt-6" variant="ghost" onClick={()=>go('reflection')}>Назад</Btn></>;
   return <div className="space-y-6 animate-rise">
@@ -42,11 +42,13 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <img src={card.cover} alt={`Карта «${card.stage}»`} className="gold-frame mx-auto aspect-[2/3] w-full max-w-64 rounded-lg object-contain shadow-card"/>
       <h2 className="text-3xl font-semibold">{card.scenario}</h2><p className="whitespace-pre-line leading-relaxed">{card.context}</p><h3 className="text-2xl">Выбери степень жёсткости партнёра</h3>
       <p className="leading-relaxed">Партнёр — это другой человек в ситуации. Мягкая, средняя или жёсткая: выбери, насколько напряжённым будет ваше взаимодействие сегодня. Затем прочитай выбранный вариант. Начни с того уровня, с которым тебе комфортно; его можно изменить.</p>
-      <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
+      <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({firstDialogue:[],firstDialogueComplete:false,firstReactionId:'',firstReactionText:''},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
       {answer.level&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>}
-      {answer.level&&<section className="rounded-lg border border-gold/40 bg-card p-4"><h3 className="text-xl font-semibold text-gold">Что говорит твой выбор</h3><p className="mt-2 leading-relaxed">{scenarioReaction(card,answer.level,theme)}</p></section>}
-      {answer.level&&<><h3 className="text-2xl">Как я обычно реагирую</h3><p className="text-sm text-muted-foreground">{reactionContext(card,answer.level)}</p><RadioGroup aria-label="Привычная реакция" value={journey.firstReactionId??''} onValueChange={firstReactionId=>{const chosen=habits.find(item=>item.id===firstReactionId);if(chosen)update({firstReactionId,firstReactionText:chosen.text});}}>{habits.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>{journey.firstReactionId&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{habits.find(item=>item.id===journey.firstReactionId)?.feedback}</p>}</>}
-      {journey.firstReactionId?next('Рефлексия','reflection'):<Btn disabled>Рефлексия</Btn>}
+      {answer.level&&<>
+        <h3 className="text-2xl">Узнаёшь себя в этой ситуации?</h3>
+        <p className="leading-relaxed">Напиши, как бы ты на самом деле ответила этому человеку. Начни диалог — ИИ сыграет партнёра в этой ситуации.</p>
+        <IntroTrainer key={`day-${day}-first-${answer.level}`} sessionId={`day-${day}-${card.id}-first-${answer.level}`} cardId={card.id ?? ''} level={answer.level} minMessages={5} maxParticipantMessages={4} withFeedback={false} placeholder="Как бы я на самом деле ответила…" initialMessages={dialogueUI(journey.firstDialogue)} initialSummary="" onProgress={firstDialogue=>update({firstDialogue})} onComplete={firstDialogue=>{update({firstDialogue,firstDialogueComplete:true,firstReactionText:firstDialogue.find(turn=>turn.role==='participant')?.text ?? '',step:'reflection'});window.scrollTo(0,0);}} />
+      </>}
     </>}
     {step==='reflection'&&<>
       <h1 className="text-4xl font-semibold">Рефлексия</h1><p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
@@ -72,9 +74,11 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
     {step==='shadePlay'&&<>
       <h1 className="text-4xl font-semibold">Моя новая реакция</h1>
       <p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
+      <section className="border-l-2 border-gold pl-4"><h3 className="text-2xl">Интегрированная тень · {name}</h3><p className="mt-2 leading-relaxed">{integrated}</p></section>
+      <p className="font-display text-2xl">Интегрируй тень или примени в диалоге навык: возьми силу этого качества, сохраняя свои и чужие границы.</p>
       <p className="leading-relaxed">Вернись в эту ситуацию. Напиши своими словами, что ты скажешь партнёру, опираясь на интегрированную сторону оттенка «{name}». Партнёр ответит — сыграйте короткий диалог из 5–8 сообщений, затем ты получишь итог и обратную связь.</p>
-      {journey.feedback ? <><section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{journey.feedback}</p></section><Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],replay:''})}>Сыграть заново</Btn></> : answer.level && <IntroTrainer cardId={card.id ?? ''} level={answer.level} {...(shadeId?{shadeId}:{})} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={[]} initialSummary="" onComplete={(dialogue,feedback)=>update({dialogue,feedback,reactionId:'',replay:dialogue.find(turn=>turn.role==='participant')?.text ?? '',manifestation:'integrated'})} />}
-      {next('Далее','feelings')}
+      {journey.feedback ? <><section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{journey.feedback}</p></section><Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],replay:''})}>Сыграть заново</Btn></> : answer.level && <IntroTrainer sessionId={`day-${day}-${card.id}-integrated`} cardId={card.id ?? ''} level={answer.level} {...(shadeId?{shadeId}:{})} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={dialogueUI(journey.dialogue)} initialSummary="" onProgress={dialogue=>update({dialogue})} onComplete={(dialogue,feedback)=>update({dialogue,feedback,reactionId:'',replay:dialogue.find(turn=>turn.role==='participant')?.text ?? '',manifestation:'integrated'})} />}
+      {journey.feedback && (requestText ? next('Вернуться к запросу','request') : <Btn onClick={finish}>Закончить день</Btn>)}
     </>}
     {step==='feelings'&&<>
       <PracticeFeelings value={journey.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>
@@ -83,7 +87,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
     {step==='request' && requestText && <>
       <h1 className="text-4xl font-semibold">Вернись к своему запросу</h1><h2 className="text-2xl">Мой запрос</h2><p className="whitespace-pre-line break-words border-l-2 border-gold pl-4 leading-relaxed">{requestText}</p>
       <label className="block space-y-3"><span className="text-2xl font-semibold">Как это связано с твоим запросом?</span><textarea aria-label="Как это связано с твоим запросом?" autoComplete="off" value={journey.requestReflection ?? ''} onChange={event=>update({requestText,requestReflection:event.target.value})} className="min-h-32 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold"/></label>
-      <Btn disabled={!journey.requestReflection?.trim()} onClick={()=>go('resource')}>Далее</Btn>
+      <Btn disabled={!journey.requestReflection?.trim()} onClick={finish}>Закончить день</Btn>
     </>}
     {step==='resource'&&<>
       <h1 className="text-4xl font-semibold">Присматриваться к лучшему и сеять новое</h1>

@@ -38,6 +38,8 @@ export type JourneyDraft = {
   dialogue?: { role: 'participant' | 'other'; text: string }[];
   firstReactionId?: string;
   firstReactionText?: string;
+  firstDialogue?: { role: 'participant' | 'other'; text: string }[];
+  firstDialogueComplete?: boolean;
   afterFeelings?: string[];
   requestText?: string;
   /** The only free-text answer in the challenge: how the day connects to the request. */
@@ -58,7 +60,7 @@ function splitSelected(value: string): string[] {
 
 export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level?: string): boolean {
   switch (step) {
-    case 'scenario': return level === 'soft' || level === 'medium' || level === 'hard';
+    case 'scenario': return (level === 'soft' || level === 'medium' || level === 'hard') && (draft.firstDialogueComplete !== undefined ? draft.firstDialogueComplete : true);
     case 'reflection': {
       const qualities = splitSelected(draft.rejected);
       return Boolean(draft.before.trim()) && qualities.length >= QUALITIES_MIN && qualities.length <= QUALITIES_MAX && qualities.every(item => CHALLENGE_QUALITIES.includes(item)) && splitSelected(draft.recognition).length > 0;
@@ -76,7 +78,8 @@ export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level
 
 export function finishJourney(answer: Partial<ChallengeAnswer>, journey: JourneyDraft, card: GameCard, day: number, theme: string, shadeId?: string, requestText?: string): ChallengeAnswer | null {
   journey = {...journey,...(requestText ? {requestText} : {})};
-  const required = (JOURNEY_STEPS.filter(step => !['balance', 'request'].includes(step)) as JourneyStep[]);
+  const aiJourney = Boolean(journey.feedback?.trim());
+  const required = (JOURNEY_STEPS.filter(step => !(aiJourney ? ['balance','request','feelings','resource'] : ['balance','request']).includes(step)) as JourneyStep[]);
   if (requestText && !canContinueJourney('request', journey)) return null;
   if (!required.every(step => canContinueJourney(step, journey, answer.level))) return null;
   const seeds = [...(journey.seedGood ?? []), ...(journey.seedAction ? [journey.seedAction] : [])];
