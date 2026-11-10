@@ -31,6 +31,8 @@ use the editor.
 
 ## Project rules
 
+- Serialize three-way progress sync and send Telegram summaries from saved records with unique claims. Why: stale devices and duplicate clicks must not erase answers or resend summaries.
+
 - Keep guest progress in browser storage and sync signed-in progress to owner-scoped Cloud records through the participant provider; keep points in a server-written idempotent ledger and roles in user_roles. Why: reloads preserve guest answers while accounts share progress securely across devices.
 - Keep challenge scheduling and scoring in browser-safe library modules, and orchestrate its screens on /season. Why: time gates and scoring are independently testable and cannot be bypassed through a second game entry point.
 - Use a separate versioned challenge storage key from the legacy season. Why: older answers are not valid baseline tests or daily assignments for the new challenge.
