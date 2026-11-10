@@ -1,5 +1,5 @@
 import { createFileRoute,Link,useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Copy,Share2,Shield,LogOut,Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { notifyStory } from '@/lib/telegram.functions';
 export const Route=createFileRoute('/profile')({head:()=>({meta:[{title:'Мой профиль и приглашения — Раппорт: ЖиваЯ'},{name:'description',content:'Баллы за дни, приглашения и истории. Личная ссылка и уведомления в Telegram.'},{property:'og:title',content:'Мой профиль — Раппорт: ЖиваЯ'},{property:'og:description',content:'Приглашай подруг и сохраняй свой прогресс знакомства с игрой.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}),component:Profile});
 function Profile(){
  const account=useParticipant(),query=useQueryClient(),navigate=useNavigate(),notify=useServerFn(notifyStory);const [url,setUrl]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
+ useEffect(()=>{setUrl('');setMessage('');setBusy(false);},[account.user?.id]);
  const invite=account.profile?`https://code-to-github-garden.lovable.app/?ref=${account.profile.invite_code}`:'';
  const copy=async()=>{try{await navigator.clipboard.writeText(invite);setMessage('Личная ссылка скопирована');}catch{setMessage('Не удалось скопировать ссылку. Выдели её в поле ниже.');}};
  const share=async()=>{try{if(navigator.share)await navigator.share({title:'Раппорт: ЖиваЯ',text:'Давай познакомимся с игрой «Раппорт: ЖиваЯ»',url:invite});else await copy();}catch{setMessage('Отправка отменена');}};
