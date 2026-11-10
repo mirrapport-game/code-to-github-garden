@@ -36,7 +36,7 @@ use the editor.
 - Use a separate versioned challenge storage key from the legacy season. Why: older answers are not valid baseline tests or daily assignments for the new challenge.
 - Keep the original introductory card flow on / and open the challenge on /season after its completion; existing challenge participants retain access. Why: the challenge is an optional continuation, not a replacement for the first experience.
 - Keep thematic questions and non-diagnostic reflection prompts in a browser-safe theme module; store personal theme answers separately from daily practice answers. Why: existing drafts remain compatible and reflections do not pretend to infer psychological traits from free text.
-- Preview all challenge days through a read-only screen independent of scheduling and assignments. Why: content inspection must not mark days complete or alter the participant's random cards.
+- Keep the read-only all-days preview screen only in .lovable/future-seasons/extended; /season does not render it. Why: content inspection must not mark days complete or alter the participant's random cards.
 - Keep the extended challenge screens in .lovable/future-seasons/extended and their original storage untouched; the simplified challenge uses its own versioned storage. Why: future seasons can reuse the richer flow without mixing incompatible answers.
 - Keep the introductory four-choice experience separate from the challenge's written-response journey; preserve legacy choice reflections for saved days. Why: challenge changes must not alter the first card or erase older results.
 - Store original scenarios separately from curated concept links; persist both concept and scenario ID in daily assignments. Why: life stages and reflection concepts are different, and random scenarios must remain stable after reload.
@@ -48,4 +48,3 @@ use the editor.
 - Keep AI access denials in a server-only database guard and preserve upstream status/messages without retries. Why: blocked providers must remain paused across reloads and server restarts.
 - Keep seven paginated stories between personal reflection and shade exploration, separate from random scenarios and shade IDs. Why: each day starts with the card while the season retains its continuous narrative.
 - Require the entry test for new challenge participants and offer the repeated test after seven days; preserve access for participants with saved completed days. Why: restoring tests must not erase or block existing progress.
-
