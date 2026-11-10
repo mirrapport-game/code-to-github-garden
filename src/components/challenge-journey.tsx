@@ -9,7 +9,7 @@ import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
 import cover from '@/assets/shadow-shades-cover.jpg';
 import { ChallengeStory } from '@/components/challenge-story';
 
-export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string;draft?:Partial<ChallengeAnswer>;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
+export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
   const [answer,setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? {});
   const journey = {...emptyJourney(),...answer.journey};
   const step = journey.step;
@@ -62,7 +62,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplet
       {field('replay','Что меняется в отыгрыше? Что ты сказала бы или сделала теперь?')}
       {field('after','Что ты чувствуешь после этой пробы?')}
       {image && <><p className="font-display text-2xl italic text-gold">{image.associations}</p><RadioGroup aria-label="Проявление тени" value={journey.manifestation} onValueChange={value => {if (value === 'shadow' || value === 'integrated' || value === 'neither') update({manifestation:value});}}>
-        {[['shadow','Когда тень не интегрирована',image.shadow],['integrated','Когда тень интегрирована',image.integrated],['neither','Мне не подходит ни один образ','Можно оставить свой ответ. Карта не определяет, какая ты.']].map(([value,title,text]) => <label key={value} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={value} className="mt-1 shrink-0" /><span><span className="block font-display text-2xl">{title}</span><span className="mt-2 block leading-relaxed">{text}</span></span></label>)}
+        {([['shadow','Когда тень не интегрирована',image.shadow],['integrated','Когда тень интегрирована',image.integrated],['neither','Мне не подходит ни один образ','Можно оставить свой ответ. Карта не определяет, какая ты.']] as const).map(([value,title,text]) => <label key={value} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={value} className="mt-1 shrink-0" /><span><span className="block font-display text-2xl">{title}</span><span className="mt-2 block leading-relaxed">{text}</span></span></label>)}
       </RadioGroup></>}
       {next('Внедрение и поиск баланса','balance')}<Btn variant="ghost" onClick={() => go('shadeMeaning')}>К моему пониманию тени</Btn>
     </>}
