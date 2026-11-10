@@ -100,7 +100,7 @@ function Season() {
           </li>;
         })}</ol>
         {completed && !state.finalTest && <Btn onClick={() => go('after')}>Пройти тест после семи дней</Btn>}
-        {completed && state.finalTest && <Btn onClick={() => go('feedback')}>Обратная связь и следующий шаг</Btn>}
+        {completed && state.finalTest && <><TestProfile before={state.baseline ?? state.finalTest} after={state.baseline ? state.finalTest : undefined} /><Btn onClick={() => go('feedback')}>Обратная связь и следующий шаг</Btn></>}
         <Link to="/" className="block text-center text-sm text-muted-foreground underline underline-offset-4">Раппорт: ЖиваЯ</Link>
         {state.startedAt && <Btn variant="ghost" onClick={() => setResetPrompt(true)}>Начать челлендж заново</Btn>}
         <p className="text-xs text-muted-foreground">Ответы хранятся только в этом браузере, не отправляются организатору и не доступны с другого устройства. Новый день открывается в полночь по местному времени; пропущенные дни можно пройти позже.</p>
@@ -122,9 +122,10 @@ function Season() {
         <ChallengeDaySummary answer={state.days[activeDay]} />
         <p className="font-display text-2xl italic">{activeDay < 7 ? 'Возвращайся завтра — новая карта и ещё одна встреча с собой.' : 'Семь дней знакомства с игрой завершены. Что ты забираешь с собой?'}</p>
         <ChallengeInvitations />
-        {activeDay < 7 ? <><Btn disabled={!canOpenDay(state,activeDay+1,now)} onClick={() => open(activeDay+1)}>Ближе к себе · День {activeDay+1}</Btn>{!canOpenDay(state,activeDay+1,now) && <p className="text-sm text-muted-foreground">Следующий день откроется {unlockAt(state,activeDay+1)?.toLocaleDateString('ru-RU')} в полночь по времени этого устройства.</p>}</> : <Btn onClick={() => go(state.finalTest ? 'feedback' : 'after')}>{state.finalTest ? 'К обратной связи' : 'Пройти тест после семи дней'}</Btn>}
+        {activeDay < 7 ? <><Btn disabled={!canOpenDay(state,activeDay+1,now)} onClick={() => open(activeDay+1)}>Ближе к себе · День {activeDay+1}</Btn>{!canOpenDay(state,activeDay+1,now) && <p className="text-sm text-muted-foreground">Следующий день откроется {unlockAt(state,activeDay+1)?.toLocaleDateString('ru-RU')} в полночь по времени этого устройства.</p>}</> : <Btn onClick={() => go(state.finalTest ? 'profile' : 'after')}>{state.finalTest ? 'Что изменилось · До и после' : 'Пройти тест после семи дней'}</Btn>}
       </div>}
       {screen === 'feedback' && completed && <div className="space-y-6">
+        {state.baseline && state.finalTest && <TestProfile before={state.baseline} after={state.finalTest} />}
         <p className="text-sm uppercase text-gold">Семь дней пройдены</p><h1 className="text-4xl font-semibold">Что ты забираешь с собой?</h1>
         {([['takeaway','Что ты забираешь из челленджа?'],['useful','Что было полезным?'],['difficult','Что было сложно или не подошло?'],['change','Что стоит изменить в игре?']] as const).map(([key,label]) => <label key={key} className="block space-y-2 font-semibold">{label}<textarea aria-label={label} value={feedback[key]} onChange={e => updateFeedback({[key]:e.target.value})} className="min-h-24 w-full rounded-lg border border-input bg-card p-4 font-normal outline-none focus:border-gold" /></label>)}
         <label className="block space-y-2 font-semibold">С каким персонажем хочешь играть дальше?<select aria-label="Персонаж" value={feedback.character} onChange={e => updateFeedback({character:e.target.value})} className="w-full rounded-lg border border-input bg-card p-3 font-normal"><option value="">Выбери тему</option>{DEMO_THEMES.map(t => <option key={t}>{t}</option>)}</select></label>

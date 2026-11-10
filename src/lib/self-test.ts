@@ -38,6 +38,11 @@ export function scoreTest(answers: number[]) {
   return TEST_GROUPS.map(g => ({ ...g, value: scores.slice(g.start, g.end).reduce((a,b) => a+b, 0) / (g.end-g.start) }));
 }
 // At shared endpoints, the higher band wins: 2 is movement, 4 is resource.
+export function compareTests(before: number[], after: number[]) {
+  const baseline = scoreTest(before);
+  const final = scoreTest(after);
+  return baseline.map((group, index) => ({title:group.title, before:group.value, after:final[index]?.value ?? group.value, change:Number(((final[index]?.value ?? group.value) - group.value).toFixed(2))}));
+}
 export function profileBand(value: number) {
   return value >= 4 ? "Ресурс — опора" : value >= 2 ? "Здесь есть движение" : "Зона Тени";
 }

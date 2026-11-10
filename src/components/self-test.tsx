@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Btn } from '@/components/game-ui';
-import { TEST_GROUPS, TEST_QUESTIONS, scoreTest, profileBand } from '@/lib/self-test';
+import { TEST_GROUPS, TEST_QUESTIONS, scoreTest, profileBand, compareTests } from '@/lib/self-test';
 
 const SCALE = ['совсем не про меня', 'скорее не про меня', 'иногда так, иногда нет', 'скорее про меня', 'очень про меня'];
 export function SelfTest({ initial, repeated, onDraft, onComplete }: { initial?: number[] | undefined; repeated: boolean; onDraft: (v: number[]) => void; onComplete: (v: number[]) => void }) {
@@ -40,14 +40,16 @@ export function SelfTest({ initial, repeated, onDraft, onComplete }: { initial?:
 export function TestProfile({ before, after }: { before: number[]; after?: number[] | undefined }) {
   const baseline = scoreTest(before);
   const final = after ? scoreTest(after) : null;
+  const changes = after ? compareTests(before, after) : [];
   return <section className="space-y-6">
     <h2 className="text-3xl font-semibold">{after ? 'Что изменилось' : 'Твоя карта опор'}</h2>
-    {after && <p className="text-sm text-muted-foreground">До — светлая полоса, после — золотая. Это не оценка: ты выбираешь свой темп.</p>}
+    {after && <p className="text-sm text-muted-foreground">Твои ответы до челленджа и после семи дней. Изменения — в баллах из 5, не оценка личности.</p>}
     {baseline.map((g,i) => { const next = final?.[i]; return <div key={g.title} className="space-y-2">
       <h3 className="font-sans text-base font-semibold">{g.title}</h3>
+      <p className="text-sm text-muted-foreground">До челленджа · {g.value.toFixed(1)} / 5</p>
       <div className="h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-blush" style={{width: `${g.value / 5 * 100}%`}} /></div>
-      {next && <div className="h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gold-gradient" style={{width: `${next.value / 5 * 100}%`}} /></div>}
-      <p className="text-sm">{g.value.toFixed(1)}{next ? ` → ${next.value.toFixed(1)}` : ''} · {profileBand(next?.value ?? g.value)}</p>
+      {next && <><p className="text-sm text-gold">После семи дней · {next.value.toFixed(1)} / 5</p><div className="h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gold-gradient" style={{width: `${next.value / 5 * 100}%`}} /></div><p className="text-sm">Изменение: {(changes[i]?.change ?? 0) > 0 ? '+' : ''}{(changes[i]?.change ?? 0).toFixed(1)} балла</p></>}
+      <p className="text-sm">{profileBand(next?.value ?? g.value)}</p>
       {next && <p className="text-xs text-muted-foreground">{next.value > g.value ? 'Ты отметила больше опоры.' : next.value < g.value ? 'Ты ответила иначе — это повод прислушаться к себе, не оценка ухудшения.' : 'Пока без движения. Это нормально.'}</p>}
     </div>; })}
     <p className="text-xs text-muted-foreground">Профиль рассчитан по авторскому файлу: обратные вопросы 8, 11, 17, 20. Среднее от 4 — ресурс, от 2 до 4 — движение, ниже 2 — зона Тени. Тест не подтверждает наличие Тени или проекции.</p>

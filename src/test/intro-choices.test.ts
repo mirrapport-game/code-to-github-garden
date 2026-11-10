@@ -2,11 +2,20 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DEMO_THEMES } from '@/lib/demo-cards';
 import { cardsForTheme } from '@/lib/official-cards';
 import { cardChoices } from '@/lib/card-choices';
-import { drawIntroChoices, loadIntroChoices, saveIntroChoices } from '@/lib/intro-choices';
+import { drawIntroChoices, loadIntroChoices, saveIntroChoices, introReflectionComplete } from '@/lib/intro-choices';
 import { emptyChallenge, loadChallenge } from '@/lib/challenge-store';
 
 describe('Introductory four-answer card', () => {
   beforeEach(() => window.localStorage.clear());
+  it('requires all three personal answers after choosing one of four responses', () => {
+    const draft = {choiceId:'2',feelings:['Злость'],hurt:'Резкость',shadow:'Смелой'};
+    expect(introReflectionComplete(draft)).toBe(true);
+    expect(introReflectionComplete({...draft, feelings:[]})).toBe(false);
+    expect(introReflectionComplete({...draft, hurt:' '})).toBe(false);
+    expect(introReflectionComplete({...draft, shadow:''})).toBe(false);
+    saveIntroChoices({theme:'Границы',cardId:cardsForTheme('Границы')[0]?.id ?? '',draft});
+    expect(loadIntroChoices()?.draft).toEqual(draft);
+  });
   it('randomly assigns each of the nine themes with a matching official scenario', () => {
     DEMO_THEMES.forEach((theme, index) => {
       const assignment = drawIntroChoices(() => (index + 0.1) / 9);
