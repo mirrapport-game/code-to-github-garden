@@ -9,13 +9,13 @@ import type { GameCard, LevelKey } from '@/lib/cards';
 import { IntroTrainer } from '@/components/intro-trainer';
 import { dialogueUI } from '@/lib/intro-trainer';
 
-export function IntroIntegration({value,selected,before,card,theme,level,scenario,onChange,onBack}: {value:Integration;selected:string[];scenario:string;card:GameCard;theme:string;level?:LevelKey | undefined;before:string[];onChange:(value:Integration)=>void;onBack:()=>void}) {
+export function IntroIntegration({value,selected,before,card,theme,level,scenario,onChange,onBack,onFinish}: {value:Integration;selected:string[];scenario:string;card:GameCard;theme:string;level?:LevelKey | undefined;before:string[];onChange:(value:Integration)=>void;onBack:()=>void;onFinish:()=>void}) {
   const profile=integrationProfile(value.quality);
   if(!profile)return null;
   const reactions=scenarioReactions(card,profile.name,profile.integrated,theme,level);
   const reaction=reactions.find(item=>item.id===value.reactionId);
   const support=practiceSupport(profile.name,profile.integrated);
-  const step=value.step==='balance' ? 'feelings' : value.step;
+  const step=value.feedback && ['balance','feelings','resource','summary'].includes(value.step) ? 'reaction' : value.step==='balance' ? 'feelings' : value.step;
   const update=(changes:Partial<Integration>)=>onChange({...value,...changes});
   const go=(target:Integration['step'])=>{update({step:target,...(target==='resource'?support:{})});window.scrollTo(0,0);};
   const field=(key:'where'|'afraid',label:string)=><PracticeChoices legend={label} options={CHALLENGE_SPHERES} value={value[key].split(', ').filter(Boolean)} onChange={items=>update({[key]:items.join(', ')})}/>;
@@ -48,7 +48,7 @@ export function IntroIntegration({value,selected,before,card,theme,level,scenari
         <section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{value.feedback}</p></section>
         <Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],personalReaction:''})}>Сыграть заново</Btn>
       </> : level && <IntroTrainer sessionId={`intro-${card.id}-integrated-${value.quality}`} cardId={card.id ?? ''} level={level} quality={value.quality} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={dialogueUI(value.dialogue)} initialSummary="" onProgress={dialogue=>update({dialogue})} onComplete={(dialogue,feedback)=>update({dialogue,feedback,personalReaction:dialogue.find(turn=>turn.role==='participant')?.text ?? ''})} />}
-      {next('Далее','feelings')}
+      {value.feedback && <Btn onClick={onFinish}>Закончить день</Btn>}
     </>}
     {step==='feelings'&&<>
       <PracticeFeelings value={value.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>

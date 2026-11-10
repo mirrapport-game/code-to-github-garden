@@ -20,7 +20,7 @@ const split=(value:string)=>value.split(', ').map(item=>item.trim()).filter(Bool
 export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;requestText?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
   const [answer,setAnswer]=useState<Partial<ChallengeAnswer>>(draft??{});
   const journey={...emptyJourney(),...answer.journey,firstDialogueComplete:answer.journey?.firstDialogueComplete ?? Boolean(answer.journey?.firstReactionId)};
-  const step=journey.step==='balance'?'feelings':journey.step==='request' && !requestText ? 'resource' : journey.step;
+  const step=journey.feedback && ['balance','feelings','resource'].includes(journey.step) ? 'shadePlay' : journey.step==='balance'?'feelings':journey.step==='request' && !requestText ? 'shadePlay' : journey.step;
   const shade=SHADOW_SHADES.find(item=>item.id===shadeId);
   const image=shade?SHADE_IMAGES[shade.id]:undefined;
   const name=shade?.name??theme;
@@ -30,7 +30,8 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
   const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{}),...(target==='request' && requestText ? {requestText} : {})});window.scrollTo(0,0);};
   const next=(label:string,target:JourneyStep)=><Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={()=>go(target)}>{label}</Btn>;
   const scenario=answer.level?card.levels[answer.level].text:card.context;
-  const steps:JourneyStep[]=['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings',...(requestText ? ['request' as const] : []),'resource'];
+  const steps:JourneyStep[]=['scenario','reflection','story','shadeMeaning','shadeView','shadePlay',...(requestText ? ['request' as const] : [])];
+  const finish=()=>{const entry=finishJourney(answer,{...journey,...support},card,day,theme,shadeId,requestText);if(entry)onComplete(entry);};
   const index=steps.indexOf(step);
   if(step==='story')return <><ChallengeStory day={day} completeLabel="Интегрировать тень" onComplete={()=>go('shadeMeaning')}/><Btn className="mt-6" variant="ghost" onClick={()=>go('reflection')}>Назад</Btn></>;
   return <div className="space-y-6 animate-rise">
@@ -77,7 +78,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <p className="font-display text-2xl">Интегрируй тень или примени в диалоге навык: возьми силу этого качества, сохраняя свои и чужие границы.</p>
       <p className="leading-relaxed">Вернись в эту ситуацию. Напиши своими словами, что ты скажешь партнёру, опираясь на интегрированную сторону оттенка «{name}». Партнёр ответит — сыграйте короткий диалог из 5–8 сообщений, затем ты получишь итог и обратную связь.</p>
       {journey.feedback ? <><section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{journey.feedback}</p></section><Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],replay:''})}>Сыграть заново</Btn></> : answer.level && <IntroTrainer sessionId={`day-${day}-${card.id}-integrated`} cardId={card.id ?? ''} level={answer.level} {...(shadeId?{shadeId}:{})} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={dialogueUI(journey.dialogue)} initialSummary="" onProgress={dialogue=>update({dialogue})} onComplete={(dialogue,feedback)=>update({dialogue,feedback,reactionId:'',replay:dialogue.find(turn=>turn.role==='participant')?.text ?? '',manifestation:'integrated'})} />}
-      {next('Далее','feelings')}
+      {journey.feedback && (requestText ? next('Вернуться к запросу','request') : <Btn onClick={finish}>Закончить день</Btn>)}
     </>}
     {step==='feelings'&&<>
       <PracticeFeelings value={journey.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>
@@ -86,7 +87,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
     {step==='request' && requestText && <>
       <h1 className="text-4xl font-semibold">Вернись к своему запросу</h1><h2 className="text-2xl">Мой запрос</h2><p className="whitespace-pre-line break-words border-l-2 border-gold pl-4 leading-relaxed">{requestText}</p>
       <label className="block space-y-3"><span className="text-2xl font-semibold">Как это связано с твоим запросом?</span><textarea aria-label="Как это связано с твоим запросом?" autoComplete="off" value={journey.requestReflection ?? ''} onChange={event=>update({requestText,requestReflection:event.target.value})} className="min-h-32 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold"/></label>
-      <Btn disabled={!journey.requestReflection?.trim()} onClick={()=>go('resource')}>Далее</Btn>
+      <Btn disabled={!journey.requestReflection?.trim()} onClick={finish}>Закончить день</Btn>
     </>}
     {step==='resource'&&<>
       <h1 className="text-4xl font-semibold">Присматриваться к лучшему и сеять новое</h1>

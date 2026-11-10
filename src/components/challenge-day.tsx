@@ -95,7 +95,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       <Btn onClick={complete}>Завершить первую карту</Btn>
       <Btn variant="ghost" onClick={() => next('reflection')}>К моим ответам</Btn>
     </>}
-    {step === 'integration' && introductory && integration && <IntroIntegration value={integration.step==='meaning'?{...integration,step:'manifestations'}:integration} selected={answer.introReflection?.notAllowed ?? []} card={card} theme={theme} level={answer.level} scenario={answer.level ? card.levels[answer.level].text : card.context} before={answer.feelings ?? []} onChange={introIntegration=>update({introIntegration})} onBack={()=>next('introSummary')} />}
+    {step === 'integration' && introductory && integration && <IntroIntegration value={integration.step==='meaning'?{...integration,step:'manifestations'}:integration} selected={answer.introReflection?.notAllowed ?? []} card={card} theme={theme} level={answer.level} scenario={answer.level ? card.levels[answer.level].text : card.context} before={answer.feelings ?? []} onChange={introIntegration=>update({...introIntegration.feedback?{introIntegration:{...introIntegration,...support}}:{introIntegration}})} onBack={()=>next('introSummary')} onFinish={complete} />}
     {step === 'reflection' && selected && !introductory && <>
       <ChoiceReflection showShade={!introductory} onShadowAnswers={shadowAnswers => update({shadowAnswers})} answer={{...answer,shadeId,stage:theme,cardId:card.id,cardStage:card.stage}} />
       {!introductory && <Btn onClick={() => next('personal')}>Ответить ещё раз своими словами</Btn>}

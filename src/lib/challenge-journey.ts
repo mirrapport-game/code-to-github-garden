@@ -78,7 +78,8 @@ export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level
 
 export function finishJourney(answer: Partial<ChallengeAnswer>, journey: JourneyDraft, card: GameCard, day: number, theme: string, shadeId?: string, requestText?: string): ChallengeAnswer | null {
   journey = {...journey,...(requestText ? {requestText} : {})};
-  const required = (JOURNEY_STEPS.filter(step => !['balance', 'request'].includes(step)) as JourneyStep[]);
+  const aiJourney = Boolean(journey.feedback?.trim());
+  const required = (JOURNEY_STEPS.filter(step => !(aiJourney ? ['balance','request','feelings','resource'] : ['balance','request']).includes(step)) as JourneyStep[]);
   if (requestText && !canContinueJourney('request', journey)) return null;
   if (!required.every(step => canContinueJourney(step, journey, answer.level))) return null;
   const seeds = [...(journey.seedGood ?? []), ...(journey.seedAction ? [journey.seedAction] : [])];

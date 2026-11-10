@@ -31,6 +31,13 @@ describe('Selection-only challenge journey',()=>{
     expect(canContinueJourney('scenario',{...emptyJourney(),firstDialogueComplete:true},'soft')).toBe(true);
     expect(canContinueJourney('scenario',{...emptyJourney(),firstReactionId:'clear'},'soft')).toBe(true);
   });
+  it('finishes an AI day without duplicate feelings, resource or seed steps',()=>{
+    const card=PLAYABLE_CARDS[0];
+    if (!card) throw new Error('Missing scenario');
+    const journey={...emptyJourney(),firstDialogueComplete:true,before:'Злость',rejected:'Наглость, Холодность, Контроль',recognition:'Семья',where:'Семья',afraid:'Дружба',feedback:'Ты обозначила границу.',replay:'Мне это не подходит.'};
+    expect(finishJourney({level:'soft'},journey,card,1,'Границы')).not.toBeNull();
+    expect(finishJourney({level:'soft'},{...journey,feedback:''},card,1,'Границы')).toBeNull();
+  });
   it('requires feelings, 3–5 listed qualities and listed spheres before shade exploration',()=>{
     const journey={...emptyJourney(),before:'Злость',rejected:selected('Наглость','Холодность','Контроль'),recognition:selected('Семья')};
     expect(canContinueJourney('reflection',journey)).toBe(true);
