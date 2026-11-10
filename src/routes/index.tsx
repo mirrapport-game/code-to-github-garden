@@ -9,6 +9,7 @@ import { ChallengeDay } from "@/components/challenge-day";
 import { clearIntroChoices, drawIntroChoices, loadIntroChoices, saveIntroChoices, type IntroChoices } from "@/lib/intro-choices";
 import { PLAYABLE_CARDS } from "@/lib/official-cards";
 import { IntroVideo } from "@/components/intro-video";
+import { ComingSoonButton } from '@/components/coming-soon-button';
 
 
 export const Route = createFileRoute("/")({
@@ -111,6 +112,7 @@ function Index() {
             />
             {name.trim() && <Btn onClick={draw}>Вытянуть карту</Btn>}
             {canReturnToChallenge && <Btn variant="night" onClick={() => navigate({ to: "/season" })}>Продолжить челлендж · 7 дней с собой</Btn>}
+            <ComingSoonButton hint="Модуль в разработке">Программы</ComingSoonButton>
           </div>
           <p className="mt-4 text-center text-xs text-night-foreground/60">
             Это игра-зеркало, а не психотерапия.
@@ -165,6 +167,7 @@ function Index() {
                 Интенсив «Я живая — Раппорт с собой»
               </Btn>
               <Btn onClick={() => navigate({ to: "/season" })}>Челлендж · 7 дней с собой</Btn>
+              <ComingSoonButton hint="Модуль в разработке">Программы</ComingSoonButton>
             </div>
             <p className="text-sm text-muted-foreground">
               Запись откроется, когда появится контакт организатора.

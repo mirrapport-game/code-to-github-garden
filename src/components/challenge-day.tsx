@@ -53,6 +53,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       <RadioGroup aria-label="Твой ответ на карту" value={answer.choiceId ?? ''} onValueChange={choiceId => update({choiceId})}>
         {choices.map(choice => <label key={choice.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem className="mt-1 shrink-0" id={`answer-${day}-${choice.id}`} value={choice.id} /><span className="leading-relaxed">{choice.text}</span></label>)}
       </RadioGroup>
+      {selected&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{selected.reflection}</p>}
       <Btn disabled={!selected} onClick={() => next('reflection')}>Узнать себя</Btn>
       <Btn variant="ghost" onClick={() => next('level')}>Изменить жёсткость партнёра</Btn>
     </>}
@@ -80,7 +81,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       <Btn onClick={complete}>Завершить первую карту</Btn>
       <Btn variant="ghost" onClick={() => next('reflection')}>К моим ответам</Btn>
     </>}
-    {step === 'integration' && introductory && integration && <IntroIntegration value={integration} selected={answer.introReflection?.notAllowed ?? []} scenario={answer.level ? card.levels[answer.level].text : card.context} before={answer.feelings ?? []} onChange={introIntegration=>update({introIntegration})} onBack={()=>next('introSummary')} />}
+    {step === 'integration' && introductory && integration && <IntroIntegration value={integration} selected={answer.introReflection?.notAllowed ?? []} card={card} theme={theme} level={answer.level} scenario={answer.level ? card.levels[answer.level].text : card.context} before={answer.feelings ?? []} onChange={introIntegration=>update({introIntegration})} onBack={()=>next('introSummary')} />}
     {step === 'reflection' && selected && !introductory && <>
       <ChoiceReflection showShade={!introductory} onShadowAnswers={shadowAnswers => update({shadowAnswers})} answer={{...answer,shadeId,stage:theme,cardId:card.id,cardStage:card.stage}} />
       {!introductory && <Btn onClick={() => next('personal')}>Ответить ещё раз своими словами</Btn>}

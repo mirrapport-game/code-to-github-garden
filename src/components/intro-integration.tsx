@@ -3,17 +3,20 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { canContinueIntegration, emptyIntegration, integrationProfile, integrationReactions, type IntroIntegration as Integration } from '@/lib/intro-integration';
 import { practiceRatingQuestion, practiceSupport } from '@/lib/integration-practice';
 import { PracticeFeelings, PracticeRating } from '@/components/practice-controls';
+import { PracticeChoices } from '@/components/practice-controls';
+import { CHALLENGE_SPHERES, scenarioReactions } from '@/lib/challenge-reflection';
+import type { GameCard, LevelKey } from '@/lib/cards';
 
-export function IntroIntegration({value,selected,before,onChange,onBack}: {value:Integration;selected:string[];scenario:string;before:string[];onChange:(value:Integration)=>void;onBack:()=>void}) {
+export function IntroIntegration({value,selected,before,card,theme,level,onChange,onBack}: {value:Integration;selected:string[];scenario:string;card:GameCard;theme:string;level?:LevelKey | undefined;before:string[];onChange:(value:Integration)=>void;onBack:()=>void}) {
   const profile=integrationProfile(value.quality);
   if(!profile)return null;
-  const reactions=integrationReactions(value.quality);
+  const reactions=scenarioReactions(card,profile.name,profile.integrated,theme,level);
   const reaction=reactions.find(item=>item.id===value.reactionId);
   const support=practiceSupport(profile.name,profile.integrated);
   const step=value.step==='balance' ? 'feelings' : value.step;
   const update=(changes:Partial<Integration>)=>onChange({...value,...changes});
   const go=(target:Integration['step'])=>{update({step:target,...(target==='resource'?support:{})});window.scrollTo(0,0);};
-  const field=(key:'where'|'afraid',label:string)=><label className="block space-y-3"><span className="font-semibold">{label}</span><textarea autoComplete="off" aria-label={label} value={value[key]} onChange={event=>update({[key]:event.target.value})} className="min-h-28 w-full rounded-lg border border-input bg-card p-4 outline-none focus:border-gold"/></label>;
+  const field=(key:'where'|'afraid',label:string)=><PracticeChoices legend={label} options={CHALLENGE_SPHERES} value={value[key].split(', ').filter(Boolean)} onChange={items=>update({[key]:items.join(', ')})}/>;
   const next=(label:string,target:Integration['step'])=><Btn disabled={!canContinueIntegration({...value,step})} onClick={()=>go(target)}>{label}</Btn>;
   const back:Record<string,Integration['step']>={manifestations:'meaning',reaction:'manifestations',feelings:'reaction',resource:'feelings',summary:'resource'};
   return <div className="space-y-6">
@@ -35,6 +38,7 @@ export function IntroIntegration({value,selected,before,onChange,onBack}: {value
     {step==='reaction'&&<>
       <h3 className="text-2xl font-semibold">Моя новая реакция</h3>
       <RadioGroup aria-label="Новая реакция" value={value.reactionId} onValueChange={reactionId=>update({reactionId})}>{reactions.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>
+      {reaction&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{reaction.feedback}</p>}
       {next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>

@@ -3,8 +3,9 @@ import { Btn } from '@/components/game-ui';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
-import { canContinueJourney, emptyJourney, finishJourney, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
-import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN, SEED_ACTIONS, SEED_GOODS, scenarioReaction, scenarioReactions } from '@/lib/challenge-reflection';
+import { canContinueJourney, emptyJourney, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
+import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN, SEED_ACTIONS, SEED_GOODS, scenarioReaction, scenarioReactions, habitReactions } from '@/lib/challenge-reflection';
+import { ComingSoonButton } from '@/components/coming-soon-button';
 import { SHADOW_SHADES } from '@/lib/shadow-shades';
 import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
 import cover from '@/assets/shadow-shades-cover.jpg';
@@ -23,7 +24,8 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
   const name=shade?.name??theme;
   const integrated=image?.integrated??shade?.integrated??'Обозначать свои потребности, уважая свои и чужие границы.';
   const support=practiceSupport(name,integrated);
-  const reactions=scenarioReactions(card,name,integrated,theme);
+  const reactions=scenarioReactions(card,name,integrated,theme,answer.level);
+  const habits=habitReactions(card,theme,answer.level);
   const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answer,...extra,journey:{...journey,...changes}};setAnswer(value);onDraft(value);};
   const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{}),...(target==='request' && requestText ? {requestText} : {})});window.scrollTo(0,0);};
   const next=(label:string,target:JourneyStep)=><Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={()=>go(target)}>{label}</Btn>;
@@ -42,6 +44,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
       {answer.level&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>}
       {answer.level&&<section className="rounded-lg border border-gold/40 bg-card p-4"><h3 className="text-xl font-semibold text-gold">Что говорит твой выбор</h3><p className="mt-2 leading-relaxed">{scenarioReaction(card,answer.level,theme)}</p></section>}
+      {answer.level&&<><h3 className="text-2xl">Как я обычно реагирую</h3><RadioGroup aria-label="Привычная реакция" value={journey.firstReactionId??''} onValueChange={firstReactionId=>{const chosen=habits.find(item=>item.id===firstReactionId);if(chosen)update({firstReactionId,firstReactionText:chosen.text});}}>{habits.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>{journey.firstReactionId&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{habits.find(item=>item.id===journey.firstReactionId)?.feedback}</p>}</>}
       {next('Рефлексия','reflection')}
     </>}
     {step==='reflection'&&<>
@@ -69,7 +72,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <h1 className="text-4xl font-semibold">Моя новая реакция</h1>
       <p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
       <p className="leading-relaxed">Представь, что снова оказалась в этой ситуации. Как ты могла бы отреагировать теперь? Выбери вариант, который ближе тебе сейчас, — это проба, а не обещание всегда поступать именно так.</p>
-      <RadioGroup aria-label="Новая реакция" value={journey.reactionId??''} onValueChange={reactionId=>{const reaction=reactions.find(item=>item.id===reactionId);if(reaction)update({reactionId,replay:reaction.text,manifestation:reaction.kind==='integrated'?'integrated':'shadow'});}}>{reactions.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>{next('Далее','feelings')}
+      <RadioGroup aria-label="Новая реакция" value={journey.reactionId??''} onValueChange={reactionId=>{const reaction=reactions.find(item=>item.id===reactionId);if(reaction)update({reactionId,replay:reaction.text,manifestation:reaction.kind==='integrated'?'integrated':'shadow'});}}>{reactions.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>{journey.reactionId&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{reactions.find(item=>item.id===journey.reactionId)?.feedback}</p>}{next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>
       <PracticeFeelings value={journey.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>
@@ -86,7 +89,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <PracticeChoices legend="Что хорошего ты заметила в себе сегодня?" hint="Выбери от 1 до 3 пунктов." options={SEED_GOODS} value={journey.seedGood??[]} onChange={seedGood=>update({seedGood})} min={1} max={3}/>
       <PracticeChoices legend="Какое новое действие посеешь?" hint="Выбери одно маленькое действие." options={SEED_ACTIONS} value={journey.seedAction?[journey.seedAction]:[]} onChange={actions=>update({seedAction:actions[actions.length-1] ?? ''})} max={1}/>
       <h2 className="text-3xl font-semibold">Ресурс</h2><p className="leading-relaxed">{support.resource}</p><h3 className="text-2xl">Маленький шаг</h3><p className="leading-relaxed">{support.smallStep}</p>
-      <Btn disabled={!canContinueJourney('resource',{...journey,...support}) || Boolean(requestText && !journey.requestReflection?.trim())} onClick={()=>{const entry=finishJourney(answer,{...journey,...support,step:'resource'},card,day,theme,shadeId,requestText);if(entry)onComplete(entry);}}>ИТОГ</Btn>
+      <ComingSoonButton hint="Итог откроется позже">ИТОГ</ComingSoonButton>
     </>}
     {index>0&&<Btn variant="ghost" onClick={()=>{const previous=steps[index-1];if(previous)go(previous);}}>Назад</Btn>}
   </div>;
