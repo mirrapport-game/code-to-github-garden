@@ -33,19 +33,24 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
   return <div className="space-y-6 animate-rise">
     <p className="text-sm uppercase text-gold">День {day} / 7 · Знакомство с игрой</p><p className="text-sm text-muted-foreground">Шаг {index+1} из {steps.length}</p>
     {step==='scenario'&&<>
-      <h1 className="text-4xl font-semibold">{card.stage}</h1><img src={card.cover} alt={`Карта «${card.stage}»`} className="gold-frame mx-auto aspect-[2/3] w-full max-w-64 rounded-lg object-contain shadow-card"/>
-      <h2 className="text-3xl font-semibold">{card.scenario}</h2><p className="whitespace-pre-line leading-relaxed">{card.context}</p><h3 className="text-2xl">Какая сила ситуации тебе подходит сегодня?</h3>
+      <h1 className="text-4xl font-semibold">{card.stage}</h1>
+      <p className="leading-relaxed">Сейчас ты познакомишься с ситуацией из игры. Прочитай её и представь себя на месте героини: что тебя в ней задевает? Где ты узнаёшь себя? Пока просто замечай свой отклик — к чувствам и ответам перейдём дальше.</p>
+      <img src={card.cover} alt={`Карта «${card.stage}»`} className="gold-frame mx-auto aspect-[2/3] w-full max-w-64 rounded-lg object-contain shadow-card"/>
+      <h2 className="text-3xl font-semibold">{card.scenario}</h2><p className="whitespace-pre-line leading-relaxed">{card.context}</p><h3 className="text-2xl">Выбери степень жёсткости партнёра</h3>
+      <p className="leading-relaxed">Партнёр — это другой человек в ситуации. Мягкая, средняя или жёсткая: выбери, насколько напряжённым будет ваше взаимодействие сегодня. Затем прочитай выбранный вариант. Начни с того уровня, с которым тебе комфортно; его можно изменить.</p>
       <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
       {answer.level&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>}{next('Рефлексия','reflection')}
     </>}
     {step==='reflection'&&<>
       <h1 className="text-4xl font-semibold">Рефлексия</h1><p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
+      <p className="leading-relaxed">Вернись к ситуации и замечай, что она вызывает в тебе. Выбери чувства, которые откликаются, затем ответь на вопросы своими словами. Здесь нет правильных ответов — важен твой взгляд.</p>
       <PracticeFeelings value={journey.before?journey.before.split(', '):[]} onChange={feelings=>update({before:feelings.join(', ')})}/>
       {field('rejected','Какие качества в другом человеке тебе трудно принять?')}{field('recognition','Где ты узнаёшь себя?')}{field('repelled','Что тебя отталкивает?')}
       {next('Далее','story')}
     </>}
     {step==='shadeMeaning'&&<>
       <h1 className="text-4xl font-semibold">Оттенки тени</h1><h2 className="text-3xl text-gold">{name}</h2><p className="text-sm text-muted-foreground">Случайная карта — образ для пробы, а не вывод о тебе.</p>
+      <p className="leading-relaxed">Теперь познакомься с одним качеством. Сначала оцени, насколько оно проявляется у тебя сейчас, и вспомни, где ты позволяешь его себе, а где сдерживаешь. Затем посмотрим на него с другой стороны.</p>
       <PracticeRating question={practiceRatingQuestion(name)} value={journey.shadeBefore?.mode==='scale'?journey.shadeBefore.rating:undefined} onChange={rating=>update({shadeBefore:{mode:'scale',rating}})}/>
       {field('where','Где ты проявляешь это качество?')}{field('afraid','Где боишься проявлять?')}{next('Посмотреть с другой стороны','shadeView')}
     </>}
@@ -57,6 +62,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
     </>}
     {step==='shadePlay'&&<>
       <h1 className="text-4xl font-semibold">Моя новая реакция</h1>
+      <p className="leading-relaxed">Представь, что снова оказалась в ситуации с карты. Как ты могла бы отреагировать теперь? Выбери вариант, который ближе тебе сейчас — это проба, а не обещание всегда поступать именно так.</p>
       <RadioGroup aria-label="Новая реакция" value={journey.reactionId??''} onValueChange={reactionId=>{const reaction=reactions.find(item=>item.id===reactionId);if(reaction)update({reactionId,replay:reaction.text,manifestation:reaction.kind==='integrated'?'integrated':'shadow'});}}>{reactions.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>{next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>
