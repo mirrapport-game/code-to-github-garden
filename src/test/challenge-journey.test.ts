@@ -1,10 +1,23 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { canContinueJourney, emptyJourney, finishJourney, JOURNEY_STEPS } from '@/lib/challenge-journey';
+import { canContinueJourney, emptyJourney, finishJourney, JOURNEY_STEPS, showShadeProgress } from '@/lib/challenge-journey';
 import { clearChallenge, emptyChallenge, loadChallenge, saveChallenge } from '@/lib/challenge-store';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 
 describe('Written challenge journey',()=>{
   beforeEach(clearChallenge);
+  it('reveals shade progress only when the participant reaches shade exploration',()=>{
+    expect(showShadeProgress('overview','scenario',0)).toBe(false);
+    for (const step of ['scenario','reflection','story'] as const) {
+      expect(showShadeProgress('day',step,0)).toBe(false);
+      expect(showShadeProgress('day',step,1)).toBe(false);
+    }
+    for (const step of ['shadeMeaning','shadePlay','balance','resource'] as const) {
+      expect(showShadeProgress('day',step,1)).toBe(true);
+    }
+    expect(showShadeProgress('summary','resource',1)).toBe(true);
+    expect(showShadeProgress('overview','scenario',1)).toBe(true);
+    expect(showShadeProgress('before','scenario',1)).toBe(false);
+  });
   it('starts with the scenario and strength selection, before reflection and shade exploration',()=>{
     expect(emptyJourney().step).toBe('scenario');
     expect(JOURNEY_STEPS).toEqual(['scenario','reflection','story','shadeMeaning','shadePlay','balance','resource']);

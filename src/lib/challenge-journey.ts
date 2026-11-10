@@ -3,6 +3,10 @@ import type { GameCard } from '@/lib/cards';
 
 export const JOURNEY_STEPS = ['scenario', 'reflection', 'story', 'shadeMeaning', 'shadePlay', 'balance', 'resource'] as const;
 export type JourneyStep = typeof JOURNEY_STEPS[number];
+export function showShadeProgress(screen: string, step: JourneyStep = 'scenario', acquainted = 0): boolean {
+  if (screen === 'day') return ['shadeMeaning', 'shadePlay', 'balance', 'resource'].includes(step);
+  return ['overview', 'summary', 'feedback'].includes(screen) && acquainted > 0;
+}
 export type JourneyDraft = {
   step: JourneyStep;
   before: string;

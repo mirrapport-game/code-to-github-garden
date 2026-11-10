@@ -12,6 +12,7 @@ import { ChoiceReflection } from '@/components/choice-reflection';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 import { SelfTest, TestProfile } from '@/components/self-test';
 import { shadeProgress } from '@/lib/shadow-shades';
+import { showShadeProgress } from '@/lib/challenge-journey';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
@@ -63,7 +64,7 @@ function Season() {
     <Stop onStop={() => go('overview')} />
     <div className="mx-auto max-w-lg px-5 pb-16 pt-20">
       {error && <p role="alert" className="mb-5 rounded-lg border border-destructive p-4 text-destructive">{error}</p>}
-      {(['overview','day','summary','feedback'] as Screen[]).includes(screen) && <section aria-label="Знакомство с оттенками тени" className="mb-7 border-b border-border pb-5">
+      {showShadeProgress(screen, state.drafts[activeDay]?.journey?.step, shades.acquainted) && <section aria-label="Знакомство с оттенками тени" className="mb-7 border-b border-border pb-5">
         <p className="text-sm text-gold">Оттенки тени · Всего {shades.total}</p>
         <div className="mt-3 grid grid-cols-2 gap-4">
           <p className="text-sm text-muted-foreground">Познакомилась<span className="mt-1 block font-display text-3xl text-foreground">{shades.acquainted}</span></p>
