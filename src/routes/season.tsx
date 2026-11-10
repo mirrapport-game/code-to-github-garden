@@ -14,6 +14,8 @@ import { SelfTest, TestProfile } from '@/components/self-test';
 import { shadeProgress } from '@/lib/shadow-shades';
 import { showShadeProgress } from '@/lib/challenge-journey';
 import { TelegramNotifications } from '@/components/participant-menu';
+import { notifyDayComplete } from '@/lib/telegram.functions';
+import { useParticipant } from '@/components/participant-provider';
 import { ChallengeRequestEditor } from '@/components/challenge-request';
 import { activeRequest, requestReady } from '@/lib/challenge-request';
 
@@ -129,7 +131,10 @@ function Season() {
       </div>}
       {screen === 'day' && card && state.startedAt && canOpenDay(state,activeDay,now) && <ChallengeJourney key={activeDay} day={activeDay} card={card} theme={state.assignments[activeDay] ?? card.stage} shadeId={state.shadeAssignments[activeDay]} requestText={requestText} draft={state.drafts[activeDay]} onDraft={draft => persist({...state,drafts:{...state.drafts,[activeDay]:draft}})} onComplete={entry => {
         if (!canOpenDay(state,activeDay)) return;
-        if (persist({...state,days:{...state.days,[activeDay]:entry}})) go('summary');
+        if (persist({...state,days:{...state.days,[activeDay]:entry}})) {
+          go('summary');
+          if (account.user) void notifyDayComplete({data:{day:activeDay,scenario:card.scenario.slice(0,400),reaction:(entry.journey?.replay ?? '').slice(0,1500),feedback:(entry.journey?.feedback ?? '').slice(0,3000),resource:(entry.resource ?? '').slice(0,800),smallStep:(entry.journey?.smallStep ?? '').slice(0,800)}}).catch(() => undefined);
+        }
       }} />}
       {screen === 'summary' && state.days[activeDay] && <div className="space-y-7">
         <ChallengeDaySummary answer={state.days[activeDay]} />
