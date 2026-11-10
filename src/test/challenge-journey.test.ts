@@ -1,33 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { canContinueJourney, emptyJourney, finishJourney, JOURNEY_STEPS, showShadeProgress, validShadeAssessment, shadeRatingChange } from '@/lib/challenge-journey';
+import { canContinueJourney, emptyJourney, finishJourney, JOURNEY_STEPS, showShadeProgress } from '@/lib/challenge-journey';
 import { clearChallenge, emptyChallenge, loadChallenge, saveChallenge } from '@/lib/challenge-store';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 
-describe('Written challenge journey',()=>{
+const selected = (...items: string[]) => items.join(', ');
+
+describe('Selection-only challenge journey',()=>{
   beforeEach(clearChallenge);
-  it('accepts only integer shade ratings from 1 through 10',()=>{
-    expect(validShadeAssessment({mode:'scale',rating:1})).toBe(true);
-    expect(validShadeAssessment({mode:'scale',rating:10})).toBe(true);
-    for(const rating of [0,11,5.5,NaN]) expect(validShadeAssessment({mode:'scale',rating})).toBe(false);
-  });
-  it('accepts a written assessment instead of a scale and keeps both observations after reload',()=>{
-    const journey={...emptyJourney(),shadeBefore:{mode:'words' as const,text:'Мне трудно просить'},shadeAfter:{mode:'words' as const,text:'Могу попросить без давления'}};
-    expect(validShadeAssessment(journey.shadeBefore)).toBe(true);
-    expect(validShadeAssessment({mode:'words',text:' '})).toBe(false);
-    saveChallenge({...emptyChallenge(),drafts:{1:{journey}}});
-    expect(loadChallenge().drafts[1]?.journey?.shadeBefore).toEqual(journey.shadeBefore);
-    expect(loadChallenge().drafts[1]?.journey?.shadeAfter).toEqual(journey.shadeAfter);
-  });
-  it('compares numeric before and after ratings without inventing scores for written answers',()=>{
-    expect(shadeRatingChange({mode:'scale',rating:3},{mode:'scale',rating:8})).toBe(5);
-    expect(shadeRatingChange({mode:'scale',rating:8},{mode:'scale',rating:3})).toBe(-5);
-    expect(shadeRatingChange({mode:'words',text:'Стало легче'},{mode:'scale',rating:8})).toBeNull();
-  });
-  it('requires a valid follow-up assessment when a baseline shade assessment exists',()=>{
-    const journey={...emptyJourney(),balance:'Прошу без давления',shadeBefore:{mode:'scale' as const,rating:3}};
-    expect(canContinueJourney('balance',journey)).toBe(false);
-    expect(canContinueJourney('balance',{...journey,shadeAfter:{mode:'scale',rating:8}})).toBe(true);
-  });
   it('reveals shade progress only when the participant reaches shade exploration',()=>{
     expect(showShadeProgress('overview','scenario',0)).toBe(false);
     for (const step of ['scenario','reflection','story'] as const) {
@@ -47,38 +26,53 @@ describe('Written challenge journey',()=>{
     expect(canContinueJourney('scenario',emptyJourney())).toBe(false);
     expect(canContinueJourney('scenario',emptyJourney(),'hard')).toBe(true);
   });
-  it('requires her feelings, rejected qualities, recognition and repulsion before shade exploration',()=>{
-    const journey={...emptyJourney(),before:'злюсь',rejected:'давление',recognition:'молчу',repelled:'грубость'};
+  it('requires feelings, 3–5 listed qualities and listed spheres before shade exploration',()=>{
+    const journey={...emptyJourney(),before:'Злость',rejected:selected('Наглость','Холодность','Контроль'),recognition:selected('Семья')};
     expect(canContinueJourney('reflection',journey)).toBe(true);
+    expect(canContinueJourney('reflection',{...journey,before:''})).toBe(false);
+    expect(canContinueJourney('reflection',{...journey,rejected:selected('Наглость','Контроль')})).toBe(false);
+    expect(canContinueJourney('reflection',{...journey,rejected:selected('Наглость','Холодность','Контроль','Лживость','Ревность','Упрямство')})).toBe(false);
+    expect(canContinueJourney('reflection',{...journey,rejected:selected('Наглость','Холодность','Моё качество')})).toBe(false);
     expect(canContinueJourney('reflection',{...journey,recognition:''})).toBe(false);
   });
-  it('asks for the meaning, expression and fear of the shade before replaying it',()=>{
-    const journey={...emptyJourney(),where:'на работе',afraid:'в семье',shadeBefore:{mode:'scale' as const,rating:4}};
+  it('asks for the spheres where the shade shows up and where it is feared, from the list only',()=>{
+    const journey={...emptyJourney(),where:selected('Работа и карьера'),afraid:selected('Семья','Дружба')};
     expect(canContinueJourney('shadeMeaning',journey)).toBe(true);
     expect(canContinueJourney('shadeMeaning',{...journey,where:''})).toBe(false);
+    expect(canContinueJourney('shadeMeaning',{...journey,afraid:'в семье'})).toBe(false);
   });
-  it('keeps the chosen manifestation, own replay and after feelings separate',()=>{
-    const journey={...emptyJourney(),replay:'Я тоже хочу сказать',after:'спокойнее',manifestation:'integrated' as const};
-    expect(canContinueJourney('shadePlay',journey)).toBe(true);
-    expect(canContinueJourney('shadePlay',{...journey,manifestation:''})).toBe(false);
+  it('requires a chosen reaction and after feelings, with no free text',()=>{
+    expect(canContinueJourney('shadePlay',emptyJourney())).toBe(false);
+    expect(canContinueJourney('shadePlay',{...emptyJourney(),reactionId:'clear'})).toBe(true);
+    expect(canContinueJourney('shadePlay',{...emptyJourney(),reactionId:'unknown'})).toBe(false);
+    expect(canContinueJourney('feelings',{...emptyJourney(),reactionId:'clear'})).toBe(false);
+    expect(canContinueJourney('feelings',{...emptyJourney(),reactionId:'clear',afterFeelings:['Лёгкость']})).toBe(true);
   });
-  it('saves before and after feelings, balance, resource and small step without four preset answers',()=>{
+  it('requires the seed selections before the day summary',()=>{
+    const journey={...emptyJourney(),resource:'мой голос',smallStep:'попрошу паузу'};
+    expect(canContinueJourney('resource',journey)).toBe(false);
+    expect(canContinueJourney('resource',{...journey,seedGood:['Я заметила своё чувство и не отмахнулась от него']})).toBe(false);
+    expect(canContinueJourney('resource',{...journey,seedGood:['Я заметила своё чувство и не отмахнулась от него'],seedAction:'Сказать «нет» в одной безопасной ситуации на этой неделе'})).toBe(true);
+  });
+  it('saves a completed day built only from selections and keeps it after reload',()=>{
     const card=PLAYABLE_CARDS[0];
     if (!card) throw new Error('Missing official scenario');
-    const journey={...emptyJourney(),step:'resource' as const,before:'злость',rejected:'давление',recognition:'уступаю',repelled:'грубость',meaning:'смелость',where:'на работе',afraid:'в семье',replay:'Мне тоже важно',after:'спокойствие',manifestation:'integrated' as const,balance:'прошу без давления',resource:'мой голос',smallStep:'попрошу паузу'};
+    const journey={...emptyJourney(),step:'resource' as const,before:'Злость, Страх',rejected:selected('Наглость','Холодность','Контроль'),recognition:selected('Семья','Дружба'),where:selected('Работа и карьера'),afraid:selected('Семья'),reactionId:'clear',replay:'Спокойно скажу, где моя граница',manifestation:'integrated' as const,afterFeelings:['Лёгкость'],after:'Лёгкость',resource:'мой голос',smallStep:'попрошу паузу',seedGood:['Я заметила своё чувство и не отмахнулась от него'],seedAction:'Сказать «нет» в одной безопасной ситуации на этой неделе'};
     expect(finishJourney({level:'soft'},emptyJourney(),card,1,'Наглость','shade-2')).toBeNull();
-    const result=finishJourney({level:'soft',choiceId:'old-choice'},journey,card,1,'Наглость','shade-2');
+    const result=finishJourney({level:'soft'},journey,card,1,'Наглость','shade-2');
     if (!result) throw new Error('Valid journey rejected');
-    expect(result.choiceId).toBeUndefined();
     saveChallenge({...emptyChallenge(),days:{1:result},drafts:{1:{journey}}});
     const saved=loadChallenge();
     expect(saved.days[1]?.journey).toEqual(journey);
     expect(saved.days[1]?.cardId).toBe(card.id);
     expect(saved.days[1]?.shadeId).toBe('shade-2');
-    expect(saved.drafts[1]?.journey?.step).toBe('resource');
-    expect(saved.days[1]?.feelings).toEqual(['злость']);
-    expect(saved.days[1]?.journey?.after).toBe('спокойствие');
-    expect(saved.days[1]?.resource).toBe('мой голос');
-    expect(saved.days[1]?.practice).toEqual(['прошу без давления','попрошу паузу']);
+    expect(saved.days[1]?.feelings).toEqual(['Злость','Страх']);
+    expect(saved.days[1]?.practice).toContain('Сказать «нет» в одной безопасной ситуации на этой неделе');
+  });
+  it('keeps the request reflection as the only free-text answer',()=>{
+    const journey={...emptyJourney(),requestText:'Хочу просить о помощи'};
+    expect(canContinueJourney('request',journey)).toBe(false);
+    expect(canContinueJourney('request',{...journey,requestReflection:'Могу назвать желание без давления'})).toBe(true);
+    expect(canContinueJourney('request',emptyJourney())).toBe(true);
   });
 });
