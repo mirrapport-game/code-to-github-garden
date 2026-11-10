@@ -8,13 +8,14 @@
 // hosting already compresses at the edge.
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import type { ConfigEnv } from "vite";
 
-export default defineConfig(({ mode }) => ({
+export default (env: ConfigEnv) => defineConfig({
   // Select Node only for external deployment; keep Lovable's default target.
-  ...(mode === "timeweb" ? { nitro: { preset: "node-server" } } : {}),
+  ...(env.mode === "timeweb" ? { nitro: { preset: "node-server" } } : {}),
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-}));
+})(env);
