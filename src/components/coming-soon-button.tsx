@@ -10,5 +10,5 @@ export function ComingSoonButton({children, hint}: {children: React.ReactNode; h
       <Btn disabled variant="ghost" className="border-muted text-muted-foreground">{children}</Btn>
     </span></TooltipTrigger>
     <TooltipContent id={id}>{hint}</TooltipContent>
-  </Tooltip></TooltipProvider>;
+  </Tooltip><p className="mt-2 text-center text-xs text-muted-foreground">{hint}</p></TooltipProvider>;
 }

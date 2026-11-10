@@ -175,11 +175,17 @@ function build(raw: Raw[], card: GameCard, level?: LevelKey): ScenarioReactionOp
   return raw.map(([id,kind,text,feedback]) => {
     const value = text(scene);
     const bound = value.includes(scene) ? value : `В ситуации «${scene}» ${value.charAt(0).toLowerCase()}${value.slice(1)}`;
-    const lead = quote ? `После слов «${detail}»` : `Когда происходит это: «${detail}»`;
-    return {id,kind,text:`${lead}. ${bound}`,feedback:`${feedback} Здесь твой выбор — ответ на ${quote ? 'слова' : 'ситуацию'} «${detail}», а не характеристика тебя.`};
+    return {id,kind,text:bound,feedback:`${feedback} Здесь твой выбор — ответ на ${quote ? 'слова' : 'ситуацию'} «${detail}», а не характеристика тебя.`};
   });
 }
 const sceneOf = (card: GameCard) => card.scenario.replace(/[«»]/g, '');
+
+/** The exact partner line from the selected scenario level, shown once above reaction options. */
+export function reactionContext(card: GameCard, level?: LevelKey): string {
+  const source = level ? card.levels[level].text : card.context;
+  const quote = source.match(/«([^»]+)»/)?.[1];
+  return quote ? `Партнёр говорит: «${quote}»` : `Ситуация: ${source.split(/(?<=[.!?])\s/)[0] ?? source}`;
+}
 
 /** Pass 1: «как я обычно реагирую» — scene-bound, per theme. */
 export function habitReactions(card: GameCard, theme: string, level?: LevelKey): ScenarioReactionOption[] {
