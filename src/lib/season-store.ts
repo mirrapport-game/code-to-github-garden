@@ -16,6 +16,7 @@ export type DayAnswer = {
   /** The resource — the support she chooses for herself. */
   resource: string;
   introReflection?: { qualities: string[]; notAllowed: string[]; spheres: string[]; strength: string; fears?: string[] } | undefined;
+  introIntegration?: import('@/lib/intro-integration').IntroIntegration | undefined;
   cardId?: string | undefined;
   dialogue?: DialogueTurn[];
   aiSummary?: string;

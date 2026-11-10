@@ -9,9 +9,11 @@ import { ChallengeStory } from '@/components/challenge-story';
 import { CHALLENGE_STORIES } from '@/lib/challenge-story';
 import { introReflectionComplete } from '@/lib/intro-choices';
 import { IntroReflection } from '@/components/intro-reflection';
+import { IntroIntegration } from '@/components/intro-integration';
+import { emptyIntegration, pickIntegrationQuality, integrationProfile } from '@/lib/intro-integration';
 
 export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, introductory = false, onDraft, onComplete }: { day: number; card: GameCard; theme?: string; shadeId?: string | undefined; draft?: Partial<ChallengeAnswer> | undefined; introductory?: boolean; onDraft: (draft: Partial<ChallengeAnswer>) => void; onComplete: (entry: ChallengeAnswer) => void }) {
-  const [step, setStep] = useState<'story' | 'cover' | 'level' | 'answers' | 'reflection' | 'introSummary' | 'personal'>(!introductory && !draft?.storyRead ? 'story' : draft?.choiceId ? 'reflection' : introductory && draft?.level ? 'answers' : 'cover');
+  const [step, setStep] = useState<'story' | 'cover' | 'level' | 'answers' | 'reflection' | 'introSummary' | 'integration' | 'personal'>(introductory && draft?.introIntegration ? 'integration' : !introductory && !draft?.storyRead ? 'story' : draft?.choiceId ? 'reflection' : introductory && draft?.level ? 'answers' : 'cover');
   const [flipped, setFlipped] = useState(false);
   const [answer, setAnswer] = useState<Partial<ChallengeAnswer>>(draft ?? {});
   const update = (values: Partial<ChallengeAnswer>) => { const next = {...answer, ...values, shadeId, stage:theme, cardId:card.id, cardStage:card.stage, day}; setAnswer(next); onDraft(next); };
@@ -19,7 +21,9 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
   const choices = answer.level ? cardChoices(theme, answer.level, card.id) : [];
   const selected = choices.find(item => item.id === answer.choiceId);
   const story = CHALLENGE_STORIES[day - 1];
-  const complete = () => { if (!selected || (introductory && !introReflectionComplete(answer))) return; onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:answer.feelings ?? [],body:[],hurt:introductory ? answer.hurt ?? '' : selected.text,shadow:answer.shadow ?? '',introReflection:answer.introReflection,resource:selected.resource,practice:introductory ? [selected.smallStep] : [],storyRead:answer.storyRead ?? false,personalAnswer:answer.personalAnswer ?? '',revisitedChoiceId:answer.revisitedChoiceId ?? '',doneAt:new Date().toISOString()}); };
+  const integration = answer.introIntegration;
+  const integrationQuality = pickIntegrationQuality(answer.introReflection?.notAllowed ?? []);
+  const complete = () => { if (!selected || (introductory && !introReflectionComplete(answer))) return; onComplete({day,stage:theme,shadeId,shadowAnswers:answer.shadowAnswers,cardId:card.id,cardStage:card.stage,responseText:selected.text,level:answer.level ?? 'soft',choiceId:selected.id,feelings:answer.feelings ?? [],body:[],hurt:introductory ? answer.hurt ?? '' : selected.text,shadow:answer.shadow ?? '',introReflection:answer.introReflection,introIntegration:integration,resource:integration?.step === 'summary' ? integration.resource : selected.resource,practice:integration?.step === 'summary' ? [integration.balance,integration.smallStep] : introductory ? [selected.smallStep] : [],storyRead:answer.storyRead ?? false,personalAnswer:answer.personalAnswer ?? '',revisitedChoiceId:answer.revisitedChoiceId ?? '',doneAt:new Date().toISOString()}); };
   if (step === 'story') return <ChallengeStory day={day} onComplete={() => {update({storyRead:true}); next('cover');}} />;
   return <div className="space-y-6 animate-rise">
     <p className="text-sm uppercase text-gold">{introductory ? 'Первая карта' : `День ${day} / 7`}</p>
@@ -54,7 +58,10 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       <p className="font-display text-2xl">Прочитай ещё раз сценарий и выбери чувства и качества, которые откликаются.</p>
       <h3 className="text-2xl font-semibold">{card.scenario}</h3>
       <p className="whitespace-pre-line border-l-2 border-gold pl-4 leading-relaxed">{answer.level ? card.levels[answer.level].text : card.context}</p>
-      <IntroReflection answer={answer} onChange={update} />
+      <IntroReflection answer={answer} onChange={values => {
+        const changedQuality = values.introReflection && JSON.stringify(values.introReflection.notAllowed) !== JSON.stringify(answer.introReflection?.notAllowed);
+        update({...values,...(changedQuality ? {introIntegration:undefined} : {})});
+      }} />
       <Btn disabled={!introReflectionComplete(answer)} onClick={() => next('introSummary')}>ИТОГ</Btn>
       <Btn variant="ghost" onClick={() => next('answers')}>Выбрать другой ответ</Btn>
     </>}
@@ -65,9 +72,12 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       {answer.introReflection?.strength && <section><h3 className="text-2xl font-semibold">Сила</h3><p className="mt-3 whitespace-pre-line leading-relaxed">{answer.introReflection.strength}</p></section>}
       <section><h3 className="text-2xl font-semibold">Чего боюсь</h3><p className="mt-3 leading-relaxed">{answer.introReflection?.fears?.join(', ')}</p></section>
       <section><h3 className="text-2xl font-semibold">Ресурс</h3><p className="mt-3 leading-relaxed">{selected.resource}</p></section>
+      {integration?.step === 'summary' && <section className="border-t border-border pt-6"><h3 className="text-2xl font-semibold">Моя интеграция · {integrationProfile(integration.quality)?.name}</h3><p className="mt-3 whitespace-pre-line">{integration.resource}</p><h4 className="mt-4 text-xl">Маленький шаг</h4><p className="mt-2 whitespace-pre-line">{integration.smallStep}</p></section>}
+      {integrationQuality ? <Btn onClick={()=>{if (!integration) update({introIntegration:emptyIntegration(integrationQuality)});next('integration');}}>{integration?.step === 'summary' ? 'Посмотреть интеграцию тени' : 'Интегрировать тень'}</Btn> : <p className="text-sm text-muted-foreground">Пока можно оставить «не знаю». Чтобы попробовать интеграцию, выбери в рефлексии качество, которое себе не позволяешь.</p>}
       <Btn onClick={complete}>Завершить первую карту</Btn>
       <Btn variant="ghost" onClick={() => next('reflection')}>К моим ответам</Btn>
     </>}
+    {step === 'integration' && introductory && integration && <IntroIntegration value={integration} selected={answer.introReflection?.notAllowed ?? []} scenario={answer.level ? card.levels[answer.level].text : card.context} before={answer.feelings ?? []} onChange={introIntegration=>update({introIntegration})} onBack={()=>next('introSummary')} />}
     {step === 'reflection' && selected && !introductory && <>
       <ChoiceReflection showShade={!introductory} onShadowAnswers={shadowAnswers => update({shadowAnswers})} answer={{...answer,shadeId,stage:theme,cardId:card.id,cardStage:card.stage}} />
       {!introductory && <Btn onClick={() => next('personal')}>Ответить ещё раз своими словами</Btn>}
