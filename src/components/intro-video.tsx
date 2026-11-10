@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
-import video from "@/assets/videos/rapport-zhivaya-voice.mp4.asset.json";
+import video from "@/assets/videos/rapport-zhivaya-no-link-v2.mp4.asset.json";
 import { Btn } from "@/components/game-ui";
 import { Button } from "@/components/ui/button";
 
