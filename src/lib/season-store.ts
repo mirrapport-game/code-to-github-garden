@@ -15,7 +15,7 @@ export type DayAnswer = {
   shadow: string;
   /** The resource — the support she chooses for herself. */
   resource: string;
-  introReflection?: { qualities: string[]; notAllowed: string[]; spheres: string[]; strength: string };
+  introReflection?: { qualities: string[]; notAllowed: string[]; spheres: string[]; strength: string } | undefined;
   cardId?: string | undefined;
   dialogue?: DialogueTurn[];
   aiSummary?: string;
