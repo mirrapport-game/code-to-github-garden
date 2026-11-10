@@ -17,5 +17,6 @@ it('completes the challenge from selections only, with ready resource and seed i
   expect(answer?.resource).toBe(journey.resource);
   expect(answer?.practice).toContain('Сказать «нет» в одной безопасной ситуации на этой неделе');
   expect(finishJourney({level:'soft'},{...journey,afterFeelings:[]},card,1,'Напористость')).toBeNull();
-  expect(finishJourney({level:'soft'},{...journey,seedAction:undefined},card,1,'Напористость')).toBeNull();
+  const {seedAction: _seedAction, ...withoutAction} = journey;
+  expect(finishJourney({level:'soft'},withoutAction,card,1,'Напористость')).toBeNull();
 });
