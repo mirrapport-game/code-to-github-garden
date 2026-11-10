@@ -14,7 +14,7 @@ describe('Introductory four-answer card', () => {
     expect(introReflectionComplete({...draft, feelings:[]})).toBe(false);
     expect(introReflectionComplete({...draft, introReflection:{...reflection,qualities:[]}})).toBe(false);
     expect(introReflectionComplete({...draft, introReflection:{...reflection,notAllowed:[]}})).toBe(false);
-    expect(introReflectionComplete({...draft, introReflection:{...reflection,spheres:[]}})).toBe(false);
+    expect(introReflectionComplete({...draft, introReflection:{...reflection,spheres:[]}})).toBe(true);
     expect(introReflectionComplete({...draft, introReflection:{...reflection,fears:[]}})).toBe(false);
     saveIntroChoices({theme:'Границы',cardId:cardsForTheme('Границы')[0]?.id ?? '',draft});
     expect(loadIntroChoices()?.draft).toEqual(draft);

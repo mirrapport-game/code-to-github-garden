@@ -15,7 +15,7 @@ export function emptyIntroReflection(): NonNullable<ChallengeAnswer['introReflec
 
 export function introReflectionComplete(answer: Partial<ChallengeAnswer>): boolean {
   const reflection = answer.introReflection;
-  return Boolean(answer.choiceId && answer.feelings?.some(value => value.trim()) && reflection?.qualities.length && reflection.notAllowed.length && reflection.spheres.length && reflection.fears?.length);
+  return Boolean(answer.choiceId && answer.feelings?.some(value => value.trim()) && reflection?.qualities.length && reflection.notAllowed.length && reflection.fears?.length);
 }
 
 export function drawIntroChoices(random = Math.random): IntroChoices | null {

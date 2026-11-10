@@ -11,6 +11,7 @@ import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
 import cover from '@/assets/shadow-shades-cover.jpg';
 import { ChallengeStory } from '@/components/challenge-story';
 import { practiceSupport } from '@/lib/integration-practice';
+import { IntroTrainer } from '@/components/intro-trainer';
 import { PracticeChoices, PracticeFeelings } from '@/components/practice-controls';
 
 const split=(value:string)=>value.split(', ').map(item=>item.trim()).filter(Boolean);
@@ -71,8 +72,9 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
     {step==='shadePlay'&&<>
       <h1 className="text-4xl font-semibold">Моя новая реакция</h1>
       <p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
-      <p className="leading-relaxed">Представь, что снова оказалась в этой ситуации. Как ты могла бы отреагировать теперь? Выбери вариант, который ближе тебе сейчас, — это проба, а не обещание всегда поступать именно так.</p>
-      <p className="text-sm text-muted-foreground">Второй проход: как ты могла бы отреагировать иначе? {reactionContext(card,answer.level)}</p><RadioGroup aria-label="Новая реакция" value={journey.reactionId??''} onValueChange={reactionId=>{const reaction=reactions.find(item=>item.id===reactionId);if(reaction)update({reactionId,replay:reaction.text,manifestation:reaction.kind==='integrated'?'integrated':'shadow'});}}>{reactions.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>{journey.reactionId&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{reactions.find(item=>item.id===journey.reactionId)?.feedback}</p>}{next('Далее','feelings')}
+      <p className="leading-relaxed">Вернись в эту ситуацию. Напиши своими словами, что ты скажешь партнёру, опираясь на интегрированную сторону оттенка «{name}». Партнёр ответит — сыграйте короткий диалог из 5–8 сообщений, затем ты получишь итог и обратную связь.</p>
+      {journey.feedback ? <><section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{journey.feedback}</p></section><Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],replay:''})}>Сыграть заново</Btn></> : answer.level && <IntroTrainer cardId={card.id ?? ''} level={answer.level} {...(shadeId?{shadeId}:{})} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={[]} initialSummary="" onComplete={(dialogue,feedback)=>update({dialogue,feedback,reactionId:'',replay:dialogue.find(turn=>turn.role==='participant')?.text ?? '',manifestation:'integrated'})} />}
+      {next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>
       <PracticeFeelings value={journey.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>

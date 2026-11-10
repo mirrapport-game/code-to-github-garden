@@ -15,6 +15,8 @@ export type IntroIntegration = {
   balance: string;
   resource: string;
   smallStep: string;
+  dialogue?: { role: 'participant' | 'other'; text: string }[];
+  feedback?: string;
 };
 const qualities: Record<string, { name: string; shadow: string; integrated: string }> = {
   'Наглой': {name:'Наглость',shadow:'',integrated:''},
@@ -42,7 +44,7 @@ export function pickIntegrationQuality(selected: string[]): string | undefined {
   return selected.find(quality => Boolean(integrationProfile(quality)));
 }
 export function emptyIntegration(quality: string): IntroIntegration {
-  return {quality,step:'meaning',meaning:'',where:'',afraid:'',reactionId:'',personalReaction:'',after:'',balance:'',resource:'',smallStep:''};
+  return {quality,step:'manifestations',meaning:'',where:'',afraid:'',reactionId:'',personalReaction:'',after:'',balance:'',resource:'',smallStep:''};
 }
 const clearReactions: Record<string,string> = {
   'Наглой':'Скажу: «Я тоже хочу заявить о своём желании. Мне важно, чтобы его услышали; ты можешь не согласиться».',
@@ -75,8 +77,8 @@ export function canContinueIntegration(value: IntroIntegration): boolean {
   switch (value.step) {
     case 'meaning': return Boolean(integrationProfile(value.quality)) && filled(value.where,value.afraid) && Number.isInteger(value.ratingBefore) && (value.ratingBefore ?? 0) >= 1 && (value.ratingBefore ?? 11) <= 10;
     case 'manifestations': return true;
-    case 'reaction': return integrationReactions(value.quality).some(reaction => reaction.id === value.reactionId);
-    case 'feelings': return Boolean(value.afterFeelings?.length) && Number.isInteger(value.ratingAfter) && (value.ratingAfter ?? 0) >= 1 && (value.ratingAfter ?? 11) <= 10;
+    case 'reaction': return filled(value.personalReaction) && Boolean(value.feedback?.trim());
+    case 'feelings': return Boolean(value.afterFeelings?.length);
     case 'balance': return filled(value.balance);
     case 'resource': return filled(value.resource,value.smallStep);
     case 'summary': return true;

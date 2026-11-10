@@ -6,8 +6,9 @@ import { PracticeFeelings, PracticeRating } from '@/components/practice-controls
 import { PracticeChoices } from '@/components/practice-controls';
 import { CHALLENGE_SPHERES, scenarioReactions } from '@/lib/challenge-reflection';
 import type { GameCard, LevelKey } from '@/lib/cards';
+import { IntroTrainer } from '@/components/intro-trainer';
 
-export function IntroIntegration({value,selected,before,card,theme,level,onChange,onBack}: {value:Integration;selected:string[];scenario:string;card:GameCard;theme:string;level?:LevelKey | undefined;before:string[];onChange:(value:Integration)=>void;onBack:()=>void}) {
+export function IntroIntegration({value,selected,before,card,theme,level,scenario,onChange,onBack}: {value:Integration;selected:string[];scenario:string;card:GameCard;theme:string;level?:LevelKey | undefined;before:string[];onChange:(value:Integration)=>void;onBack:()=>void}) {
   const profile=integrationProfile(value.quality);
   if(!profile)return null;
   const reactions=scenarioReactions(card,profile.name,profile.integrated,theme,level);
@@ -18,7 +19,7 @@ export function IntroIntegration({value,selected,before,card,theme,level,onChang
   const go=(target:Integration['step'])=>{update({step:target,...(target==='resource'?support:{})});window.scrollTo(0,0);};
   const field=(key:'where'|'afraid',label:string)=><PracticeChoices legend={label} options={CHALLENGE_SPHERES} value={value[key].split(', ').filter(Boolean)} onChange={items=>update({[key]:items.join(', ')})}/>;
   const next=(label:string,target:Integration['step'])=><Btn disabled={!canContinueIntegration({...value,step})} onClick={()=>go(target)}>{label}</Btn>;
-  const back:Record<string,Integration['step']>={manifestations:'meaning',reaction:'manifestations',feelings:'reaction',resource:'feelings',summary:'resource'};
+  const back:Record<string,Integration['step']>={reaction:'manifestations',feelings:'reaction',resource:'feelings',summary:'resource'};
   return <div className="space-y-6">
     <h2 className="text-3xl font-semibold text-gold">{profile.name}</h2>
     {step==='meaning'&&<>
@@ -33,17 +34,21 @@ export function IntroIntegration({value,selected,before,card,theme,level,onChang
       <section className="border-l-2 border-gold pl-4"><h4 className="text-2xl">Теневое проявление</h4><p className="mt-2 leading-relaxed">{profile.shadow}</p></section>
       <section className="border-l-2 border-gold pl-4"><h4 className="text-2xl">Интегрированное проявление</h4><p className="mt-2 leading-relaxed">{profile.integrated}</p></section>
       <p className="leading-relaxed">Попробуй интегрировать тень: взять силу качества, сохраняя свои и чужие границы, и выбрать новую реакцию.</p>
-      {next('Выбрать новую реакцию','reaction')}
+      {next('Сыграть новую реакцию','reaction')}
     </>}
     {step==='reaction'&&<>
       <h3 className="text-2xl font-semibold">Моя новая реакция</h3>
-      <RadioGroup aria-label="Новая реакция" value={value.reactionId} onValueChange={reactionId=>update({reactionId})}>{reactions.map(item=><label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={item.id} className="mt-1 shrink-0"/><span className="leading-relaxed">{item.text}</span></label>)}</RadioGroup>
-      {reaction&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{reaction.feedback}</p>}
+      <p className="font-display text-xl">{card.scenario}</p>
+      <p className="whitespace-pre-line border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
+      <p className="leading-relaxed">Вернись в эту ситуацию. Напиши своими словами, что ты скажешь партнёру, опираясь на интегрированную сторону качества «{profile.name}». Партнёр ответит — сыграйте короткий диалог из 5–8 сообщений, затем ты получишь итог и обратную связь.</p>
+      {value.feedback ? <>
+        <section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{value.feedback}</p></section>
+        <Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],personalReaction:''})}>Сыграть заново</Btn>
+      </> : level && <IntroTrainer cardId={card.id ?? ''} level={level} quality={value.quality} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={[]} initialSummary="" onComplete={(dialogue,feedback)=>update({dialogue,feedback,personalReaction:dialogue.find(turn=>turn.role==='participant')?.text ?? ''})} />}
       {next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>
       <PracticeFeelings value={value.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>
-      <PracticeRating phase="после" question="Насколько ты теперь готова проявлять это качество?" value={value.ratingAfter} onChange={ratingAfter=>update({ratingAfter})}/>
       {next('Ресурс и маленький шаг','resource')}
     </>}
     {step==='resource'&&<>
@@ -53,7 +58,8 @@ export function IntroIntegration({value,selected,before,card,theme,level,onChang
     </>}
     {step==='summary'&&<>
       <h3 className="text-2xl font-semibold">Итог интеграции</h3>
-      <section><h4 className="text-xl">Моя новая реакция</h4><p className="mt-2 leading-relaxed">{reaction?.text}</p></section>
+      <section><h4 className="text-xl">Моя новая реакция</h4><p className="mt-2 leading-relaxed">{value.personalReaction || reaction?.text}</p></section>
+      {value.feedback&&<section><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{value.feedback}</p></section>}
       <div className="grid grid-cols-2 gap-4"><section><h4 className="text-xl text-gold">Чувства до</h4><p className="mt-2">{before.join(', ')}</p></section><section><h4 className="text-xl text-gold">Чувства после</h4><p className="mt-2">{value.after}</p></section></div>
       {value.ratingBefore!==undefined&&value.ratingAfter!==undefined&&<p>Оценка качества: {value.ratingBefore} → {value.ratingAfter} из 10</p>}
       <h4 className="text-2xl">Ресурс</h4><p className="leading-relaxed">{value.resource}</p><h4 className="text-2xl">Маленький шаг</h4><p className="leading-relaxed">{value.smallStep}</p>

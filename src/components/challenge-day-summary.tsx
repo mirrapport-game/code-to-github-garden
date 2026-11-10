@@ -16,6 +16,7 @@ export function ChallengeDaySummary({answer}: {answer:ChallengeAnswer}) {
       ['3. Что чувствую после',journey?.after ?? ''],
       [`4. Тень${shade ? ` · ${shade.name}` : ''}`,journey?.reactionId ? (journey.manifestation === 'integrated' ? shade?.integrated : shade?.shadow) : journey?.balance ?? answer.shadow],
       ['Мой новый ответ',journey?.replay ?? answer.personalAnswer ?? ''],
+      ...(journey?.feedback ? [['Обратная связь по диалогу',journey.feedback] as [string,string]] : []),
       ['Мой ресурс',journey?.resource ?? answer.resource],
       ['Маленький шаг',journey?.smallStep ?? ''],
       ['Присматриваюсь к лучшему',journey?.seedGood?.length ? journey.seedGood.map(item=>`· ${item}`).join('\n') : ''],

@@ -18,8 +18,13 @@ it('offers four reactions including two integrated and two shadow reactions and 
   expect(choices).toHaveLength(4);
   expect(choices.filter(item=>item.kind==='integrated')).toHaveLength(2);
   expect(choices.filter(item=>item.kind==='shadow')).toHaveLength(2);
-  for (const reaction of choices) expect(canContinueIntegration({...emptyIntegration('Наглой'),step:'reaction',reactionId:reaction.id,after:'Злюсь'})).toBe(true);
-  expect(canContinueIntegration({...emptyIntegration('Наглой'),step:'reaction',reactionId:'missing',after:'Злюсь'})).toBe(false);
+});
+it('starts at the shade view and requires a written reaction with dialogue feedback',()=>{
+  expect(emptyIntegration('Наглой').step).toBe('manifestations');
+  const base={...emptyIntegration('Наглой'),step:'reaction' as const};
+  expect(canContinueIntegration({...base,personalReaction:'Я тоже хочу'})).toBe(false);
+  expect(canContinueIntegration({...base,personalReaction:'',feedback:'Итог'})).toBe(false);
+  expect(canContinueIntegration({...base,personalReaction:'Я тоже хочу',feedback:'Итог'})).toBe(true);
 });
 it('changes the integrated reaction with the selected quality',()=>{
   expect(integrationReactions('Слабой').find(item=>item.id==='clear')?.text).toContain('Мне нужна помощь');
@@ -35,7 +40,7 @@ it('persists the chosen quality, stage and new reaction without changing challen
   expect(loadChallenge()).toEqual(emptyChallenge());
 });
 it('requires the 1–10 baseline and both location answers before introductory manifestations',()=>{
-  const value={...emptyIntegration('Напористой'),where:'На работе',afraid:'Дома'};
+  const value={...emptyIntegration('Напористой'),step:'meaning' as const,where:'На работе',afraid:'Дома'};
   expect(canContinueIntegration(value)).toBe(false);
   for (const ratingBefore of [1,10]) expect(canContinueIntegration({...value,ratingBefore})).toBe(true);
   for (const ratingBefore of [0,11,3.5]) expect(canContinueIntegration({...value,ratingBefore})).toBe(false);

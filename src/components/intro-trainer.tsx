@@ -24,8 +24,18 @@ export function IntroTrainer({
   level,
   initialMessages,
   initialSummary,
+  quality,
+  shadeId,
+  minMessages = 0,
+  maxParticipantMessages,
+  placeholder = "Я хочу сказать…",
   onComplete,
 }: {
+  quality?: string;
+  shadeId?: string;
+  minMessages?: number;
+  maxParticipantMessages?: number;
+  placeholder?: string;
   cardId: string;
   level: LevelKey;
   initialMessages: UIMessage[];
@@ -45,7 +55,7 @@ export function IntroTrainer({
       new DefaultChatTransport({
         api: "/api/intro-trainer",
         prepareSendMessagesRequest: ({ messages }) => ({
-          body: { cardId, level, mode: mode.current, messages: textOnlyMessages(messages) },
+          body: { cardId, level, mode: mode.current, ...(quality ? { quality } : {}), ...(shadeId ? { shadeId } : {}), messages: textOnlyMessages(messages) },
         }),
         fetch: async (url, init) => {
           const response = await fetch(url, init);
@@ -62,10 +72,10 @@ export function IntroTrainer({
           return response;
         },
       }),
-    [cardId, level],
+    [cardId, level, quality, shadeId],
   );
   const { messages, sendMessage, status, stop } = useChat({
-    id: `intro-${cardId}-${level}`,
+    id: `intro-${cardId}-${level}-${quality ?? ""}`,
     messages: initialMessages,
     transport,
     onError: (error) => setFailure(error.message),
@@ -95,6 +105,8 @@ export function IntroTrainer({
       ),
     [messages],
   );
+  const userTurns = dialogueMessages.filter((m) => m.role === "user").length;
+  const limitReached = maxParticipantMessages !== undefined && userTurns >= maxParticipantMessages;
   const liveSummary =
     summaryMode && summaryStart.current !== null
       ? messages
@@ -182,10 +194,15 @@ export function IntroTrainer({
             </ConversationContent>
             <ConversationScrollButton aria-label="К последнему сообщению" />
           </Conversation>
+          {maxParticipantMessages !== undefined && (
+            <p className="text-xs text-muted-foreground">
+              Сообщений: {dialogueMessages.length} · итог откроется после {minMessages}, максимум {maxParticipantMessages * 2}
+            </p>
+          )}
           <PromptInput
             onSubmit={() => {
               const text = draft.trim();
-              if (!text || busy) return;
+              if (!text || busy || limitReached) return;
               setFailure("");
               mode.current = "dialogue";
               setDraft("");
@@ -200,7 +217,8 @@ export function IntroTrainer({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               maxLength={4000}
-              placeholder="Я хочу сказать…"
+              disabled={limitReached}
+              placeholder={limitReached ? "Сцена сыграна — посмотри итог" : dialogueMessages.length ? "Я отвечаю…" : placeholder}
             />
             <PromptInputFooter className="justify-end">
               <PromptInputSubmit
@@ -215,6 +233,7 @@ export function IntroTrainer({
           <Btn
             disabled={
               busy ||
+              dialogueMessages.length < minMessages ||
               !dialogueMessages.some(
                 (m) =>
                   m.role === "assistant" && m.parts.some((p) => p.type === "text" && p.text.trim()),
