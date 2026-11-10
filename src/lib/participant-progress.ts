@@ -28,7 +28,7 @@ export function shadowTracker(intro:SeasonState,challenge:ChallengeState):Shadow
   for(const [day,entry] of Object.entries({...challenge.drafts,...challenge.days})) {
     const journey=entry.journey;
     const shade=SHADOW_SHADES.find(item=>item.id===(entry.shadeId ?? challenge.shadeAssignments[Number(day)]));
-    if(!shade || !journey || !['shadeMeaning','shadePlay','balance','resource'].includes(journey.step)) continue;
+    if(!shade || !journey || !['shadeMeaning','shadeView','shadePlay','feelings','balance','resource'].includes(journey.step)) continue;
     result.push({key:`day:${day}`,name:shade.name,source:`День ${day}`,integrated:Boolean(challenge.days[Number(day)]) && journey.manifestation==='integrated',before:journey.before,after:journey.after,shadow:shade.shadow,balanced:shade.integrated,resource:journey.resource,smallStep:journey.smallStep});
   }
   return result;

@@ -5,7 +5,8 @@ export function validPracticeRating(rating?: number): boolean {
   return rating !== undefined && Number.isInteger(rating) && rating >= 1 && rating <= 10;
 }
 export function practiceRatingQuestion(name:string, quality?:string) {
-  if (quality) return `Насколько ты ${quality.toLocaleLowerCase('ru-RU').replace(/ой$/, 'а').replace(/ей$/, 'я')}?`;
+  const adjectives:Record<string,string>={'Наглой':'нагла','Напористой':'напориста','Резкой':'резка','Холодной':'холодна','Слабой':'слаба','Уязвимой':'уязвима','Эгоистичной':'эгоистична','Упрямой':'упряма','Контролирующей':'склонна контролировать','Независимой':'независима','Смелой':'смела','Прямой':'пряма','Требовательной':'требовательна','Мягкой':'мягка'};
+  if (quality && adjectives[quality]) return `Насколько ты ${adjectives[quality]}?`;
   return `Насколько тебе свойственно это качество — «${name}»?`;
 }
 export function practiceReactions(name:string, integrated:string) {

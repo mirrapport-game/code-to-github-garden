@@ -12,7 +12,7 @@ import { practiceRatingQuestion, practiceReactions, practiceSupport } from '@/li
 import { PracticeFeelings, PracticeRating } from '@/components/practice-controls';
 import { ShadeComparison } from '@/components/shade-assessment';
 
-export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string;draft?:Partial<ChallengeAnswer>;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
+export function ChallengeJourney({day,card,theme,shadeId,draft,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
   const [answer,setAnswer]=useState<Partial<ChallengeAnswer>>(draft??{});
   const journey={...emptyJourney(),...answer.journey};
   const step=journey.step==='balance'?'feelings':journey.step;

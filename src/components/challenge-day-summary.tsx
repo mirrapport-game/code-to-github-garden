@@ -15,7 +15,7 @@ export function ChallengeDaySummary({answer}: {answer:ChallengeAnswer}) {
       ['1. Какой сценарий выпал',`${card?.stage ?? answer.cardStage ?? answer.stage} · ${card?.scenario ?? ''}\n${card?.levels[answer.level].text ?? ''}`],
       ['2. Что чувствовала до',journey?.before ?? answer.feelings.join(', ')],
       ['3. Что чувствую после',journey?.after ?? ''],
-      [`4. Как я интегрирую тень${shade ? ` · ${shade.name}` : ''}`,journey?.balance ?? answer.shadow],
+      [`4. Тень${shade ? ` · ${shade.name}` : ''}`,journey?.reactionId ? (journey.manifestation === 'integrated' ? shade?.integrated : shade?.shadow) : journey?.balance ?? answer.shadow],
       ['Мой новый ответ',journey?.replay ?? answer.personalAnswer ?? ''],
       ['Мой ресурс',journey?.resource ?? answer.resource],
       ['Маленький шаг',journey?.smallStep ?? ''],

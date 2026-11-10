@@ -21,7 +21,7 @@ export function IntroVideo({ onContinue }: { onContinue: () => void }) {
 
   return (
     <main className="min-h-svh bg-night-gradient text-night-foreground">
-      <div className="mx-auto flex min-h-svh max-w-md flex-col items-center gap-4 px-5 py-5">
+      <div className="mx-auto flex min-h-svh max-w-md flex-col items-center gap-4 px-5 pb-24 pt-5">
         <h1 className="text-center font-display text-3xl font-semibold text-gold">Раппорт: ЖиваЯ</h1>
         {failed ? (
           <p role="alert" className="flex flex-1 items-center text-center">Не удалось загрузить ролик. Можно сразу перейти к игре.</p>
@@ -38,7 +38,7 @@ export function IntroVideo({ onContinue }: { onContinue: () => void }) {
             preload="auto"
             onError={() => setFailed(true)}
             onVolumeChange={event => setMuted(event.currentTarget.muted)}
-            className="aspect-[9/16] max-h-[calc(100svh-170px)] w-full bg-night object-contain"
+            className="aspect-[9/16] max-h-[calc(100svh-250px)] w-full bg-night object-contain"
           />
           <Button
             variant="ghost"

@@ -53,6 +53,7 @@ export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level
 }
 export function finishJourney(answer: Partial<ChallengeAnswer>, journey: JourneyDraft, card: GameCard, day: number, theme: string, shadeId?: string): ChallengeAnswer | null {
   const required = journey.reactionId ? JOURNEY_STEPS.filter(step => step !== 'balance') : JOURNEY_STEPS.filter(step => step !== 'shadeMeaning');
+  if (!journey.reactionId && ![journey.meaning,journey.where,journey.afraid].every(value=>value.trim())) return null;
   if (!required.every(step => canContinueJourney(step,journey,answer.level))) return null;
   return {day,stage:theme,cardId:card.id,cardStage:card.stage,shadeId,level:answer.level ?? 'soft',feelings:[journey.before],body:[],hurt:journey.repelled,shadow:journey.rejected,resource:journey.resource,practice:[journey.balance,journey.smallStep],personalAnswer:journey.replay,storyRead:true,journey,doneAt:new Date().toISOString()};
 }
