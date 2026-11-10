@@ -43,7 +43,7 @@ describe('Written challenge journey',()=>{
   });
   it('starts with the scenario and strength selection, before reflection and shade exploration',()=>{
     expect(emptyJourney().step).toBe('scenario');
-    expect(JOURNEY_STEPS).toEqual(['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings','balance','resource']);
+    expect(JOURNEY_STEPS).toEqual(['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings','balance','request','resource']);
     expect(canContinueJourney('scenario',emptyJourney())).toBe(false);
     expect(canContinueJourney('scenario',emptyJourney(),'hard')).toBe(true);
   });
