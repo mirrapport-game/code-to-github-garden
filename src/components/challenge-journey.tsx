@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LEVEL_META, type GameCard, type LevelKey } from '@/lib/cards';
 import type { ChallengeAnswer } from '@/lib/challenge-store';
 import { canContinueJourney, emptyJourney, finishJourney, type JourneyDraft, type JourneyStep } from '@/lib/challenge-journey';
-import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN, SEED_ACTIONS, SEED_GOODS, scenarioReaction, scenarioReactions, habitReactions, reactionContext } from '@/lib/challenge-reflection';
+import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN, SEED_ACTIONS, SEED_GOODS } from '@/lib/challenge-reflection';
 import { ComingSoonButton } from '@/components/coming-soon-button';
 import { SHADOW_SHADES } from '@/lib/shadow-shades';
 import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
@@ -41,7 +41,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <img src={card.cover} alt={`Карта «${card.stage}»`} className="gold-frame mx-auto aspect-[2/3] w-full max-w-64 rounded-lg object-contain shadow-card"/>
       <h2 className="text-3xl font-semibold">{card.scenario}</h2><p className="whitespace-pre-line leading-relaxed">{card.context}</p><h3 className="text-2xl">Выбери степень жёсткости партнёра</h3>
       <p className="leading-relaxed">Партнёр — это другой человек в ситуации. Мягкая, средняя или жёсткая: выбери, насколько напряжённым будет ваше взаимодействие сегодня. Затем прочитай выбранный вариант. Начни с того уровня, с которым тебе комфортно; его можно изменить.</p>
-      <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
+      <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({firstDialogue:[],firstDialogueComplete:false,firstReactionId:'',firstReactionText:''},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
       {answer.level&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>}
       {answer.level&&<>
         <h3 className="text-2xl">Узнаёшь себя в этой ситуации?</h3>

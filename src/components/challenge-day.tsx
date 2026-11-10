@@ -45,7 +45,7 @@ export function ChallengeDay({ day, card, theme = card.stage, shadeId, draft, in
       <h2 className="text-2xl font-semibold">{card.scenario}</h2><p className="leading-relaxed">{card.context}</p>
       <h3 className="text-2xl">Выбери степень жёсткости партнёра</h3>
       <p className="leading-relaxed">Партнёр — это другой человек в ситуации. Мягкая, средняя или жёсткая: выбери, насколько напряжённым будет ваше взаимодействие сегодня. Затем прочитай выбранный вариант. Начни с того уровня, с которым тебе комфортно; его можно изменить.</p>
-      <RadioGroup aria-label="Сила ситуации" value={answer.level ?? ''} onValueChange={value => update({level:value as LevelKey, choiceId:''})}>
+      <RadioGroup aria-label="Сила ситуации" value={answer.level ?? ''} onValueChange={value => update({level:value as LevelKey, choiceId:'',dialogue:[],firstDialogueComplete:false})}>
         {(Object.keys(LEVEL_META) as LevelKey[]).map(key => <label key={key} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem id={`level-${day}-${key}`} value={key} /><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}
       </RadioGroup>
       {answer.level && <p className="border-l-2 border-gold pl-4 leading-relaxed">{card.levels[answer.level].text}</p>}
