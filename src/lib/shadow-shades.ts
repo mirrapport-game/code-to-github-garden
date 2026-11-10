@@ -14,7 +14,7 @@ export function shadeProgress(state: ChallengeState) {
   }
   for (const [day, draft] of Object.entries(state.drafts)) {
     const step = draft.journey?.step;
-    const revealed = step === 'shadeMeaning' || step === 'shadePlay' || step === 'balance' || step === 'resource' || Boolean(draft.shadowAnswers?.some(value => value.trim()));
+    const revealed = step !== undefined && ['shadeMeaning','shadeView','shadePlay','feelings','balance','request','resource'].includes(step) || Boolean(draft.shadowAnswers?.some(value => value.trim()));
     const id = draft.shadeId ?? state.shadeAssignments[Number(day)];
     if (revealed && id && known.has(id)) seen.add(id);
   }

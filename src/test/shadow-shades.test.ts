@@ -7,6 +7,13 @@ describe('Shadow shades', () => {
   it('shows all 38 remaining before a shade is revealed, even with a daily assignment', () => {
     expect(shadeProgress(assignDay(emptyChallenge(),1,()=>0))).toEqual({total:38,acquainted:0,remaining:38});
   });
+  it('retains the acquainted shade on manifestation, feelings and request stages',()=>{
+    for(const step of ['shadeView','feelings','request'] as const){
+      const state=assignDay(emptyChallenge(),1,()=>0);
+      state.drafts[1]={journey:{step,before:'',rejected:'',recognition:'',repelled:'',meaning:'',where:'',afraid:'',replay:'',after:'',manifestation:'',balance:'',resource:'',smallStep:''}};
+      expect(shadeProgress(state)).toEqual({total:38,acquainted:1,remaining:37});
+    }
+  });
   it('counts a revealed shade once across a draft and a completed day, and survives reload', () => {
     const state=assignDay(emptyChallenge(),1,()=>0);
     state.drafts[1]={journey:{step:'shadeMeaning',before:'',rejected:'',recognition:'',repelled:'',meaning:'',where:'',afraid:'',replay:'',after:'',manifestation:'',balance:'',resource:'',smallStep:''}};
