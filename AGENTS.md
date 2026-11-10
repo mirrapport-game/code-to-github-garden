@@ -54,3 +54,5 @@ use the editor.
 - Use separate progress, profile and admin routes, with isolated in-memory admin day previews and shared bottom navigation. Why: inspecting a future day must not change participant assignments, completion or points.
 - Link Telegram chats through one-time opaque codes delivered to a secret-verified webhook; keep Telegram calls in authenticated server functions or verified webhook handlers. Why: bot notifications must not expose credentials or permit forged account linking.
 - Store the optional challenge request in ChallengeState and snapshot it with each day's integration reflection in JourneyDraft. Why: existing progress sync includes requests, and editing the request does not rewrite completed reflections.
+
+- Keep email authentication passwordless via Cloud magic links and the existing participant profile sync; retain Google and Telegram notification linking separately. Why: email confirmation controls sign-in and Telegram is not a supported account provider.
