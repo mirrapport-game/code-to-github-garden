@@ -8,6 +8,13 @@
       "when": 1794259841733,
       "tag": "0000_intro_ai_access_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794320251772,
+      "tag": "0001_participant_progress_rewards_admin",
+      "breakpoints": true
     }
   ]
 }
