@@ -91,7 +91,6 @@ export function IntroTrainer({
     },
   });
   const busy = status === "submitted" || status === "streaming";
-  const dialogueMessagesRef = useRef<UIMessage[]>([]);
   const dialogueMessages = useMemo(
     () =>
       messages.filter(
@@ -104,7 +103,6 @@ export function IntroTrainer({
       ),
     [messages],
   );
-  dialogueMessagesRef.current = dialogueMessages;
   const userTurns = dialogueMessages.filter((m) => m.role === "user").length;
   const limitReached = maxParticipantMessages !== undefined && userTurns >= maxParticipantMessages;
   const liveSummary =
