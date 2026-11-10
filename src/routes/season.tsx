@@ -11,6 +11,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { ChoiceReflection } from '@/components/choice-reflection';
 import { PLAYABLE_CARDS } from '@/lib/official-cards';
 import { SelfTest, TestProfile } from '@/components/self-test';
+import { shadeProgress } from '@/lib/shadow-shades';
 
 export const Route = createFileRoute('/season')({
   head: () => ({ meta: [
@@ -50,6 +51,7 @@ function Season() {
   if (!introDone) return <main className="challenge-theme min-h-screen bg-night-gradient text-foreground"><div className="mx-auto max-w-md space-y-6 px-6 py-16"><Logo className="h-16 w-16 text-4xl" /><h1 className="text-4xl font-semibold">Сначала — знакомство с собой</h1><Btn onClick={() => navigate({to: '/'})}>К первой карте</Btn></div></main>;
   const completed = challengeComplete(state);
   const passed = Object.keys(state.days).length;
+  const shades = shadeProgress(state);
   const feedback = state.feedback ?? initialFeedback;
   const card = PLAYABLE_CARDS.find(c => c.id === state.cardAssignments[activeDay]) ?? DEMO_CARDS.find(c => c.stage === state.assignments[activeDay]);
   const open = (day: number) => {
@@ -61,6 +63,13 @@ function Season() {
     <Stop onStop={() => go('overview')} />
     <div className="mx-auto max-w-lg px-5 pb-16 pt-20">
       {error && <p role="alert" className="mb-5 rounded-lg border border-destructive p-4 text-destructive">{error}</p>}
+      {(['overview','day','summary','feedback'] as Screen[]).includes(screen) && <section aria-label="Знакомство с оттенками тени" className="mb-7 border-b border-border pb-5">
+        <p className="text-sm text-gold">Оттенки тени · Всего {shades.total}</p>
+        <div className="mt-3 grid grid-cols-2 gap-4">
+          <p className="text-sm text-muted-foreground">Познакомилась<span className="mt-1 block font-display text-3xl text-foreground">{shades.acquainted}</span></p>
+          <p className="text-sm text-muted-foreground">Осталось открыть<span className="mt-1 block font-display text-3xl text-foreground">{shades.remaining}</span></p>
+        </div>
+      </section>}
       {screen === 'overview' && <div className="space-y-8">
         <header className="border-b border-border pb-7">
           <div className="flex items-center gap-4"><Logo className="h-12 w-12 text-2xl" /><p className="text-sm text-muted-foreground">Раппорт: ЖиваЯ</p></div>
