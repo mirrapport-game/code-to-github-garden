@@ -37,4 +37,4 @@ export function saveIntroChoices(value: IntroChoices) {
   window.localStorage.setItem(KEY, JSON.stringify(value));
   window.dispatchEvent(new Event('rapport-progress-changed'));
 }
-export function clearIntroChoices() { window.localStorage.removeItem(KEY); }
+export function clearIntroChoices() { window.localStorage.removeItem(KEY); window.dispatchEvent(new Event('rapport-progress-changed')); }

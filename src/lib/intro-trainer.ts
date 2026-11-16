@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { UIMessage } from "ai";
 import type { DialogueTurn } from '@/lib/intro-dialogue';
+import { setupSchema, DAY_FEELINGS } from '@/lib/intro-day';
 
 export function dialogueUI(turns: DialogueTurn[] = []): UIMessage[] {
   return turns.map((turn, index) => ({ id: `turn-${index}`, role: turn.role === 'participant' ? 'user' : 'assistant', parts: [{ type: 'text', text: turn.text }] }));
@@ -15,9 +16,11 @@ export const trainerRequestSchema = z
   .object({
     cardId: z.string().min(1).max(100),
     level: z.enum(["soft", "medium", "hard"]),
-    mode: z.enum(["dialogue", "summary"]),
+    mode: z.enum(["dialogue", "reflection", "summary"]),
     quality: z.string().max(60).optional(),
     shadeId: z.string().max(100).optional(),
+    introHelp: z.enum(['skill', 'partner']).optional(),
+    introDay: z.object({ setupAnswers: setupSchema, feelings: z.array(z.string().refine(value => DAY_FEELINGS.includes(value))).min(1).max(3), firstMessage: z.string().max(4000), qualities: z.array(z.string().max(60)).max(20).optional(), shadows: z.array(z.string().max(60)).max(20).optional(), emotionIntensity: z.number().int().min(1).max(10).nullable().optional(), skill: z.string().max(12000).optional(), requestReflection: z.object({requestText:z.string().max(12000),connection:z.string().max(12000),action:z.string().max(12000)}).optional() }).strict().optional(),
     messages: z
       .array(
         z.object({
@@ -32,7 +35,8 @@ export const trainerRequestSchema = z
       .min(1)
       .max(100),
   })
-  .strict();
+  .strict()
+  .refine(value => !value.introHelp || (Boolean(value.introDay) && value.mode === 'dialogue'), {message: 'Помощь доступна только в диалоге вводного дня.'});
 
 export function textOnlyMessages(messages: UIMessage[]): UIMessage[] {
   return messages

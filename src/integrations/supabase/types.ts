@@ -35,6 +35,36 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_requests: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          notification_status: string
+          notification_warning: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          kind: string
+          name: string
+          notification_status?: string
+          notification_warning?: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          notification_status?: string
+          notification_warning?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       day_notifications: {
         Row: {
           created_at: string
@@ -52,6 +82,84 @@ export type Database = {
           created_at?: string
           event_key?: string
           status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      intro_day_sessions: {
+        Row: {
+          card_id: string
+          chosen_feelings: string[]
+          chosen_qualities: string[]
+          chosen_shadows: string[]
+          completed_at: string | null
+          created_at: string
+          dialogue: Json
+          emotion_intensity: number | null
+          feelings_chosen: boolean
+          id: string
+          new_dialogue_first_message: string
+          partner_harshness: string | null
+          partner_line: string
+          reflection_stage: string
+          release_method: string | null
+          request_reflection: Json
+          setup_answers: Json
+          skill_dialogue: Json
+          skill_text: string
+          step: number
+          summary_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          chosen_feelings?: string[]
+          chosen_qualities?: string[]
+          chosen_shadows?: string[]
+          completed_at?: string | null
+          created_at?: string
+          dialogue?: Json
+          emotion_intensity?: number | null
+          feelings_chosen?: boolean
+          id?: string
+          new_dialogue_first_message?: string
+          partner_harshness?: string | null
+          partner_line?: string
+          reflection_stage?: string
+          release_method?: string | null
+          request_reflection?: Json
+          setup_answers?: Json
+          skill_dialogue?: Json
+          skill_text?: string
+          step?: number
+          summary_text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          card_id?: string
+          chosen_feelings?: string[]
+          chosen_qualities?: string[]
+          chosen_shadows?: string[]
+          completed_at?: string | null
+          created_at?: string
+          dialogue?: Json
+          emotion_intensity?: number | null
+          feelings_chosen?: boolean
+          id?: string
+          new_dialogue_first_message?: string
+          partner_harshness?: string | null
+          partner_line?: string
+          reflection_stage?: string
+          release_method?: string | null
+          request_reflection?: Json
+          setup_answers?: Json
+          skill_dialogue?: Json
+          skill_text?: string
+          step?: number
+          summary_text?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

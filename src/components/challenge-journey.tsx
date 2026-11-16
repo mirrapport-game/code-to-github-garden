@@ -11,30 +11,28 @@ import { SHADE_IMAGES } from '@/lib/shadow-shade-images';
 import cover from '@/assets/shadow-shades-cover.jpg';
 import { ChallengeStory } from '@/components/challenge-story';
 import { practiceSupport } from '@/lib/integration-practice';
-import { IntroTrainer } from '@/components/intro-trainer';
 import { PracticeChoices, PracticeFeelings } from '@/components/practice-controls';
-import { dialogueUI } from '@/lib/intro-trainer';
 
 const split=(value:string)=>value.split(', ').map(item=>item.trim()).filter(Boolean);
 
 export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDraft,onComplete}: {day:number;card:GameCard;theme:string;shadeId?:string | undefined;requestText?:string | undefined;draft?:Partial<ChallengeAnswer> | undefined;onDraft:(answer:Partial<ChallengeAnswer>)=>void;onComplete:(answer:ChallengeAnswer)=>void}) {
   const [answer,setAnswer]=useState<Partial<ChallengeAnswer>>(draft??{});
   const answerRef=useRef(answer);
-  const journey={...emptyJourney(),...answer.journey,firstDialogueComplete:answer.journey?.firstDialogueComplete ?? Boolean(answer.journey?.firstReactionId)};
-  const step=journey.feedback && ['balance','feelings','resource'].includes(journey.step) ? 'shadePlay' : journey.step==='balance'?'feelings':journey.step==='request' && !requestText ? 'shadePlay' : journey.step;
+  const journey={...emptyJourney(),...answer.journey,practiceMode:'reflection' as const};
+  const step=['balance','resource'].includes(journey.step) ? 'feelings' : journey.step==='request' && !requestText ? 'feelings' : journey.step;
   const shade=SHADOW_SHADES.find(item=>item.id===shadeId);
   const image=shade?SHADE_IMAGES[shade.id]:undefined;
   const name=shade?.name??theme;
   const integrated=image?.integrated??shade?.integrated??'Обозначать свои потребности, уважая свои и чужие границы.';
   const support=practiceSupport(name,integrated);
-  const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answerRef.current,...extra,journey:{...emptyJourney(),...answerRef.current.journey,...changes}};answerRef.current=value;setAnswer(value);onDraft(value);};
+  const update=(changes:Partial<JourneyDraft>,extra:Partial<ChallengeAnswer>={})=>{const value={...answerRef.current,...extra,journey:{...emptyJourney(),...answerRef.current.journey,...changes,practiceMode:'reflection' as const}};answerRef.current=value;setAnswer(value);onDraft(value);};
   const go=(target:JourneyStep)=>{update({step:target,...(target==='resource'?support:{}),...(target==='request' && requestText ? {requestText} : {})});window.scrollTo(0,0);};
   const next=(label:string,target:JourneyStep)=><Btn disabled={!canContinueJourney(step,journey,answer.level)} onClick={()=>go(target)}>{label}</Btn>;
   const scenario=answer.level?card.levels[answer.level].text:card.context;
-  const steps:JourneyStep[]=['scenario','reflection','story','shadeMeaning','shadeView','shadePlay',...(requestText ? ['request' as const] : [])];
+  const steps:JourneyStep[]=['story','scenario','reflection','shadeMeaning','shadeView','shadePlay','feelings',...(requestText ? ['request' as const] : [])];
   const finish=()=>{const entry=finishJourney(answer,{...journey,...support},card,day,theme,shadeId,requestText);if(entry)onComplete(entry);};
   const index=steps.indexOf(step);
-  if(step==='story')return <><ChallengeStory day={day} completeLabel="Интегрировать тень" onComplete={()=>go('shadeMeaning')}/><Btn className="mt-6" variant="ghost" onClick={()=>go('reflection')}>Назад</Btn></>;
+  if(step==='story')return <ChallengeStory day={day} completeLabel="К сегодняшней карте" onComplete={()=>go('scenario')}/>;
   return <div className="space-y-6 animate-rise">
     <p className="text-sm uppercase text-gold">День {day} / 7 · Знакомство с игрой</p><p className="text-sm text-muted-foreground">Шаг {index+1} из {steps.length}</p>
     {step==='scenario'&&<>
@@ -45,11 +43,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <p className="leading-relaxed">Партнёр — это другой человек в ситуации. Мягкая, средняя или жёсткая: выбери, насколько напряжённым будет ваше взаимодействие сегодня. Затем прочитай выбранный вариант. Начни с того уровня, с которым тебе комфортно; его можно изменить.</p>
       <RadioGroup aria-label="Сила ситуации" value={answer.level??''} onValueChange={level=>{if(level==='soft'||level==='medium'||level==='hard')update({firstDialogue:[],firstDialogueComplete:false,firstReactionId:'',firstReactionText:''},{level});}}>{(Object.keys(LEVEL_META) as LevelKey[]).map(key=><label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={key} className="mt-1"/><span><span className={LEVEL_META[key].text}>{LEVEL_META[key].icon} {LEVEL_META[key].label}</span><span className="block font-display text-xl">{card.levels[key].title}</span></span></label>)}</RadioGroup>
       {answer.level&&<p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>}
-      {answer.level&&<>
-        <h3 className="text-2xl">Узнаёшь себя в этой ситуации?</h3>
-        <p className="leading-relaxed">Напиши, как бы ты на самом деле ответила этому человеку. Начни диалог — ИИ сыграет партнёра в этой ситуации.</p>
-        <IntroTrainer key={`day-${day}-first-${answer.level}`} sessionId={`day-${day}-${card.id}-first-${answer.level}`} cardId={card.id ?? ''} level={answer.level} minMessages={5} maxParticipantMessages={4} withFeedback={false} placeholder="Как бы я на самом деле ответила…" initialMessages={dialogueUI(journey.firstDialogue)} initialSummary="" onProgress={firstDialogue=>update({firstDialogue})} onComplete={firstDialogue=>{update({firstDialogue,firstDialogueComplete:true,firstReactionText:firstDialogue.find(turn=>turn.role==='participant')?.text ?? '',step:'reflection'});window.scrollTo(0,0);}} />
-      </>}
+      {next('К чувствам и качествам','reflection')}
     </>}
     {step==='reflection'&&<>
       <h1 className="text-4xl font-semibold">Рефлексия</h1><p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
@@ -57,7 +51,7 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <PracticeFeelings value={split(journey.before)} onChange={feelings=>update({before:feelings.join(', ')})}/>
       <PracticeChoices legend="Какие качества в другом человеке тебе трудно принять?" hint={`Выбери от ${QUALITIES_MIN} до ${QUALITIES_MAX} качеств.`} options={CHALLENGE_QUALITIES} value={split(journey.rejected)} onChange={qualities=>update({rejected:qualities.join(', ')})} min={QUALITIES_MIN} max={QUALITIES_MAX}/>
       <PracticeChoices legend="Где ещё тебе сложно проявлять эти качества?" hint={split(journey.rejected).length?`Речь о качествах: ${split(journey.rejected).join(', ')}.`:'Сначала выбери качества выше.'} options={CHALLENGE_SPHERES} value={split(journey.recognition)} onChange={spheres=>update({recognition:spheres.join(', ')})}/>
-      {next('Далее','story')}
+      {next('Далее','shadeMeaning')}
     </>}
     {step==='shadeMeaning'&&<>
       <h1 className="text-4xl font-semibold">Оттенки тени</h1><h2 className="text-3xl text-gold">{name}</h2><p className="text-sm text-muted-foreground">Случайная карта — образ для пробы, а не вывод о тебе.</p>
@@ -70,20 +64,21 @@ export function ChallengeJourney({day,card,theme,shadeId,draft,requestText,onDra
       <h1 className="text-4xl font-semibold">Посмотри на оттенок тени с другой стороны</h1><h2 className="text-3xl text-gold">{name}</h2><img src={cover} alt="Оттенки тени" className="gold-frame mx-auto aspect-[2/3] w-full max-w-56 rounded-lg object-contain shadow-card"/>
       <section className="border-l-2 border-gold pl-4"><h3 className="text-2xl">Теневое проявление</h3><p className="mt-2 leading-relaxed">{image?.shadow??shade?.shadow}</p></section>
       <section className="border-l-2 border-gold pl-4"><h3 className="text-2xl">Интегрированное проявление</h3><p className="mt-2 leading-relaxed">{integrated}</p></section>
-      <p className="leading-relaxed">Попробуй интегрировать оттенок тени и выбрать новую реакцию — сохраняя свои и чужие границы.</p>{next('Выбрать новую реакцию','shadePlay')}
+      <p className="leading-relaxed">Примерь интегрированное проявление этого качества, сохраняя свои и чужие границы.</p>{next('Интегрировать тень','shadePlay')}
     </>}
     {step==='shadePlay'&&<>
-      <h1 className="text-4xl font-semibold">Моя новая реакция</h1>
+      <h1 className="text-4xl font-semibold">Интеграция тени</h1>
       <p className="border-l-2 border-gold pl-4 leading-relaxed">{scenario}</p>
       <section className="border-l-2 border-gold pl-4"><h3 className="text-2xl">Интегрированная тень · {name}</h3><p className="mt-2 leading-relaxed">{integrated}</p></section>
-      <p className="font-display text-2xl">Интегрируй тень или примени в диалоге навык: возьми силу этого качества, сохраняя свои и чужие границы.</p>
-      <p className="leading-relaxed">Вернись в эту ситуацию. Напиши своими словами, что ты скажешь партнёру, опираясь на интегрированную сторону оттенка «{name}». Партнёр ответит — сыграйте короткий диалог из 5–8 сообщений, затем ты получишь итог и обратную связь.</p>
-      {journey.feedback ? <><section className="border-l-2 border-gold pl-4"><h4 className="text-xl">Обратная связь по диалогу</h4><p className="mt-2 whitespace-pre-line leading-relaxed">{journey.feedback}</p></section><Btn variant="ghost" onClick={()=>update({feedback:'',dialogue:[],replay:''})}>Сыграть заново</Btn></> : answer.level && <IntroTrainer sessionId={`day-${day}-${card.id}-integrated`} cardId={card.id ?? ''} level={answer.level} {...(shadeId?{shadeId}:{})} minMessages={5} maxParticipantMessages={4} placeholder="Моя новая реакция…" initialMessages={dialogueUI(journey.dialogue)} initialSummary="" onProgress={dialogue=>update({dialogue})} onComplete={(dialogue,feedback)=>update({dialogue,feedback,reactionId:'',replay:dialogue.find(turn=>turn.role==='participant')?.text ?? '',manifestation:'integrated'})} />}
-      {journey.feedback && (requestText ? next('Вернуться к запросу','request') : <Btn onClick={finish}>Закончить день</Btn>)}
+      <p className="leading-relaxed">Представь, как ты могла бы проявить силу этого качества в ситуации на карте. Что тебе ближе сейчас?</p>
+      <RadioGroup aria-label="Проявление качества" value={journey.manifestation} onValueChange={value=>{if(value==='shadow'||value==='integrated'||value==='neither')update({manifestation:value});}}>
+        {([['shadow','Пока узнаю себя в теневом проявлении'],['integrated','Готова попробовать интегрированное проявление'],['neither','Пока ни одно проявление мне не близко']] as const).map(([value,label])=><label key={value} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[[data-state=checked]]:border-gold"><RadioGroupItem value={value} className="mt-1"/><span>{label}</span></label>)}
+      </RadioGroup>
+      {next('Далее','feelings')}
     </>}
     {step==='feelings'&&<>
       <PracticeFeelings value={journey.afterFeelings??[]} onChange={afterFeelings=>update({afterFeelings,after:afterFeelings.join(', ')})}/>
-      {next(requestText ? 'Вернуться к запросу' : 'Далее',requestText ? 'request' : 'resource')}
+      {requestText ? next('Вернуться к запросу','request') : <Btn disabled={!canContinueJourney('feelings',journey)} onClick={finish}>Закончить день</Btn>}
     </>}
     {step==='request' && requestText && <>
       <h1 className="text-4xl font-semibold">Вернись к своему запросу</h1><h2 className="text-2xl">Мой запрос</h2><p className="whitespace-pre-line break-words border-l-2 border-gold pl-4 leading-relaxed">{requestText}</p>

@@ -20,11 +20,24 @@ describe('Selection-only challenge journey',()=>{
     expect(showShadeProgress('overview','scenario',1)).toBe(true);
     expect(showShadeProgress('before','scenario',1)).toBe(false);
   });
-  it('starts with the scenario and strength selection, before reflection and shade exploration',()=>{
-    expect(emptyJourney().step).toBe('scenario');
-    expect(JOURNEY_STEPS).toEqual(['scenario','reflection','story','shadeMeaning','shadeView','shadePlay','feelings','balance','request','resource']);
+  it('starts with the explanation before the card, reflection and shade exploration',()=>{
+    expect(emptyJourney().step).toBe('story');
+    expect(JOURNEY_STEPS.slice(0,6)).toEqual(['story','scenario','reflection','shadeMeaning','shadeView','shadePlay']);
     expect(canContinueJourney('scenario',emptyJourney())).toBe(false);
     expect(canContinueJourney('scenario',emptyJourney(),'hard')).toBe(true);
+  });
+  it('allows the card without an AI dialogue in reflection mode',()=>{
+    const journey={...emptyJourney(),practiceMode:'reflection' as const,firstDialogueComplete:false};
+    expect(canContinueJourney('scenario',journey,'soft')).toBe(true);
+    expect(canContinueJourney('scenario',journey)).toBe(false);
+  });
+  it('finishes reflection with feelings and shade integration without dialogues or resource steps',()=>{
+    const card=PLAYABLE_CARDS[0];
+    if(!card)throw new Error('Missing scenario');
+    const journey={...emptyJourney(),practiceMode:'reflection' as const,firstDialogueComplete:false,before:'Злость',rejected:'Наглость, Холодность, Контроль',recognition:'Семья',where:'Семья',afraid:'Дружба',manifestation:'integrated' as const,afterFeelings:['Лёгкость'],after:'Лёгкость'};
+    expect(finishJourney({level:'soft'},journey,card,1,'Границы')).not.toBeNull();
+    expect(finishJourney({level:'soft'},{...journey,manifestation:''},card,1,'Границы')).toBeNull();
+    expect(finishJourney({level:'soft'},{...journey,afterFeelings:[]},card,1,'Границы')).toBeNull();
   });
   it('requires the first AI dialogue for new days while retaining saved legacy choices',()=>{
     expect(canContinueJourney('scenario',{...emptyJourney(),firstDialogueComplete:false},'soft')).toBe(false);

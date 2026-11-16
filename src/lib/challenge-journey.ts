@@ -2,7 +2,7 @@ import type { ChallengeAnswer } from '@/lib/challenge-store';
 import type { GameCard } from '@/lib/cards';
 import { CHALLENGE_QUALITIES, CHALLENGE_SPHERES, QUALITIES_MAX, QUALITIES_MIN } from '@/lib/challenge-reflection';
 
-export const JOURNEY_STEPS = ['scenario', 'reflection', 'story', 'shadeMeaning', 'shadeView', 'shadePlay', 'feelings', 'balance', 'request', 'resource'] as const;
+export const JOURNEY_STEPS = ['story', 'scenario', 'reflection', 'shadeMeaning', 'shadeView', 'shadePlay', 'feelings', 'balance', 'request', 'resource'] as const;
 export type JourneyStep = typeof JOURNEY_STEPS[number];
 
 export function showShadeProgress(screen: string, step: JourneyStep = 'scenario', acquainted = 0): boolean {
@@ -11,6 +11,7 @@ export function showShadeProgress(screen: string, step: JourneyStep = 'scenario'
 }
 
 export type JourneyDraft = {
+  practiceMode?: 'reflection' | 'dialogue';
   step: JourneyStep;
   /** Comma-joined selected feelings. */
   before: string;
@@ -51,7 +52,7 @@ export type JourneyDraft = {
 };
 
 export function emptyJourney(): JourneyDraft {
-  return {step:'scenario',before:'',rejected:'',recognition:'',repelled:'',meaning:'',where:'',afraid:'',replay:'',after:'',manifestation:'',balance:'',resource:'',smallStep:''};
+  return {step:'story',before:'',rejected:'',recognition:'',repelled:'',meaning:'',where:'',afraid:'',replay:'',after:'',manifestation:'',balance:'',resource:'',smallStep:''};
 }
 
 function splitSelected(value: string): string[] {
@@ -60,15 +61,15 @@ function splitSelected(value: string): string[] {
 
 export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level?: string): boolean {
   switch (step) {
-    case 'scenario': return (level === 'soft' || level === 'medium' || level === 'hard') && (draft.firstDialogueComplete !== undefined ? draft.firstDialogueComplete : true);
+    case 'scenario': return (level === 'soft' || level === 'medium' || level === 'hard') && (draft.practiceMode === 'reflection' || draft.firstDialogueComplete !== false);
     case 'reflection': {
       const qualities = splitSelected(draft.rejected);
       return Boolean(draft.before.trim()) && qualities.length >= QUALITIES_MIN && qualities.length <= QUALITIES_MAX && qualities.every(item => CHALLENGE_QUALITIES.includes(item)) && splitSelected(draft.recognition).length > 0;
     }
     case 'shadeMeaning': return splitSelected(draft.where).length > 0 && splitSelected(draft.afraid).length > 0 && [...splitSelected(draft.where), ...splitSelected(draft.afraid)].every(item => CHALLENGE_SPHERES.includes(item));
     case 'shadeView': return true;
-    case 'shadePlay': return draft.feedback !== undefined ? Boolean(draft.replay.trim() && draft.feedback.trim()) : draft.reactionId ? ['pressure','clear','hide','pause'].includes(draft.reactionId) : Boolean(draft.replay.trim() && draft.after.trim() && draft.manifestation);
-    case 'feelings': return draft.reactionId || draft.feedback ? Boolean(draft.afterFeelings?.length) : Boolean(draft.after.trim());
+    case 'shadePlay': return draft.practiceMode === 'reflection' ? ['shadow','integrated','neither'].includes(draft.manifestation) : draft.feedback !== undefined ? Boolean(draft.replay.trim() && draft.feedback.trim()) : draft.reactionId ? ['pressure','clear','hide','pause'].includes(draft.reactionId) : Boolean(draft.replay.trim() && draft.after.trim() && draft.manifestation);
+    case 'feelings': return draft.practiceMode === 'reflection' || draft.reactionId || draft.feedback ? Boolean(draft.afterFeelings?.length) : Boolean(draft.after.trim());
     case 'balance': return Boolean(draft.balance.trim());
     case 'resource': return Boolean(draft.resource.trim() && draft.smallStep.trim() && draft.seedGood?.length && draft.seedAction);
     case 'story': return true;
@@ -79,7 +80,7 @@ export function canContinueJourney(step: JourneyStep, draft: JourneyDraft, level
 export function finishJourney(answer: Partial<ChallengeAnswer>, journey: JourneyDraft, card: GameCard, day: number, theme: string, shadeId?: string, requestText?: string): ChallengeAnswer | null {
   journey = {...journey,...(requestText ? {requestText} : {})};
   const aiJourney = Boolean(journey.feedback?.trim());
-  const required = (JOURNEY_STEPS.filter(step => !(aiJourney ? ['balance','request','feelings','resource'] : ['balance','request']).includes(step)) as JourneyStep[]);
+  const required = (JOURNEY_STEPS.filter(step => !(journey.practiceMode === 'reflection' ? ['balance','request','resource'] : aiJourney ? ['balance','request','feelings','resource'] : ['balance','request']).includes(step)) as JourneyStep[]);
   if (requestText && !canContinueJourney('request', journey)) return null;
   if (!required.every(step => canContinueJourney(step, journey, answer.level))) return null;
   const seeds = [...(journey.seedGood ?? []), ...(journey.seedAction ? [journey.seedAction] : [])];

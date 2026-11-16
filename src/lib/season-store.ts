@@ -22,11 +22,13 @@ export type DayAnswer = {
   aiSummary?: string;
   shadeId?: string | undefined;
   doneAt: string;
+  requestReflection?: {requestText: string; connection: string; action: string};
 };
 
 export type SeasonState = {
   name: string;
   days: Record<number, DayAnswer>;
+  dailyPractice?: { startedAt: string; assignments: Record<number, string>; request?: import('@/lib/challenge-request').ChallengeRequest; reflections?: Record<number, {requestText: string; connection: string; action: string}> };
 };
 
 const EMPTY: SeasonState = { name: "", days: {} };
@@ -42,13 +44,13 @@ export function loadSeason(): SeasonState {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return EMPTY;
     const parsed = JSON.parse(raw) as Partial<SeasonState>;
-    return { name: parsed.name ?? "", days: parsed.days ?? {} };
+    return { name: parsed.name ?? "", days: parsed.days ?? {}, ...(parsed.dailyPractice ? {dailyPractice: parsed.dailyPractice} : {}) };
   } catch {
     return EMPTY;
   }
 }
 
-function write(state: SeasonState) {
+export function writeSeason(state: SeasonState) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(KEY, JSON.stringify(state));
@@ -62,13 +64,13 @@ export function saveSeasonName(name: string) {
   if (!name.trim()) return;
   const state = loadSeason();
   if (state.name === name.trim()) return;
-  write({ ...state, name: name.trim() });
+  writeSeason({ ...state, name: name.trim() });
 }
 
 export function saveSeasonDay(entry: DayAnswer): SeasonState {
   const state = loadSeason();
   const next: SeasonState = { ...state, days: { ...state.days, [entry.day]: entry } };
-  write(next);
+  writeSeason(next);
   return next;
 }
 

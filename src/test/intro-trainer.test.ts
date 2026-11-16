@@ -2,6 +2,13 @@ import { describe, it, expect } from "vitest";
 import { canFinishDialogue, dialogueUI, clearTrainer, loadTrainer, saveTrainer, trainerRequestSchema, textOnlyMessages } from "@/lib/intro-trainer";
 
 describe("Intro AI conversation boundaries", () => {
+  it('allows both support options only for introductory dialogue', () => {
+    const request = {cardId: 'taxi', level: 'soft', mode: 'dialogue', introDay: {setupAnswers: ['Вопрос', 'Страх', 'Понять', 'Дома'], feelings: ['Обида'], firstMessage: ''}, messages: [{id: 'one', role: 'user', parts: [{type: 'text', text: 'Не получается договориться.'}]}]};
+    expect(trainerRequestSchema.safeParse({...request, introHelp: 'skill'}).success).toBe(true);
+    expect(trainerRequestSchema.safeParse({...request, introHelp: 'partner'}).success).toBe(true);
+    expect(trainerRequestSchema.safeParse({...request, introHelp: 'partner', introDay: undefined}).success).toBe(false);
+    expect(trainerRequestSchema.safeParse({...request, introHelp: 'skill', mode: 'summary'}).success).toBe(false);
+  });
   it('requires 5–8 scene messages ending in a partner reply before completion', () => {
     const turns = dialogueUI(Array.from({length:8}, (_,i)=>({role:i%2===0?'participant' as const:'other' as const,text:`Реплика ${i}`})));
     expect(canFinishDialogue(turns.slice(0,4))).toBe(false);
